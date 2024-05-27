@@ -1,0 +1,174 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity boothmul is
+    generic (
+        nbit: integer := 32 -- refers to the width of the inputs
+    );
+    port (
+        a  : in  std_logic_vector(nbit-1 downto 0);
+        b  : in  std_logic_vector(nbit-1 downto 0);
+        res: out std_logic_vector((2*nbit)-1 downto 0)
+    );
+end entity;
+
+architecture structural of boothmul is
+    component p4_adder is
+        generic (
+            nbit: integer := 32;
+            subtractor: integer := 0
+        );
+        port (
+            a   : in  std_logic_vector(nbit-1 downto 0);
+            b   : in  std_logic_vector(nbit-1 downto 0);
+            cin : in  std_logic;
+            sub : in  std_logic;
+            s   : out std_logic_vector(nbit-1 downto 0);
+            cout: out std_logic
+        );
+    end component;
+    component shifter_left is
+        generic (
+            nbit  : integer := 32;
+            amount: integer := 2
+        );
+        port (
+            a      : in  std_logic_vector(nbit-1 downto 0);
+            a_shift: out std_logic_vector(nbit-1 downto 0)
+        );
+    end component;
+    component mux_mul is
+        generic (
+            nbit: integer := 32
+        );
+        port (
+            i0 : in  std_logic_vector(nbit-1 downto 0);
+            i1 : in  std_logic_vector(nbit-1 downto 0);
+            i2 : in  std_logic_vector(nbit-1 downto 0);
+            i3 : in  std_logic_vector(nbit-1 downto 0);
+            i4 : in  std_logic_vector(nbit-1 downto 0);
+            sel: in  std_logic_vector(     2 downto 0);
+            o  : out std_logic_vector(nbit-1 downto 0)
+        );
+    end component;
+    type array3d_shift is array(0 to (nbit/2)-1, 0 to 4) of std_logic_vector((2*nbit)-1 downto 0);
+    type array3d_sum is array(0 to (nbit/2)-1, 0 to 1) of std_logic_vector((2*nbit)-1 downto 0);
+    type array2d_enc is array(0 to (nbit/2)-1) of std_logic_vector(2 downto 0);
+    signal shift_array: array3d_shift;
+    signal sum_array  : array3d_sum;
+    signal enc        : array2d_enc;
+    signal a_ext      : std_logic_vector((2*nbit)-1 downto 0);
+    signal complement : std_logic_vector((2*nbit)-1 downto 0);
+    signal zero       : std_logic_vector((2*nbit)-1 downto 0);
+begin
+    extend_a: for i in 0 to a_ext'length-1 generate
+        copy: if i < a'length generate
+            a_ext(i) <= a(i);
+        end generate copy;
+        sign_extension: if i >= a'length generate
+            a_ext(i) <= a(a'length-1);
+        end generate sign_extension;
+    end generate extend_a;
+    zero <= std_logic_vector(to_unsigned(0, zero'length));
+
+    shift_array(0, 0) <= (others => '0');
+    shift_array(0, 1) <= a_ext;
+    shift_array(0, 2) <= complement;
+    shift03_inst: shifter_left
+        generic map (
+            nbit   => 2*nbit,
+            amount => 1
+        )
+        port map (
+            a       => a_ext,
+            a_shift => shift_array(0, 3)
+        );
+
+    complement_inst: p4_adder
+        generic map (
+            nbit      => 2*nbit,
+            subtractor => 1
+        )
+        port map (
+            a    => zero,
+            b    => a_ext,
+            cin  => '1',
+            sub  => '1',
+            s    => complement,
+            cout => open
+        );
+    shift04_inst: shifter_left
+        generic map (
+            nbit   => 2*nbit,
+            amount => 1
+        )
+        port map (
+            a       => complement,
+            a_shift => shift_array(0, 4)
+        );
+
+    generate_loop: for i in 0 to (nbit/2)-1 generate
+        first_case: if i = 0 generate
+            enc(0) <= b(1) & b(0) & '0';
+            mux0_inst: mux_mul
+                generic map (
+                    nbit => 2*nbit
+                )
+                port map (
+                    i0  => shift_array(i, 0),
+                    i1  => shift_array(i, 1),
+                    i2  => shift_array(i, 2),
+                    i3  => shift_array(i, 3),
+                    i4  => shift_array(i, 4),
+                    sel => enc(0),
+                    o   => sum_array  (i, 0)
+                );
+        end generate first_case;
+        else_first_case: if i /= 0 generate
+            shift_array(i, 0) <= (others => '0');
+            -- Generates shifter layer in order to reuse the previous layer
+            -- mux inputs
+            shifters_gen: for j in 1 to 4 generate
+                shift_inst: shifter_left
+                    generic map (
+                        nbit => 2*nbit,
+                        amount => 2
+                    )
+                    port map (
+                        a       => shift_array(i-1, j),
+                        a_shift => shift_array(  i, j)
+                    );
+            end generate shifters_gen;
+            enc(i) <= b((i*2)+1) & b(i*2) & b((i*2)-1);
+            mux_inst: mux_mul
+                generic map (
+                    nbit => 2*nbit
+                )
+                port map (
+                    i0  => shift_array(i, 0),
+                    i1  => shift_array(i, 1),
+                    i2  => shift_array(i, 2),
+                    i3  => shift_array(i, 3),
+                    i4  => shift_array(i, 4),
+                    sel => enc(i),
+                    o   => sum_array  (i-1, 1)
+                );
+            adder_inst: p4_adder
+                generic map (
+                    nbit      => 2*nbit,
+                    subtractor => 0
+                )
+                port map (
+                    a    => sum_array(i-1, 0),
+                    b    => sum_array(i-1, 1),
+                    cin  => '0',
+                    sub  => '0',
+                    s    => sum_array(i, 0),
+                    cout => open
+                );
+        end generate else_first_case;
+    end generate generate_loop;
+    
+    res <= sum_array((nbit/2)-1, 0);
+end structural;
