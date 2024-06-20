@@ -9,7 +9,7 @@ entity t2_shifter_levels_1_2 is
     );
     port(
         data_i:        in  std_logic_vector(nbit-1 downto 0);
-        selection:     in  std_logic_vector(clog2(nbit/8)-1 downto 0);
+        selection_i:     in  std_logic_vector(clog2(nbit/8)-1 downto 0);
         logic_arith_i: in  std_logic;
         left_right_i:  in  std_logic;
         data_o:        out std_logic_vector((nbit+8)-2 downto 0)
@@ -18,7 +18,7 @@ end entity;
 
 architecture behav of t2_shifter_levels_1_2 is
     constant nbit_mask: integer := (nbit+8)-1; -- number of bits in a single mask
-    constant n_masks := (nbit/8); -- number of masks
+    constant n_masks: integer := (nbit/8); -- number of masks
     type array2d is array(0 to n_masks-1) of std_logic_vector(nbit_mask-1 downto 0);
     signal mask: array2d;
 begin
@@ -57,5 +57,5 @@ begin
         end loop;
     end process;
 
-    data_o <= mask(to_integer(unsigned(selection)));
+    data_o <= mask(to_integer(unsigned(selection_i)));
 end behav;
