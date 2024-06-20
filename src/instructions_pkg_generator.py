@@ -14,21 +14,28 @@ with open('instructions.json', 'r') as f:
         name_len = len(instruction["name"])
         if name_len > max_name_len:
             max_name_len = name_len
-    print("    -- OPCODE FIELD")
-    for instruction in instructions:
-        name = instruction["name"]
-        opcode = instruction["opcode"]
-        func = instruction["func"]
-        block = instruction["block"]
-        print(opcode_string.format(name, " "*(max_name_len-len(name)), format(int(opcode, 16), '06b'), opcode))
-    print()
-    print("    -- FUNC FIELD")
-    for instruction in instructions:
-        name = instruction["name"]
-        opcode = instruction["opcode"]
-        func = instruction["func"]
-        block = instruction["block"]
-        if block != "g-i":
-            print(func_string.format(name, " "*(max_name_len-len(name)+(len("opcode")-len("func"))), format(int(func, 16), '011b'), func))
+    for mandatory in [True, False]:
+        if mandatory:
+            print("-- MANDATORY INSTRUCTIONS")
+        else:
+            print("-- OPTIONAL INSTRUCTIONS")
+        print("    -- OPCODE FIELD")
+        for instruction in instructions:
+            name = instruction["name"]
+            opcode = instruction["opcode"]
+            func = instruction["func"]
+            block = instruction["block"]
+            if instruction["mandatory"] == mandatory:
+                print(opcode_string.format(name, " "*(max_name_len-len(name)), format(int(opcode, 16), '06b'), opcode))
+        print()
+        print("    -- FUNC FIELD")
+        for instruction in instructions:
+            name = instruction["name"]
+            opcode = instruction["opcode"]
+            func = instruction["func"]
+            block = instruction["block"]
+            if block != "g-i" and instruction["mandatory"] == mandatory:
+                print(func_string.format(name, " "*(max_name_len-len(name)+(len("opcode")-len("func"))), format(int(func, 16), '011b'), func))
+        print()
 
 print("end instructions_pkg;")
