@@ -1,0 +1,620 @@
+[
+    {
+        "block": "g-i",
+        "name": "j",
+        "opcode": "0x02",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "jal",
+        "opcode": "0x03",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "beqz",
+        "opcode": "0x04",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "bnez",
+        "opcode": "0x05",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "bfpt",
+        "opcode": "0x06",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "bfpf",
+        "opcode": "0x07",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "addi",
+        "opcode": "0x08",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "addui",
+        "opcode": "0x09",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "subi",
+        "opcode": "0x0a",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "subui",
+        "opcode": "0x0b",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "andi",
+        "opcode": "0x0c",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "ori",
+        "opcode": "0x0d",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "xori",
+        "opcode": "0x0e",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "lhi",
+        "opcode": "0x0f",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "rfe",
+        "opcode": "0x10",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "trap",
+        "opcode": "0x11",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "jr",
+        "opcode": "0x12",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "jalr",
+        "opcode": "0x13",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "slli",
+        "opcode": "0x14",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "nop",
+        "opcode": "0x15",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "srli",
+        "opcode": "0x16",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "srai",
+        "opcode": "0x17",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "seqi",
+        "opcode": "0x18",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "snei",
+        "opcode": "0x19",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "slti",
+        "opcode": "0x1a",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "sgti",
+        "opcode": "0x1b",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "slei",
+        "opcode": "0x1c",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "sgei",
+        "opcode": "0x1d",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "lb",
+        "opcode": "0x20",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "lh",
+        "opcode": "0x21",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "lw",
+        "opcode": "0x23",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "lbu",
+        "opcode": "0x24",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "lhu",
+        "opcode": "0x25",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "lf",
+        "opcode": "0x26",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "ld",
+        "opcode": "0x27",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "sb",
+        "opcode": "0x28",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "sh",
+        "opcode": "0x29",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "sw",
+        "opcode": "0x2b",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "sf",
+        "opcode": "0x2e",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "sd",
+        "opcode": "0x2f",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "itlb",
+        "opcode": "0x38",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "sltui",
+        "opcode": "0x3a",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "sgtui",
+        "opcode": "0x3b",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "sleui",
+        "opcode": "0x3c",
+        "func": ""
+    },
+    {
+        "block": "g-i",
+        "name": "sgeui",
+        "opcode": "0x3d",
+        "func": ""
+    },
+    {
+        "block": "rtr",
+        "name": "sll",
+        "opcode": "0x0",
+        "func": "0x04"
+    },
+    {
+        "block": "rtr",
+        "name": "srl",
+        "opcode": "0x0",
+        "func": "0x06"
+    },
+    {
+        "block": "rtr",
+        "name": "sra",
+        "opcode": "0x0",
+        "func": "0x07"
+    },
+    {
+        "block": "rtr",
+        "name": "add",
+        "opcode": "0x0",
+        "func": "0x20"
+    },
+    {
+        "block": "rtr",
+        "name": "addu",
+        "opcode": "0x0",
+        "func": "0x21"
+    },
+    {
+        "block": "rtr",
+        "name": "sub",
+        "opcode": "0x0",
+        "func": "0x22"
+    },
+    {
+        "block": "rtr",
+        "name": "subu",
+        "opcode": "0x0",
+        "func": "0x23"
+    },
+    {
+        "block": "rtr",
+        "name": "and",
+        "opcode": "0x0",
+        "func": "0x24"
+    },
+    {
+        "block": "rtr",
+        "name": "or",
+        "opcode": "0x0",
+        "func": "0x25"
+    },
+    {
+        "block": "rtr",
+        "name": "xor",
+        "opcode": "0x0",
+        "func": "0x26"
+    },
+    {
+        "block": "rtr",
+        "name": "seq",
+        "opcode": "0x0",
+        "func": "0x28"
+    },
+    {
+        "block": "rtr",
+        "name": "sne",
+        "opcode": "0x0",
+        "func": "0x29"
+    },
+    {
+        "block": "rtr",
+        "name": "slt",
+        "opcode": "0x0",
+        "func": "0x2a"
+    },
+    {
+        "block": "rtr",
+        "name": "sgt",
+        "opcode": "0x0",
+        "func": "0x2b"
+    },
+    {
+        "block": "rtr",
+        "name": "sle",
+        "opcode": "0x0",
+        "func": "0x2c"
+    },
+    {
+        "block": "rtr",
+        "name": "sge",
+        "opcode": "0x0",
+        "func": "0x2d"
+    },
+    {
+        "block": "rtr",
+        "name": "movi2s",
+        "opcode": "0x0",
+        "func": "0x30"
+    },
+    {
+        "block": "rtr",
+        "name": "movs2i",
+        "opcode": "0x0",
+        "func": "0x31"
+    },
+    {
+        "block": "rtr",
+        "name": "movf",
+        "opcode": "0x0",
+        "func": "0x32"
+    },
+    {
+        "block": "rtr",
+        "name": "movd",
+        "opcode": "0x0",
+        "func": "0x33"
+    },
+    {
+        "block": "rtr",
+        "name": "movfp2i",
+        "opcode": "0x0",
+        "func": "0x34"
+    },
+    {
+        "block": "rtr",
+        "name": "movi2fp",
+        "opcode": "0x0",
+        "func": "0x35"
+    },
+    {
+        "block": "rtr",
+        "name": "movi2t",
+        "opcode": "0x0",
+        "func": "0x36"
+    },
+    {
+        "block": "rtr",
+        "name": "movt2i",
+        "opcode": "0x0",
+        "func": "0x37"
+    },
+    {
+        "block": "rtr",
+        "name": "sltu",
+        "opcode": "0x0",
+        "func": "0x3a"
+    },
+    {
+        "block": "rtr",
+        "name": "sgtu",
+        "opcode": "0x0",
+        "func": "0x3b"
+    },
+    {
+        "block": "rtr",
+        "name": "sleu",
+        "opcode": "0x0",
+        "func": "0x3c"
+    },
+    {
+        "block": "rtr",
+        "name": "sgeu",
+        "opcode": "0x0",
+        "func": "0x3d"
+    },
+    {
+        "block": "fp",
+        "name": "addf",
+        "opcode": "0x4",
+        "func": "0x00"
+    },
+    {
+        "block": "fp",
+        "name": "subf",
+        "opcode": "0x4",
+        "func": "0x01"
+    },
+    {
+        "block": "fp",
+        "name": "multf",
+        "opcode": "0x4",
+        "func": "0x02"
+    },
+    {
+        "block": "fp",
+        "name": "divf",
+        "opcode": "0x4",
+        "func": "0x03"
+    },
+    {
+        "block": "fp",
+        "name": "addd",
+        "opcode": "0x4",
+        "func": "0x04"
+    },
+    {
+        "block": "fp",
+        "name": "subd",
+        "opcode": "0x4",
+        "func": "0x05"
+    },
+    {
+        "block": "fp",
+        "name": "multd",
+        "opcode": "0x4",
+        "func": "0x06"
+    },
+    {
+        "block": "fp",
+        "name": "divd",
+        "opcode": "0x4",
+        "func": "0x07"
+    },
+    {
+        "block": "fp",
+        "name": "cvtf2d",
+        "opcode": "0x4",
+        "func": "0x08"
+    },
+    {
+        "block": "fp",
+        "name": "cvtf2i",
+        "opcode": "0x4",
+        "func": "0x09"
+    },
+    {
+        "block": "fp",
+        "name": "cvtd2f",
+        "opcode": "0x4",
+        "func": "0x0a"
+    },
+    {
+        "block": "fp",
+        "name": "cvtd2i",
+        "opcode": "0x4",
+        "func": "0x0b"
+    },
+    {
+        "block": "fp",
+        "name": "cvti2f",
+        "opcode": "0x4",
+        "func": "0x0c"
+    },
+    {
+        "block": "fp",
+        "name": "cvti2d",
+        "opcode": "0x4",
+        "func": "0x0d"
+    },
+    {
+        "block": "fp",
+        "name": "mult",
+        "opcode": "0x4",
+        "func": "0x0e"
+    },
+    {
+        "block": "fp",
+        "name": "div",
+        "opcode": "0x4",
+        "func": "0x0f"
+    },
+    {
+        "block": "fp",
+        "name": "eqf",
+        "opcode": "0x4",
+        "func": "0x10"
+    },
+    {
+        "block": "fp",
+        "name": "nef",
+        "opcode": "0x4",
+        "func": "0x11"
+    },
+    {
+        "block": "fp",
+        "name": "ltf",
+        "opcode": "0x4",
+        "func": "0x12"
+    },
+    {
+        "block": "fp",
+        "name": "gtf",
+        "opcode": "0x4",
+        "func": "0x13"
+    },
+    {
+        "block": "fp",
+        "name": "lef",
+        "opcode": "0x4",
+        "func": "0x14"
+    },
+    {
+        "block": "fp",
+        "name": "gef",
+        "opcode": "0x4",
+        "func": "0x15"
+    },
+    {
+        "block": "fp",
+        "name": "multu",
+        "opcode": "0x4",
+        "func": "0x16"
+    },
+    {
+        "block": "fp",
+        "name": "divu",
+        "opcode": "0x4",
+        "func": "0x17"
+    },
+    {
+        "block": "fp",
+        "name": "eqd",
+        "opcode": "0x4",
+        "func": "0x18"
+    },
+    {
+        "block": "fp",
+        "name": "ned",
+        "opcode": "0x4",
+        "func": "0x19"
+    },
+    {
+        "block": "fp",
+        "name": "ltd",
+        "opcode": "0x4",
+        "func": "0x1a"
+    },
+    {
+        "block": "fp",
+        "name": "gtd",
+        "opcode": "0x4",
+        "func": "0x1b"
+    },
+    {
+        "block": "fp",
+        "name": "led",
+        "opcode": "0x4",
+        "func": "0x1c"
+    },
+    {
+        "block": "fp",
+        "name": "ged",
+        "opcode": "0x4",
+        "func": "0x1d"
+    }
+]
