@@ -4,14 +4,14 @@ use work.utils_pkg.all;
 
 entity t2_shifter is
     generic(
-        nbit: integer := 64;
+        nbit: integer := 64
     );
     port(
         data_i:        in  std_logic_vector(nbit-1 downto 0);
         amount_i:      in  std_logic_vector(clog2(nbit)-1 downto 0);
         logic_arith_i: in  std_logic;
         left_right_i:  in  std_logic;
-        data_o:        out std_logic_vector(nbit-1 downto 0);
+        data_o:        out std_logic_vector(nbit-1 downto 0)
     );
 end entity;
 
