@@ -9,7 +9,7 @@ entity t2_shifter_levels_1_2 is
     );
     port(
         data_i:        in  std_logic_vector(nbit-1 downto 0);
-        selection_i:     in  std_logic_vector(clog2(nbit/8)-1 downto 0);
+        selection_i:   in  std_logic_vector(clog2(nbit/8)-1 downto 0);
         logic_arith_i: in  std_logic;
         left_right_i:  in  std_logic;
         data_o:        out std_logic_vector((nbit+8)-2 downto 0)
