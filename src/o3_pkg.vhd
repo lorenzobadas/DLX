@@ -24,6 +24,6 @@ package o3_pkg is
         reservation_station: std_logic_vector(clog2(n_reservation_station) downto 0);
         rs_index:            std_logic_vector(clog2(n_entries_rs) downto 0);
         destination:         std_logic_vector(nbit-1 downto 0); -- either register or memory address
-        ready:               std_logic;
+        ready:               std_logic; -- ready if result is available
     end record rob_entry;
 end o3_pkg;
