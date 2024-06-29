@@ -17,6 +17,33 @@ t2-shifter-tb: clean
 	vsim \
 		-do ../scripts/tb_t2_shifter.do
 
+p4-adder-tb: clean
+	cp ../src/g_p.vhd .
+	cp ../src/g_g.vhd .
+	cp ../src/g_pg.vhd .
+	cp ../src/carry_generator.vhd .
+	cp ../src/rca.vhd .
+	cp ../src/carry_select_adder.vhd .
+	cp ../src/sum_generator.vhd .
+	cp ../src/xor_layer.vhd .
+	cp ../src/p4_adder.vhd .
+	cp ../tb/tb_p4_adder.vhd .
+
+	vcom g_p.vhd
+	vcom g_g.vhd
+	vcom g_pg.vhd
+	vcom carry_generator.vhd
+	vcom rca.vhd
+	vcom carry_select_adder.vhd
+	vcom sum_generator.vhd
+	vcom xor_layer.vhd
+	vcom p4_adder.vhd
+	vcom tb_p4_adder.vhd
+
+	vsim \
+		-do ../scripts/tb_p4_adder.do
+
+
 clean:
 	rm -f ./*.vhd
 	rm -rf ./work
