@@ -4,6 +4,7 @@ use ieee.numeric_std.all;
 use ieee.math_real.all;
 
 package utils_pkg is
+    constant nbit: integer := 32;
     function clog2 (a: integer) return integer;
     function max (a: integer; b: integer) return integer;
     function slv_to_string ( a: std_logic_vector) return string;
