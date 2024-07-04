@@ -23,7 +23,7 @@ entity reorder_buffer is
         misprediction_o: out std_logic;
         issue_ptr_o:     out std_logic_vector(clog2(n_entries_rob)-1 downto 0)
     );
-end reorder_buffer;
+end entity;
 
 architecture behav of reorder_buffer is
     type state_t is (idle, full);
@@ -136,4 +136,5 @@ end behav;
 
 -- just to be clear, jump instructions do not pose any problem, since they are not speculative
 
--- in case of misprediction the branch instruction which is committed signals the BPU of the misprediction
+-- in case of misprediction the PC has to be updated and the pipeline has to be flushed
+-- the BPU retrieves the result of the branch from the CDB (no direct connection with the ROB is needed)

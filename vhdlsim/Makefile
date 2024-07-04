@@ -21,6 +21,7 @@ p4-adder-tb: clean
 	cp ../src/g_p.vhd .
 	cp ../src/g_g.vhd .
 	cp ../src/g_pg.vhd .
+	cp ../src/utils_pkg.vhd .
 	cp ../src/carry_generator.vhd .
 	cp ../src/rca.vhd .
 	cp ../src/carry_select_adder.vhd .
@@ -32,6 +33,7 @@ p4-adder-tb: clean
 	vcom g_p.vhd
 	vcom g_g.vhd
 	vcom g_pg.vhd
+	vcom utils_pkg.vhd
 	vcom carry_generator.vhd
 	vcom rca.vhd
 	vcom carry_select_adder.vhd
@@ -47,6 +49,7 @@ boothmul-tb: clean
 	cp ../src/g_p.vhd .
 	cp ../src/g_g.vhd .
 	cp ../src/g_pg.vhd .
+	cp ../src/utils_pkg.vhd .
 	cp ../src/carry_generator.vhd .
 	cp ../src/rca.vhd .
 	cp ../src/carry_select_adder.vhd .
@@ -61,6 +64,7 @@ boothmul-tb: clean
 	vcom g_p.vhd
 	vcom g_g.vhd
 	vcom g_pg.vhd
+	vcom utils_pkg.vhd
 	vcom carry_generator.vhd
 	vcom rca.vhd
 	vcom carry_select_adder.vhd
@@ -74,6 +78,20 @@ boothmul-tb: clean
 
 	vsim \
 		-do ../scripts/tb_boothmul.do
+
+reorder-buffer-tb: clean
+	cp ../src/utils_pkg.vhd .
+	cp ../src/o3_pkg.vhd .
+	cp ../src/reorder_buffer.vhd .
+	cp ../tb/tb_reorder_buffer.vhd .
+
+	vcom utils_pkg.vhd
+	vcom o3_pkg.vhd
+	vcom reorder_buffer.vhd
+	vcom tb_reorder_buffer.vhd
+
+	vsim \
+		-do ../scripts/tb_reorder_buffer.do
 
 clean:
 	rm -f ./*.vhd
