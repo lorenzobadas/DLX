@@ -1,3 +1,4 @@
 **/vhdlsim/*
 **/syn/*
 !**/Makefile
+!**/.gitkeep
