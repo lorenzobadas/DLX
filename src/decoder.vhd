@@ -10,7 +10,7 @@ entity decoder is
         rs2_o:         out std_logic_vector( 4 downto 0);
         rd_o:          out std_logic_vector( 4 downto 0);
         i_immediate_o: out std_logic_vector(15 downto 0);
-        j_immediate_o: out std_logic_vector(25 downto 0);
+        j_immediate_o: out std_logic_vector(25 downto 0)
     );
 end entity;
 
