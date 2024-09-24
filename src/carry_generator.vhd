@@ -2,6 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.math_real.all;
+use work.utils_pkg.all;
 
 entity carry_generator is
     generic (
@@ -17,10 +18,6 @@ entity carry_generator is
 end entity;
 
 architecture behav of carry_generator is
-    function clog2(a: integer) return integer is
-        begin
-            return integer(ceil(log2(real(a))));
-        end clog2;
     component g_pg is
         port (
             p_i0: in  std_logic;
