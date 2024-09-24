@@ -1,0 +1,61 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.7.8 Chrome/128.0.6613.36 Electron/32.0.1 Safari/537.36" version="24.7.8">
+  <diagram name="Page-1" id="0Ntxyqf6oMitSI2uGikq">
+    <mxGraphModel dx="994" dy="1735" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="dZVgA7oNxxfrhCtS2hdQ-1" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;align=left;" parent="1" vertex="1">
+          <mxGeometry y="-120" width="840" height="280" as="geometry" />
+        </mxCell>
+        <mxCell id="dZVgA7oNxxfrhCtS2hdQ-3" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry y="200" width="840" height="520" as="geometry" />
+        </mxCell>
+        <mxCell id="nDp7bIeZ7wkqlTfn3YNX-1" value="FETCH/ISSUE" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="240" y="40" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="nDp7bIeZ7wkqlTfn3YNX-2" value="&lt;div&gt;ALU&lt;/div&gt;&lt;div&gt;RESERVATION STATIONS&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="340" y="240" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="nDp7bIeZ7wkqlTfn3YNX-3" value="LOAD/STORE RESERVATION STATIONS" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="120" y="240" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="nDp7bIeZ7wkqlTfn3YNX-4" value="MULT&lt;div&gt;RESERVATION STATIONS&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="560" y="240" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="nDp7bIeZ7wkqlTfn3YNX-5" value="BRANCH PREDICTION UNIT" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="40" y="40" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="nDp7bIeZ7wkqlTfn3YNX-6" value="REORDER BUFFER" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="440" y="40" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="nDp7bIeZ7wkqlTfn3YNX-7" value="REGISTER FILE" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="440" y="-80" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="nDp7bIeZ7wkqlTfn3YNX-8" value="ALU" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="340" y="360" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="nDp7bIeZ7wkqlTfn3YNX-9" value="MULTIPLIER" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="560" y="360" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="nDp7bIeZ7wkqlTfn3YNX-10" value="DATA MEMORY" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="120" y="480" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="nDp7bIeZ7wkqlTfn3YNX-11" value="INSTRUCTION MEMORY" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="240" y="-80" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="nDp7bIeZ7wkqlTfn3YNX-12" value="COMMON DATA BUS&lt;div&gt;ARBITER&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="340" y="600" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="dZVgA7oNxxfrhCtS2hdQ-2" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;FRONT-END&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry y="-120" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="dZVgA7oNxxfrhCtS2hdQ-4" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;BACK-END&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry y="200" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="zy_QGetUUOPeRNZOTqfi-1" value="REGISTER ALIAS&lt;div&gt;TABLE&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="640" y="40" width="160" height="80" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
