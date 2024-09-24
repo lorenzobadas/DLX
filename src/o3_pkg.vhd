@@ -27,4 +27,9 @@ package o3_pkg is
         destination:      std_logic_vector(nbit-1 downto 0); -- either register or memory address
         ready:            std_logic; -- ready if result is available
     end record rob_entry;
+
+    type rat_entry is record
+        physical: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
+        valid:    std_logic;
+    end record rat_entry;
 end o3_pkg;
