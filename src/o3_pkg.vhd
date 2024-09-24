@@ -6,6 +6,7 @@ package o3_pkg is
     constant n_reservation_station: integer := 4;
     constant n_entries_rs:          integer := 4;
     constant n_entries_rob:         integer := 16;
+    constant n_entries_bpu:         integer := 64;
 
     type instruction_t is (jump, branch, load, store, to_reg);
 
@@ -32,4 +33,11 @@ package o3_pkg is
         physical: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
         valid:    std_logic;
     end record rat_entry;
+
+    type rob_branch_result is record
+        branch_taken: std_logic;
+        address:      std_logic_vector(clog2(n_entries_rob)-1 downto 0);
+        history:      std_logic_vector(1 downto 0);
+        valid:        std_logic;
+    end record rob_branch_result;
 end o3_pkg;
