@@ -5,7 +5,7 @@ use work.utils_pkg.all;
 package o3_pkg is
     constant n_reservation_station: integer := 4;
     constant n_entries_rs:          integer := 4;
-    constant n_entries_rob:         integer := 16;
+    constant n_entries_rob:         integer := 4;
     constant n_entries_bpu:         integer := 64;
 
     type instruction_t is (jump, branch, load, store, to_reg);
@@ -39,8 +39,8 @@ package o3_pkg is
 
     type branch_data_t is record
         branch_taken:   std_logic;
-        branch_address: std_logic_vector(clog2(n_entries_rob)-1 downto 0); -- used to update BPU and PC
-        taken_address:  std_logic_vector(clog2(n_entries_rob)-1 downto 0); -- used to update PC
+        branch_address: std_logic_vector(nbit-1 downto 0); -- used to update BPU and PC
+        taken_address:  std_logic_vector(nbit-1 downto 0); -- used to update PC
         history:        std_logic_vector(1 downto 0);
     end record branch_data_t;
     
