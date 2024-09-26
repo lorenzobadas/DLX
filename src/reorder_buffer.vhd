@@ -11,7 +11,7 @@ entity reorder_buffer is
     port (
         clk_i:        in  std_logic;
         reset_i:      in  std_logic;
-        mem_hazard_i: in  std_logic; -- stall if high
+        mem_hazard_i: in  std_logic;
         full_o:       out std_logic;
         issue_ptr_o:  out std_logic_vector(clog2(n_entries_rob)-1 downto 0);
         commit_ptr_o: out std_logic_vector(clog2(n_entries_rob)-1 downto 0);
@@ -23,7 +23,6 @@ entity reorder_buffer is
         -- Issue Interface
         insert_instruction_i: in  std_logic; -- acknowledge not needed because insertion prevented if full
         instruction_i:        in  rob_decoded_instruction;
-        
 
         -- RF/MEM Interface
         destination_o:     out std_logic_vector(nbit-1 downto 0);
@@ -33,9 +32,7 @@ entity reorder_buffer is
 
         -- Branch Unit Interface
         branch_result_o:    out rob_branch_result;
-
-        -- RAT Commit Interface
-        commit_register_o: out std_logic
+        misprediction_o:    out std_logic
     );
 end entity;
 
@@ -81,13 +78,12 @@ architecture beh of reorder_buffer is
         signal mem_hazard:         in  std_logic;
         signal commit_ptr_next:    out unsigned(clog2(n_entries_rob)-1 downto 0);
         signal issue_ptr_next:     out unsigned(clog2(n_entries_rob)-1 downto 0);
-        signal state_next:         out state_t;
         signal destination_o:      out std_logic_vector(nbit-1 downto 0);
         signal result_o:           out std_logic_vector(nbit-1 downto 0);
         signal memory_we_o:        out std_logic;
         signal registerfile_we_o:  out std_logic;
         signal branch_result_o:    out rob_branch_result;
-        signal commit_register_o:  out std_logic
+        signal misprediction_o:    out std_logic
     ) is
     begin
         commit_ptr_next <= commit_ptr + 1;
@@ -106,18 +102,21 @@ architecture beh of reorder_buffer is
                 registerfile_we_o <= '1';
                 destination_o     <= rob_fifo(to_integer(commit_ptr)).destination;
                 result_o          <= rob_fifo(to_integer(commit_ptr)).result;
-                commit_register_o <= '1';
+            when load => -- same as to_reg since a load writes to a register
+                registerfile_we_o <= '1';
+                destination_o     <= rob_fifo(to_integer(commit_ptr)).destination;
+                result_o          <= rob_fifo(to_integer(commit_ptr)).result;
             when branch =>
+                -- fill branch result info
+                branch_result_o.branch_taken  <= rob_fifo(to_integer(commit_ptr)).result(0);
+                branch_result_o.address       <= rob_fifo(to_integer(commit_ptr)).branch_data.branch_address;
+                branch_result_o.taken_address <= rob_fifo(to_integer(commit_ptr)).branch_data.taken_address;
+                branch_result_o.history       <= rob_fifo(to_integer(commit_ptr)).branch_data.history;
+                branch_result_o.valid         <= '1';
                 if rob_fifo(to_integer(commit_ptr)).branch_data.branch_taken /= rob_fifo(to_integer(commit_ptr)).result(0) then
-                    -- fill branch result info
-                    branch_result_o.branch_taken  <= rob_fifo(to_integer(commit_ptr)).result(0);
-                    branch_result_o.address       <= rob_fifo(to_integer(commit_ptr)).branch_data.branch_address;
-                    branch_result_o.taken_address <= rob_fifo(to_integer(commit_ptr)).branch_data.taken_address;
-                    branch_result_o.history       <= rob_fifo(to_integer(commit_ptr)).branch_data.history;
-                    branch_result_o.valid         <= '1'; -- may be used to flush the pipeline and to update the PC
                     -- flush rob
+                    misprediction_o <= '1';
                     issue_ptr_next <= commit_ptr + 1;
-                    state_next <= empty;
                 end if;
             when others =>
         end case;
@@ -146,12 +145,12 @@ begin
                 result_o          <= (others => '-');
                 memory_we_o       <= '0';
                 registerfile_we_o <= '0';
-                commit_register_o <= '0';
                 branch_result_o.branch_taken  <= '-';
                 branch_result_o.address       <= (others => '-');
                 branch_result_o.taken_address <= (others => '-');
                 branch_result_o.history       <= (others => '-');
                 branch_result_o.valid         <= '0';
+                misprediction_o <= '0';
                 if insert_instruction_i = '1' then
                     insert_instruction(instruction_i, issue_ptr, rob_fifo_next, issue_ptr_next);
                     state_next <= idle;
@@ -160,21 +159,60 @@ begin
                 rob_fifo_next <= rob_fifo;
                 issue_ptr_next <= issue_ptr;
                 commit_ptr_next <= commit_ptr;
-                state_next <= empty;
+                state_next <= idle;
                 full_o <= '0';
                 destination_o     <= (others => '-');
                 result_o          <= (others => '-');
                 memory_we_o    <= '0';
                 registerfile_we_o    <= '0';
-                commit_register_o <= '0';
                 branch_result_o.branch_taken  <= '-';
                 branch_result_o.address       <= (others => '-');
                 branch_result_o.taken_address <= (others => '-');
                 branch_result_o.history       <= (others => '-');
                 branch_result_o.valid         <= '0';
+                misprediction_o <= '0';
+                if insert_result_i = '1' then
+                    insert_result(cdb_i, rob_fifo_next);
+                end if;
                 if insert_instruction_i = '1' then
                     insert_instruction(instruction_i, issue_ptr, rob_fifo_next, issue_ptr_next);
                 end if;
+                if rob_fifo(to_integer(commit_ptr)).ready = '1' then
+                    commit_instruction(
+                        rob_fifo => rob_fifo,
+                        commit_ptr => commit_ptr,
+                        mem_hazard => mem_hazard_i,
+                        commit_ptr_next => commit_ptr_next,
+                        issue_ptr_next => issue_ptr_next,
+                        destination_o => destination_o,
+                        result_o => result_o,
+                        memory_we_o => memory_we_o,
+                        registerfile_we_o => registerfile_we_o,
+                        branch_result_o => branch_result_o,
+                        misprediction_o => misprediction_o
+                    );
+                end if;
+                if push and not(pop) and test_full then
+                    state_next <= full;
+                    full_o <= '1';
+                elsif (not(push) and pop and test_empty) or misp then
+                    state_next <= empty;
+                end if;
+            when full =>
+                rob_fifo_next   <= rob_fifo;
+                issue_ptr_next  <= issue_ptr;
+                commit_ptr_next <= commit_ptr;
+                state_next      <= full;
+                full_o          <= '1';
+                destination_o     <= (others => '-');
+                result_o          <= (others => '-');
+                memory_we_o    <= '0';
+                registerfile_we_o    <= '0';
+                branch_result_o.branch_taken <= '-';
+                branch_result_o.address      <= (others => '-');
+                branch_result_o.history      <= (others => '-');
+                branch_result_o.valid        <= '0';
+                misprediction_o <= '0';
                 if insert_result_i = '1' then
                     insert_result(cdb_i, rob_fifo_next);
                 end if;
@@ -185,50 +223,12 @@ begin
                         mem_hazard => mem_hazard_i,
                         commit_ptr_next => commit_ptr_next,
                         issue_ptr_next => issue_ptr_next,
-                        state_next => state_next,
                         destination_o => destination_o,
                         result_o => result_o,
                         memory_we_o => memory_we_o,
                         registerfile_we_o => registerfile_we_o,
                         branch_result_o => branch_result_o,
-                        commit_register_o => commit_register_o
-                    );
-                end if;
-                if push and not(pop) and test_full then
-                    state_next <= full;
-                    full_o <= '1';
-                elsif not(push) and pop and test_empty then
-                    state_next <= empty;
-                end if;
-            when full =>
-                rob_fifo_next   <= rob_fifo;
-                issue_ptr_next  <= issue_ptr;
-                commit_ptr_next <= commit_ptr;
-                state_next      <= empty;
-                full_o          <= '1';
-                destination_o     <= (others => '-');
-                result_o          <= (others => '-');
-                memory_we_o    <= '0';
-                registerfile_we_o    <= '0';
-                commit_register_o <= '0';
-                branch_result_o.branch_taken <= '-';
-                branch_result_o.address      <= (others => '-');
-                branch_result_o.history      <= (others => '-');
-                branch_result_o.valid        <= '0';
-                if rob_fifo(to_integer(commit_ptr)).ready = '1' then
-                    commit_instruction(
-                        rob_fifo => rob_fifo,
-                        commit_ptr => commit_ptr,
-                        mem_hazard => mem_hazard_i,
-                        commit_ptr_next => commit_ptr_next,
-                        issue_ptr_next => issue_ptr_next,
-                        state_next => state_next,
-                        destination_o => destination_o,
-                        result_o => result_o,
-                        memory_we_o => memory_we_o,
-                        registerfile_we_o => registerfile_we_o,
-                        branch_result_o => branch_result_o,
-                        commit_register_o => commit_register_o
+                        misprediction_o => misprediction_o
                     );
                     full_o <= '0';
                 end if;
@@ -246,7 +246,6 @@ begin
                 result_o          <= (others => '-');
                 memory_we_o    <= '0';
                 registerfile_we_o    <= '0';
-                commit_register_o <= '0';
                 branch_result_o.branch_taken  <= '-';
                 branch_result_o.address       <= (others => '-');
                 branch_result_o.taken_address <= (others => '-');
