@@ -194,7 +194,6 @@ begin
                 end if;
                 if push and not(pop) and test_full then
                     state_next <= full;
-                    full_o <= '1';
                 elsif (not(push) and pop and test_empty) or misp then
                     state_next <= empty;
                 end if;
@@ -230,11 +229,11 @@ begin
                         branch_result_o => branch_result_o,
                         misprediction_o => misprediction_o
                     );
-                    full_o <= '0';
                 end if;
                 if pop and not(misp) then
                     state_next <= idle;
-                    full_o <= '0';
+                elsif pop and misp then
+                    state_next <= empty;
                 end if;
             when others =>
                 rob_fifo_next <= rob_fifo;
