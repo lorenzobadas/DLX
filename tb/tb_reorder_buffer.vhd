@@ -276,7 +276,7 @@ begin
         assertions(
             issue_ptr_exp       => 3,
             commit_ptr_exp      => 0,
-            full_exp            => '1', -- full should be 1 because an instruction is being inserted (mealy behavior)
+            full_exp            => '0',
             misprediction_exp   => '0',
             memory_we_exp       => '0',
             registerfile_we_exp => '0',
@@ -433,7 +433,7 @@ begin
         assertions(
             issue_ptr_exp       => 0,
             commit_ptr_exp      => 0,
-            full_exp            => '0', -- full should be 0 because an instruction is being committed
+            full_exp            => '1',
             misprediction_exp   => '0',
             memory_we_exp       => '0',
             registerfile_we_exp => '0',
@@ -577,6 +577,268 @@ begin
             registerfile_we => registerfile_we,
             branch_valid    => branch_result.valid
         );
+        -- insert load
+        insert_instruction_proc(
+            insert_instruction => '1',
+            instruction_type => load,
+            destination => 4,
+            branch_taken => '0',
+            branch_addr => 4,
+            taken_addr => 4,
+            bpu_history => "00",
+            insert_instruction_s => insert_instruction,
+            instruction => instruction
+        );
+        -- result load (it should be ignored because the rob is empty)
+        insert_result_proc(
+            insert_result   => '1',
+            result          => 100,
+            rob_index       => 0,
+            insert_result_s => insert_result,
+            cdb => cdb
+        );
+        wait for 10 ns; -- time 170 ns
+        assertions(
+            issue_ptr_exp       => 1,
+            commit_ptr_exp      => 0,
+            full_exp            => '0',
+            misprediction_exp   => '0',
+            memory_we_exp       => '0',
+            registerfile_we_exp => '0',
+            branch_valid_exp    => '0',
+            issue_ptr       => issue_ptr,
+            commit_ptr      => commit_ptr,
+            full            => full,
+            misprediction   => misprediction,
+            memory_we       => memory_we,
+            registerfile_we => registerfile_we,
+            branch_valid    => branch_result.valid
+        );
+        -- insert branch
+        insert_instruction_proc(
+            insert_instruction => '1',
+            instruction_type => branch,
+            destination => 5,
+            branch_taken => '0',
+            branch_addr => 5,
+            taken_addr => 5,
+            bpu_history => "00",
+            insert_instruction_s => insert_instruction,
+            instruction => instruction
+        );
+        -- result load
+        insert_result_proc(
+            insert_result   => '1',
+            result          => 4,
+            rob_index       => 0,
+            insert_result_s => insert_result,
+            cdb => cdb
+        );
+        wait for 10 ns; -- time 180 ns
+        assertions(
+            issue_ptr_exp       => 2,
+            commit_ptr_exp      => 0,
+            full_exp            => '0',
+            misprediction_exp   => '0',
+            memory_we_exp       => '0',
+            registerfile_we_exp => '1',
+            branch_valid_exp    => '0',
+            issue_ptr       => issue_ptr,
+            commit_ptr      => commit_ptr,
+            full            => full,
+            misprediction   => misprediction,
+            memory_we       => memory_we,
+            registerfile_we => registerfile_we,
+            branch_valid    => branch_result.valid
+        );
+        -- assert result
+        check_results_proc(
+            commit_branch => false,
+            destination => 4,
+            result => 4,
+            branch_taken => '-',
+            branch_addr => 0,
+            taken_addr => 0,
+            bpu_history => "00",
+            destination_s => destination,
+            result_s => result,
+            branch_result => branch_result
+        );
+        -- insert branch
+        insert_instruction_proc(
+            insert_instruction => '1',
+            instruction_type => branch,
+            destination => 6,
+            branch_taken => '0',
+            branch_addr => 6,
+            taken_addr => 6,
+            bpu_history => "00",
+            insert_instruction_s => insert_instruction,
+            instruction => instruction
+        );
+        insert_result <= '0';
+        wait for 10 ns; -- time 190 ns
+        assertions(
+            issue_ptr_exp       => 3,
+            commit_ptr_exp      => 1,
+            full_exp            => '0',
+            misprediction_exp   => '0',
+            memory_we_exp       => '0',
+            registerfile_we_exp => '0',
+            branch_valid_exp    => '0',
+            issue_ptr       => issue_ptr,
+            commit_ptr      => commit_ptr,
+            full            => full,
+            misprediction   => misprediction,
+            memory_we       => memory_we,
+            registerfile_we => registerfile_we,
+            branch_valid    => branch_result.valid
+        );
+        -- insert branch
+        insert_instruction_proc(
+            insert_instruction => '1',
+            instruction_type => branch,
+            destination => 7,
+            branch_taken => '0',
+            branch_addr => 7,
+            taken_addr => 7,
+            bpu_history => "00",
+            insert_instruction_s => insert_instruction,
+            instruction => instruction
+        );
+        wait for 10 ns; -- time 200 ns
+        insert_instruction <= '0';
+        assertions(
+            issue_ptr_exp       => 0,
+            commit_ptr_exp      => 1,
+            full_exp            => '0',
+            misprediction_exp   => '0',
+            memory_we_exp       => '0',
+            registerfile_we_exp => '0',
+            branch_valid_exp    => '0',
+            issue_ptr       => issue_ptr,
+            commit_ptr      => commit_ptr,
+            full            => full,
+            misprediction   => misprediction,
+            memory_we       => memory_we,
+            registerfile_we => registerfile_we,
+            branch_valid    => branch_result.valid
+        );
+        wait for 10 ns; -- time 210 ns
+        assertions(
+            issue_ptr_exp       => 0,
+            commit_ptr_exp      => 1,
+            full_exp            => '0',
+            misprediction_exp   => '0',
+            memory_we_exp       => '0',
+            registerfile_we_exp => '0',
+            branch_valid_exp    => '0',
+            issue_ptr       => issue_ptr,
+            commit_ptr      => commit_ptr,
+            full            => full,
+            misprediction   => misprediction,
+            memory_we       => memory_we,
+            registerfile_we => registerfile_we,
+            branch_valid    => branch_result.valid
+        );
+        -- insert branch
+        insert_instruction_proc(
+            insert_instruction => '1',
+            instruction_type => branch,
+            destination => 8,
+            branch_taken => '0',
+            branch_addr => 8,
+            taken_addr => 8,
+            bpu_history => "00",
+            insert_instruction_s => insert_instruction,
+            instruction => instruction
+        );
+        wait for 10 ns; -- time 220 ns
+        assertions(
+            issue_ptr_exp       => 1,
+            commit_ptr_exp      => 1,
+            full_exp            => '1',
+            misprediction_exp   => '0',
+            memory_we_exp       => '0',
+            registerfile_we_exp => '0',
+            branch_valid_exp    => '0',
+            issue_ptr       => issue_ptr,
+            commit_ptr      => commit_ptr,
+            full            => full,
+            misprediction   => misprediction,
+            memory_we       => memory_we,
+            registerfile_we => registerfile_we,
+            branch_valid    => branch_result.valid
+        );
+        -- insert to_reg (this should not be inserted because the rob is full)
+        insert_instruction_proc(
+            insert_instruction => '1',
+            instruction_type => to_reg,
+            destination => 9,
+            branch_taken => '0',
+            branch_addr => 9,
+            taken_addr => 9,
+            bpu_history => "00",
+            insert_instruction_s => insert_instruction,
+            instruction => instruction
+        );
+        -- result branch (will cause a misprediction)
+        insert_result_proc(
+            insert_result   => '1',
+            result          => 1,
+            rob_index       => 1,
+            insert_result_s => insert_result,
+            cdb => cdb
+        );
+        wait for 10 ns; -- time 230 ns
+        assertions(
+            issue_ptr_exp       => 1,
+            commit_ptr_exp      => 1,
+            full_exp            => '1',
+            misprediction_exp   => '1',
+            memory_we_exp       => '0',
+            registerfile_we_exp => '0',
+            branch_valid_exp    => '1',
+            issue_ptr       => issue_ptr,
+            commit_ptr      => commit_ptr,
+            full            => full,
+            misprediction   => misprediction,
+            memory_we       => memory_we,
+            registerfile_we => registerfile_we,
+            branch_valid    => branch_result.valid
+        );
+        -- assert result
+        check_results_proc(
+            commit_branch => true,
+            destination => 0,
+            result => 0,
+            branch_taken => '1',
+            branch_addr => 5,
+            taken_addr => 5,
+            bpu_history => "00",
+            destination_s => destination,
+            result_s => result,
+            branch_result => branch_result
+        );
+        insert_result <= '0';
+        wait for 10 ns; -- time 240 ns
+        assertions(
+            issue_ptr_exp       => 2,
+            commit_ptr_exp      => 2,
+            full_exp            => '0',
+            misprediction_exp   => '0',
+            memory_we_exp       => '0',
+            registerfile_we_exp => '0',
+            branch_valid_exp    => '0',
+            issue_ptr       => issue_ptr,
+            commit_ptr      => commit_ptr,
+            full            => full,
+            misprediction   => misprediction,
+            memory_we       => memory_we,
+            registerfile_we => registerfile_we,
+            branch_valid    => branch_result.valid
+        );
+
         wait;
     end process test_proc;
 end test;
