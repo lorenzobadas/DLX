@@ -15,7 +15,7 @@ entity bpu is
         prediction_o: out std_logic;
 
         -- Reorder Buffer Interface
-        rob_result_i: in rob_branch_result
+        rob_result_i: in rob_branch_result_t
     );
 end entity;
 

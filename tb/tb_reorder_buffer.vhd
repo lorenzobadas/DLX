@@ -24,12 +24,12 @@ architecture test of tb_reorder_buffer is
             insert_result_i: in std_logic;
             cdb_i:           in  cdb_t;
             insert_instruction_i: in  std_logic;
-            instruction_i:        in  rob_decoded_instruction;
+            instruction_i:        in  rob_decoded_instruction_t;
             destination_o:     out std_logic_vector(nbit-1 downto 0);
             result_o:          out std_logic_vector(nbit-1 downto 0);
             memory_we_o:       out std_logic;
             registerfile_we_o: out std_logic;
-            branch_result_o:    out rob_branch_result;
+            branch_result_o:    out rob_branch_result_t;
             misprediction_o:    out std_logic
         );
     end component;
@@ -43,12 +43,12 @@ architecture test of tb_reorder_buffer is
     signal insert_result: std_logic;
     signal cdb: cdb_t;
     signal insert_instruction: std_logic;
-    signal instruction: rob_decoded_instruction;
+    signal instruction: rob_decoded_instruction_t;
     signal destination: std_logic_vector(nbit-1 downto 0);
     signal result: std_logic_vector(nbit-1 downto 0);
     signal memory_we: std_logic;
     signal registerfile_we: std_logic;
-    signal branch_result: rob_branch_result;
+    signal branch_result: rob_branch_result_t;
     signal misprediction: std_logic;
 
     -- testbench procedures
@@ -62,7 +62,7 @@ architecture test of tb_reorder_buffer is
         bpu_history:      std_logic_vector(1 downto 0);
 
         signal insert_instruction_s: out std_logic;
-        signal instruction:          out rob_decoded_instruction
+        signal instruction:          out rob_decoded_instruction_t
     ) is
     begin
         insert_instruction_s <= insert_instruction;
@@ -133,7 +133,7 @@ architecture test of tb_reorder_buffer is
 
         signal destination_s: in std_logic_vector(nbit-1 downto 0);
         signal result_s: in std_logic_vector(nbit-1 downto 0);
-        signal branch_result: in rob_branch_result
+        signal branch_result: in rob_branch_result_t
     ) is
     begin
         if not commit_branch then

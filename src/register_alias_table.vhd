@@ -16,20 +16,20 @@ entity register_alias_table is
         rename_physical_i: in std_logic_vector(clog2(n_entries_rob)-1 downto 0); -- issue pointer of ROB
 
         -- ROB commit interface
-        commit_i:          in std_logic;
+        commit_i:          in std_logic; -- see registerfile_we_o in reorder_buffer
         commit_address_i:  in std_logic_vector(4 downto 0); -- destination field of ROB entry
         commit_physical_i: in std_logic_vector(clog2(n_entries_rob)-1 downto 0); -- commit pointer of ROB
 
         -- RS interface (actually from issue unit but related to RS)
         register1_i: in  std_logic_vector(4 downto 0);
-        alias1_o:    out rat_entry;
+        alias1_o:    out rat_entry_t;
         register2_i: in  std_logic_vector(4 downto 0);
-        alias2_o:    out rat_entry
+        alias2_o:    out rat_entry_t
     );
 end entity;
 
 architecture beh of register_alias_table is
-    type rat_array is array(0 to 31) of rat_entry;
+    type rat_array is array(0 to 31) of rat_entry_t;
 begin
     rename_proc: process(clk_i, reset_i)
     begin

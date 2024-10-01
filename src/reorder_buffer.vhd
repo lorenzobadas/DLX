@@ -22,7 +22,7 @@ entity reorder_buffer is
         
         -- Issue Interface
         insert_instruction_i: in  std_logic; -- acknowledge not needed because insertion prevented if full
-        instruction_i:        in  rob_decoded_instruction;
+        instruction_i:        in  rob_decoded_instruction_t;
 
         -- RF/MEM Interface
         destination_o:     out std_logic_vector(nbit-1 downto 0);
@@ -31,21 +31,21 @@ entity reorder_buffer is
         registerfile_we_o: out std_logic;
 
         -- Branch Unit Interface
-        branch_result_o:    out rob_branch_result;
+        branch_result_o:    out rob_branch_result_t;
         misprediction_o:    out std_logic
     );
 end entity;
 
 architecture beh of reorder_buffer is
     type state_t is (empty, idle, full);
-    type rob_array is array(0 to n_entries_rob-1) of rob_entry;
+    type rob_array is array(0 to n_entries_rob-1) of rob_entry_t;
     signal state, state_next:           state_t;
     signal rob_fifo, rob_fifo_next:     rob_array;
     signal commit_ptr, commit_ptr_next: unsigned(clog2(n_entries_rob)-1 downto 0);
     signal issue_ptr, issue_ptr_next:   unsigned(clog2(n_entries_rob)-1 downto 0);
 
     procedure insert_instruction (
-        signal instruction:        in  rob_decoded_instruction;
+        signal instruction:        in  rob_decoded_instruction_t;
         signal issue_ptr:          in  unsigned;
         signal rob_fifo:           out rob_array;
         signal issue_ptr_next:     out unsigned
@@ -82,7 +82,7 @@ architecture beh of reorder_buffer is
         signal result_o:           out std_logic_vector(nbit-1 downto 0);
         signal memory_we_o:        out std_logic;
         signal registerfile_we_o:  out std_logic;
-        signal branch_result_o:    out rob_branch_result;
+        signal branch_result_o:    out rob_branch_result_t;
         signal misprediction_o:    out std_logic
     ) is
     begin
