@@ -8,10 +8,10 @@ package o3_pkg is
     constant n_entries_rob:         integer := 4;
     constant n_entries_bpu:         integer := 64;
 
-    type instruction_t is (jump, branch, load, store, to_reg);
+    type commit_option_t is (none, branch, to_mem, to_rf);
 
     type rob_decoded_instruction is record
-        instruction_type:     instruction_t;
+        instruction_type:     commit_option_t;
         instruction_address:  std_logic_vector(nbit-1 downto 0);
         branch_taken:         std_logic;
         destination:          std_logic_vector(nbit-1 downto 0); -- either register or memory address
@@ -45,10 +45,13 @@ package o3_pkg is
     end record branch_data_t;
     
     type rob_entry is record
-        instruction_type: instruction_t;
+        instruction_type: commit_option_t;
         result:           std_logic_vector(nbit-1 downto 0);
         destination:      std_logic_vector(nbit-1 downto 0); -- either register or memory address
         branch_data:      branch_data_t;
         ready:            std_logic; -- ready if result is available
     end record rob_entry;
+
+    type reservation_station_t is (ls, alu, mult, none);
+    type alu_operation_t is (add);
 end o3_pkg;

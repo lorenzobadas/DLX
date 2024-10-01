@@ -90,7 +90,7 @@ architecture beh of reorder_buffer is
         destination_o <= rob_fifo(to_integer(commit_ptr)).destination;
         result_o <= rob_fifo(to_integer(commit_ptr)).result;
         case rob_fifo(to_integer(commit_ptr)).instruction_type is
-            when store =>
+            when to_mem =>
                 if mem_hazard = '0' then
                     memory_we_o   <= '1';
                     destination_o <= rob_fifo(to_integer(commit_ptr)).destination;
@@ -98,11 +98,7 @@ architecture beh of reorder_buffer is
                 else
                     commit_ptr_next <= commit_ptr;
                 end if;
-            when to_reg =>
-                registerfile_we_o <= '1';
-                destination_o     <= rob_fifo(to_integer(commit_ptr)).destination;
-                result_o          <= rob_fifo(to_integer(commit_ptr)).result;
-            when load => -- same as to_reg since a load writes to a register
+            when to_rf =>
                 registerfile_we_o <= '1';
                 destination_o     <= rob_fifo(to_integer(commit_ptr)).destination;
                 result_o          <= rob_fifo(to_integer(commit_ptr)).result;
@@ -129,7 +125,7 @@ begin
         variable push, pop, misp, test_full, test_empty: boolean;
     begin
         push       := insert_instruction_i = '1';
-        pop        := rob_fifo(to_integer(commit_ptr)).ready = '1' and not(rob_fifo(to_integer(commit_ptr)).instruction_type = store and mem_hazard_i = '1');
+        pop        := rob_fifo(to_integer(commit_ptr)).ready = '1' and not(rob_fifo(to_integer(commit_ptr)).instruction_type = to_mem and mem_hazard_i = '1');
         misp       := pop and (rob_fifo(to_integer(commit_ptr)).instruction_type = branch) and (rob_fifo(to_integer(commit_ptr)).branch_data.branch_taken /= rob_fifo(to_integer(commit_ptr)).result(0));
         test_full  := issue_ptr = commit_ptr-1;
         test_empty := issue_ptr = commit_ptr+1;
@@ -260,7 +256,7 @@ begin
             commit_ptr <= (others => '0');
             issue_ptr <= (others => '0');
             for i in 0 to n_entries_rob-1 loop
-                rob_fifo(i).instruction_type <= to_reg;
+                rob_fifo(i).instruction_type <= to_rf;
                 rob_fifo(i).result           <= (others => '-');
                 rob_fifo(i).destination      <= (others => '-');
                 rob_fifo(i).branch_data.branch_taken   <= '-';
