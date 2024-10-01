@@ -93,6 +93,20 @@ reorder-buffer-tb: clean
 	vsim \
 		-do ../scripts/tb_reorder_buffer.do
 
+reservation-station-tb: clean
+	cp ../src/utils_pkg.vhd .
+	cp ../src/o3_pkg.vhd .
+	cp ../src/reservation_station.vhd .
+	cp ../tb/tb_reservation_station.vhd .
+
+	vcom utils_pkg.vhd
+	vcom o3_pkg.vhd
+	vcom reservation_station.vhd
+	vcom tb_reservation_station.vhd
+
+	vsim \
+		-do ../scripts/tb_reservation_station.do
+
 clean:
 	rm -f ./*.vhd
 	rm -rf ./work

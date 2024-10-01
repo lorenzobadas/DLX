@@ -63,8 +63,8 @@ package o3_pkg is
         source2: std_logic_vector(nbit-1 downto 0);
         valid2: std_logic;
         operation: std_logic_vector(clog2(max_operations)-1 downto 0);
-        reg1: rat_entry_t;
-        reg2: rat_entry_t;
+        reg1: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
+        reg2: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
     end record rs_entry_t;
 
     type reservation_station_t is (lsu, alu, mult, none);
