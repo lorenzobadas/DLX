@@ -1,8 +1,10 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use work.utils_pkg.all;
+use work.o3_pkg.all;
 
-entity reservation_station is
+entity exe_reservation_station is
     generic (
         nbit: integer := 32;
         in_order: boolean := false
@@ -15,7 +17,7 @@ entity reservation_station is
 
         -- Issue Interface
         insert_i:   in std_logic;
-        rs_entry_i: in rs_entry_t;
+        rs_entry_i: in exe_rs_entry_t;
         
         -- Execution unit interface
         exe_stall_i:     in  std_logic;
@@ -31,9 +33,9 @@ entity reservation_station is
     );
 end entity;
 
-architecture beh of reservation_station is
+architecture beh of exe_reservation_station is
     type state_t is (empty, idle, full);
-    type rs_array_t is array(0 to n_entries_rs-1) of rs_entry_t;
+    type rs_array_t is array(0 to n_entries_rs-1) of exe_rs_entry_t;
     signal state, state_next: state_t;
     signal rs_array, rs_array_next: rs_array_t;
     signal head_ptr, head_ptr_next: unsigned(clog2(n_entries_rs)-1 downto 0);
@@ -183,7 +185,7 @@ begin
                     end loop;
                 end if;
             when others =>
-                state <= empty;
+                state_next <= empty;
                 full_o <= '0';
                 head_ptr <= (others => '0');
                 for i in 0 to n_entries_rs-1 loop
@@ -206,7 +208,7 @@ begin
 
     seq_proc: process(clk_i, reset_i)
     begin
-        if reset = '1' then
+        if reset_i = '1' then
             state <= empty;
             head_ptr <= (others => '0');
             for i in 0 to n_entries_rs-1 loop
