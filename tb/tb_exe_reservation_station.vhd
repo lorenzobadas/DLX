@@ -4,11 +4,11 @@ use ieee.numeric_std.all;
 use work.utils_pkg.all;
 use work.o3_pkg.all;
 
-entity tb_reservation_station is
-end tb_reservation_station;
+entity tb_exe_reservation_station is
+end tb_exe_reservation_station;
 
-architecture test of tb_reservation_station is
-    component reservation_station is
+architecture test of tb_exe_reservation_station is
+    component exe_reservation_station is
         generic (
             nbit: integer := 32;
             in_order: boolean := false
@@ -19,7 +19,7 @@ architecture test of tb_reservation_station is
             flush_i: in  std_logic;
             full_o:  out std_logic;
             insert_i:   in std_logic;
-            rs_entry_i: in rs_entry_t;
+            rs_entry_i: in exe_rs_entry_t;
             exe_stall_i:     in  std_logic;
             exe_enable_o:    out std_logic; -- insert instruction in the execution unit
             exe_rob_id_o:    out std_logic_vector(clog2(n_entries_rob)-1 downto 0);
@@ -35,7 +35,7 @@ architecture test of tb_reservation_station is
     signal flush: std_logic;
     signal full: std_logic;
     signal insert: std_logic;
-    signal rs_entry: rs_entry_t;
+    signal rs_entry: exe_rs_entry_t;
     signal exe_stall: std_logic;
     signal exe_enable: std_logic;
     signal exe_rob_id: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
@@ -44,8 +44,10 @@ architecture test of tb_reservation_station is
     signal exe_operation: std_logic_vector(clog2(max_operations)-1 downto 0);
     signal insert_result: std_logic;
     signal cdb: cdb_t;
+
+    signal simulation_done: boolean := false;
 begin
-    dut: reservation_station
+    dut: exe_reservation_station
         generic map (
             nbit => 32,
             in_order => false
@@ -69,10 +71,14 @@ begin
     
     clk_proc: process
     begin
-        clk <= '0';
-        wait for 5 ns;
-        clk <= '1';
-        wait for 5 ns;
+        if not simulation_done then
+            clk <= '0';
+            wait for 5 ns;
+            clk <= '1';
+            wait for 5 ns;
+        else
+            wait;
+        end if;
     end process;
 
     -- test process
@@ -98,6 +104,7 @@ begin
         reset <= '0';
         wait for 10 ns; -- time 20 ns
         
+        simulation_done <= true;
         wait;
         
     end process test_proc;
