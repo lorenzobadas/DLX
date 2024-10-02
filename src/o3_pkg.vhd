@@ -3,12 +3,11 @@ use ieee.std_logic_1164.all;
 use work.utils_pkg.all;
 
 package o3_pkg is
-    constant n_reservation_station: integer := 4;
     constant n_entries_rs:          integer := 4;
     constant n_operations_alu:      integer := 1;
     constant n_operations_mult:     integer := 1;
     constant n_operations_lsu:      integer := 2;
-    constant max_operations:       integer := max(max(n_operations_alu, n_operations_mult), n_operations_lsu);
+    constant max_operations:        integer := max(n_operations_alu, n_operations_mult);
     constant n_entries_rob:         integer := 4;
     constant n_entries_bpu:         integer := 64;
 
@@ -56,7 +55,7 @@ package o3_pkg is
         ready:            std_logic; -- ready if result is available
     end record rob_entry_t;
 
-    type rs_entry_t is record
+    type exe_rs_entry_t is record
         rob_id: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
         source1: std_logic_vector(nbit-1 downto 0);
         valid1: std_logic;
@@ -65,7 +64,23 @@ package o3_pkg is
         operation: std_logic_vector(clog2(max_operations)-1 downto 0);
         reg1: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
         reg2: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
-    end record rs_entry_t;
+    end record exe_rs_entry_t;
+
+    type ls_rs_entry_t is record
+        rob_id: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
+        source1: std_logic_vector(nbit-1 downto 0);
+        valid1: std_logic;
+        source2: std_logic_vector(nbit-1 downto 0);
+        valid2: std_logic;
+        valid_address: std_logic;
+        immediate: std_logic_vector(nbit-1 downto 0);
+        operation: std_logic; -- load & store
+        width: std_logic_vector(1 downto 0); -- 0: byte, 1: half, 2: word
+        signed_flag: std_logic; -- 0: unsigned, 1: signed
+        reg1: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
+        reg2: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
+        wait_commit: std_logic;
+    end record ls_rs_entry_t;
 
     type reservation_station_t is (lsu, alu, mult, none);
 end o3_pkg;
