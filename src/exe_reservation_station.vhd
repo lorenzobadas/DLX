@@ -6,8 +6,7 @@ use work.o3_pkg.all;
 
 entity exe_reservation_station is
     generic (
-        nbit: integer := 32;
-        in_order: boolean := false
+        nbit: integer := 32
     );
     port (
         clk_i:   in  std_logic;
@@ -39,8 +38,71 @@ architecture beh of exe_reservation_station is
     signal state, state_next: state_t;
     signal rs_array, rs_array_next: rs_array_t;
     signal head_ptr, head_ptr_next: unsigned(clog2(n_entries_rs)-1 downto 0);
+    signal tail_ptr, tail_ptr_next: unsigned(clog2(n_entries_rs)-1 downto 0);
+
+    procedure insert_instruction (
+        signal rs_entry: in exe_rs_entry_t;
+        signal head_ptr: in unsigned(clog2(n_entries_rs)-1 downto 0);
+        signal rs_array_next: out rs_array_t;
+        signal head_ptr_next: out unsigned(clog2(n_entries_rs)-1 downto 0)
+    ) is
+    begin
+        rs_array_next(to_integer(head_ptr)) <= rs_entry;
+        head_ptr_next <= head_ptr + 1;
+    end procedure insert_instruction;
+
+    procedure send_instruction_to_exe (
+        signal rs_array: in rs_array_t;
+        signal tail_ptr: in unsigned(clog2(n_entries_rs)-1 downto 0);
+        signal exe_enable: out std_logic;
+        signal exe_rob_id: out std_logic_vector(clog2(n_entries_rob)-1 downto 0);
+        signal exe_source1: out std_logic_vector(nbit-1 downto 0);
+        signal exe_source2: out std_logic_vector(nbit-1 downto 0);
+        signal exe_operation: out std_logic_vector(clog2(max_operations)-1 downto 0);
+        signal rs_array_next: out rs_array_t
+    ) is
+        variable found: boolean := false;
+    begin
+        for i in 0 to n_entries_rs-1 loop
+            if (not found) and
+               (rs_array(to_integer(tail_ptr + i)).valid1 = '1') and
+               (rs_array(to_integer(tail_ptr + i)).valid2 = '1') and 
+               (rs_array(to_integer(tail_ptr + i)).busy = '1')
+            then
+                found := true;
+                exe_enable_o <= '1';
+                exe_rob_id_o <= rs_array(to_integer(tail_ptr + i)).rob_id;
+                exe_source1_o <= rs_array(to_integer(tail_ptr + i)).source1;
+                exe_source2_o <= rs_array(to_integer(tail_ptr + i)).source2;
+                exe_operation_o <= rs_array(to_integer(tail_ptr + i)).operation;
+                rs_array_next(to_integer(tail_ptr + i)).busy <= '0';
+            end if;
+        end loop;
+    end procedure send_instruction_to_exe;
+
+    procedure insert_result (
+        signal rs_array: in rs_array_t;
+        signal cdb: in cdb_t;
+        signal rs_array_next: out rs_array_t
+    ) is
+    begin
+        for i in 0 to n_entries_rs-1 loop
+            if rs_array(i).valid1 = '0' and
+               rs_array(i).reg1 = cdb_i.rob_index
+            then
+                rs_array_next(i).source1 <= cdb_i.result;
+                rs_array_next(i).valid1 <= '1';
+            end if;
+            if rs_array(i).valid2 = '0' and
+               rs_array(i).reg2 = cdb_i.rob_index
+            then
+                rs_array_next(i).source2 <= cdb_i.result;
+                rs_array_next(i).valid2 <= '1';
+            end if;
+        end loop;
+    end procedure insert_result;
 begin
-    comb_proc: process(state, rs_array, head_ptr, flush_i, insert_i, rs_entry_i, exe_stall_i, insert_result_i, cdb_i)
+    comb_proc: process(state, rs_array, head_ptr, tail_ptr, insert_i, rs_entry_i, exe_stall_i, insert_result_i, cdb_i)
         variable execution_index: integer;
         variable execution_found: boolean := false;
     begin
@@ -49,6 +111,7 @@ begin
                 state_next <= empty;
                 full_o <= '0';
                 head_ptr_next <= head_ptr;
+                tail_ptr_next <= tail_ptr;
                 rs_array_next <= rs_array;
                 exe_enable_o <= '0';
                 exe_rob_id_o <= (others => '-');
@@ -64,140 +127,110 @@ begin
                 state_next <= idle;
                 full_o <= '0';
                 head_ptr_next <= head_ptr;
+                tail_ptr_next <= tail_ptr;
                 rs_array_next <= rs_array;
                 exe_enable_o <= '0';
                 exe_rob_id_o <= (others => '-');
                 exe_source1_o <= (others => '-');
                 exe_source2_o <= (others => '-');
                 exe_operation_o <= (others => '-');
-                -- check if there is an instruction to be executed
-                if exe_stall_i = '0' then
-                    for i in n_entries_rs-1 downto 0 loop
-                        if rs_array(i).valid1 = '1' and rs_array(i).valid2 = '1' then
-                            exe_enable_o <= '1';
-                            exe_rob_id_o <= rs_array(i).rob_id;
-                            exe_source1_o <= rs_array(i).source1;
-                            exe_source2_o <= rs_array(i).source2;
-                            exe_operation_o <= rs_array(i).operation;
-                            execution_index := i;
-                            execution_found := true;
-                        end if;
-                    end loop;
-                end if;
-                -- shift entries that come after the executed instruction
-                if execution_found then
-                    for i in 1 to n_entries_rs-1 loop
-                        if i > execution_index then
-                            rs_array_next(i-1) <= rs_array(i);
-                        end if;
-                    end loop;
-                end if;
-                -- insert new instruction in the reservation station
-                -- different in case of instruction ready for execution
+
                 if insert_i = '1' then
-                    if execution_found then
-                        rs_array_next(to_integer(head_ptr-1)) <= rs_entry_i;
-                    else
-                        rs_array_next(to_integer(head_ptr)) <= rs_entry_i;
-                        head_ptr_next <= head_ptr + 1;
-                        if head_ptr = n_entries_rs-1 then
-                            state_next <= full;
-                        end if;
-                    end if; 
+                    insert_instruction(
+                        rs_entry => rs_entry_i,
+                        head_ptr => head_ptr,
+                        rs_array_next => rs_array_next,
+                        head_ptr_next => head_ptr_next
+                    );
                 end if;
-                -- check if cdb result can be used to update the reservation station
+
+                if exe_stall_i = '0' then
+                    send_instruction_to_exe(
+                        rs_array => rs_array,
+                        tail_ptr => tail_ptr,
+                        exe_enable => exe_enable_o,
+                        exe_rob_id => exe_rob_id_o,
+                        exe_source1 => exe_source1_o,
+                        exe_source2 => exe_source2_o,
+                        exe_operation => exe_operation_o,
+                        rs_array_next => rs_array_next
+                    );
+                end if;
+
                 if insert_result_i = '1' then
-                    for i in 0 to n_entries_rs-1 loop
-                        if rs_array(i).valid1 = '0' and rs_array(i).reg1 = cdb_i.rob_index then
-                            if execution_found and i > execution_index then
-                                rs_array_next(i-1).source1 <= cdb_i.result;
-                                rs_array_next(i-1).valid1 <= '1';
-                            else
-                                rs_array_next(i).source1 <= cdb_i.result;
-                                rs_array_next(i).valid1 <= '1';
-                            end if;
-                        end if;
-                        if rs_array(i).valid2 = '0' and rs_array(i).reg2 = cdb_i.rob_index then
-                            if execution_found and i > execution_index then
-                                rs_array_next(i-1).source2 <= cdb_i.result;
-                                rs_array_next(i-1).valid2 <= '1';
-                            else
-                                rs_array_next(i).source2 <= cdb_i.result;
-                                rs_array_next(i).valid2 <= '1';
-                            end if;
-                        end if;
-                    end loop;
+                    insert_result(
+                        rs_array => rs_array,
+                        cdb => cdb_i,
+                        rs_array_next => rs_array_next
+                    );
                 end if;
+                
+                -- update tail_ptr
+                if rs_array(to_integer(tail_ptr)).busy = '0' then
+                    tail_ptr_next <= tail_ptr + 1;
+                end if;
+
+                -- check if the reservation station is full
+                if head_ptr = tail_ptr-1 and
+                   insert_i = '1' and
+                   not(rs_array(to_integer(tail_ptr)).busy = '0')
+                then
+                    state_next <= full;
+                end if;
+
+                -- check if the reservation station is empty
+                if head_ptr = tail_ptr+1 and
+                   insert_i = '0' and
+                   rs_array(to_integer(tail_ptr)).busy = '0'
+                then
+                    state_next <= empty;
+                end if;
+
             when full =>
                 state_next <= full;
                 full_o <= '1';
                 head_ptr_next <= head_ptr;
+                tail_ptr_next <= tail_ptr;
                 rs_array_next <= rs_array;
                 exe_enable_o <= '0';
                 exe_rob_id_o <= (others => '-');
                 exe_source1_o <= (others => '-');
                 exe_source2_o <= (others => '-');
                 exe_operation_o <= (others => '-');
-                -- check if there is an instruction to be executed
+
                 if exe_stall_i = '0' then
-                    for i in n_entries_rs-1 downto 0 loop
-                        if rs_array(i).valid1 = '1' and rs_array(i).valid2 = '1' then
-                            exe_enable_o <= '1';
-                            exe_rob_id_o <= rs_array(i).rob_id;
-                            exe_source1_o <= rs_array(i).source1;
-                            exe_source2_o <= rs_array(i).source2;
-                            exe_operation_o <= rs_array(i).operation;
-                            execution_index := i;
-                            execution_found := true;
-                        end if;
-                    end loop;
+                    send_instruction_to_exe(
+                        rs_array => rs_array,
+                        tail_ptr => tail_ptr,
+                        exe_enable => exe_enable_o,
+                        exe_rob_id => exe_rob_id_o,
+                        exe_source1 => exe_source1_o,
+                        exe_source2 => exe_source2_o,
+                        exe_operation => exe_operation_o,
+                        rs_array_next => rs_array_next
+                    );
                 end if;
-                -- shift entries that come after the executed instruction
-                if execution_found then
-                    state_next <= idle;
-                    for i in 1 to n_entries_rs-1 loop
-                        if i > execution_index then
-                            rs_array_next(i-1) <= rs_array(i);
-                        end if;
-                    end loop;
-                end if;
-                -- check if cdb result can be used to update the reservation station
+
                 if insert_result_i = '1' then
-                    for i in 0 to n_entries_rs-1 loop
-                        if rs_array(i).valid1 = '0' and rs_array(i).reg1 = cdb_i.rob_index then
-                            if execution_found and i > execution_index then
-                                rs_array_next(i-1).source1 <= cdb_i.result;
-                                rs_array_next(i-1).valid1 <= '1';
-                            else
-                                rs_array_next(i).source1 <= cdb_i.result;
-                                rs_array_next(i).valid1 <= '1';
-                            end if;
-                        end if;
-                        if rs_array(i).valid2 = '0' and rs_array(i).reg2 = cdb_i.rob_index then
-                            if execution_found and i > execution_index then
-                                rs_array_next(i-1).source2 <= cdb_i.result;
-                                rs_array_next(i-1).valid2 <= '1';
-                            else
-                                rs_array_next(i).source2 <= cdb_i.result;
-                                rs_array_next(i).valid2 <= '1';
-                            end if;
-                        end if;
-                    end loop;
+                    insert_result(
+                        rs_array => rs_array,
+                        cdb => cdb_i,
+                        rs_array_next => rs_array_next
+                    );
                 end if;
+                
+                -- update tail_ptr
+                if rs_array(to_integer(tail_ptr)).busy = '0' then
+                    tail_ptr_next <= tail_ptr + 1;
+                    state_next <= idle;
+                end if;
+
             when others =>
                 state_next <= empty;
                 full_o <= '0';
-                head_ptr <= (others => '0');
-                for i in 0 to n_entries_rs-1 loop
-                    rs_array(i).rob_id <= (others => '-');
-                    rs_array(i).source1 <= (others => '-');
-                    rs_array(i).valid1 <= '0';
-                    rs_array(i).source2 <= (others => '-');
-                    rs_array(i).valid2 <= '0';
-                    rs_array(i).operation <= (others => '-');
-                    rs_array(i).reg1 <= (others => '-');
-                    rs_array(i).reg2 <= (others => '-');
-                end loop;
+                head_ptr_next <= (others => '0');
+                tail_ptr_next <= (others => '0');
+                rs_array_next <= rs_array;
                 exe_enable_o <= '0';
                 exe_rob_id_o <= (others => '-');
                 exe_source1_o <= (others => '-');
