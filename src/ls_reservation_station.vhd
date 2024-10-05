@@ -110,6 +110,9 @@ architecture beh of ls_reservation_station is
         signal tail_ptr: in unsigned(clog2(n_entries_rs)-1 downto 0);
         signal rs_array_next: out rs_array_t;
         signal mem_read_enable: out std_logic;
+        signal mem_rob_id: out std_logic_vector(clog2(n_entries_rob)-1 downto 0);
+        signal mem_format: out std_logic_vector(2 downto 0);
+        signal mem_address: out std_logic_vector(nbit-1 downto 0);
         signal selected_load_next: out unsigned(clog2(n_entries_rs)-1 downto 0);
         signal load_in_pipeline_next: out std_logic
     ) is
@@ -154,18 +157,23 @@ architecture beh of ls_reservation_station is
                     found := true;
                     rs_array_next(to_integer(tail_ptr + i)).wait_instr <= '1';
                     mem_read_enable <= '1';
+                    mem_rob_id_o <= rs_array(to_integer(tail_ptr + i)).rob_id;
+                    mem_format_o <= rs_array(to_integer(tail_ptr + i)).width_field & rs_array(to_integer(tail_ptr + i)).sign_field;
+                    mem_address_o <= rs_array(to_integer(tail_ptr + i)).source2;
                     selected_load_next <= tail_ptr + i;
                     load_in_pipeline_next <= '1';
                 end if;
             end if;
         end loop;
     end procedure send_load_to_mem;
-
     procedure send_store_to_lsu (
         signal rs_array: in rs_array_t;
         signal tail_ptr: in unsigned(clog2(n_entries_rs)-1 downto 0);
         signal rs_array_next: out rs_array_t;
         signal lsu_arbiter_store_enable: out std_logic;
+        signal lsu_arbiter_rob_id: out std_logic_vector(clog2(n_entries_rob)-1 downto 0);
+        signal lsu_arbiter_address: out std_logic_vector(nbit-1 downto 0);
+        signal lsu_arbiter_data: out std_logic_vector(nbit-1 downto 0);
         signal selected_store_next: out unsigned(clog2(n_entries_rs)-1 downto 0);
         signal store_in_pipeline_next: out std_logic
     ) is
@@ -185,13 +193,15 @@ architecture beh of ls_reservation_station is
             then
                 found := true;
                 lsu_arbiter_store_enable_o <= '1';
+                lsu_arbiter_rob_id_o <= rs_array(to_integer(tail_ptr + i)).rob_id;
+                lsu_arbiter_address_o <= rs_array(to_integer(tail_ptr + i)).source2;
+                lsu_arbiter_data_o <= rs_array(to_integer(tail_ptr + i)).source1;
                 selected_store_next <= tail_ptr + i;
                 rs_array_next(to_integer(tail_ptr + i)).wait_instr <= '1';
                 store_in_pipeline_next <= '1';
             end if;
         end loop;
     end procedure send_store_to_lsu;
-
     procedure remove_store_from_rs (
         signal rs_array: in rs_array_t;
         signal tail_ptr: in unsigned(clog2(n_entries_rs)-1 downto 0);
@@ -234,14 +244,6 @@ architecture beh of ls_reservation_station is
         end loop;
     end procedure insert_result;
 begin
-    mem_rob_id_o <= rs_array(to_integer(selected_load)).rob_id;
-    mem_format_o <= rs_array(to_integer(selected_load)).width_field & rs_array(to_integer(selected_load)).sign_field;
-    mem_address_o <= rs_array(to_integer(selected_load)).source2;
-
-    lsu_arbiter_rob_id_o <= rs_array(to_integer(selected_store)).rob_id;
-    lsu_arbiter_address_o <= rs_array(to_integer(selected_store)).source2;
-    lsu_arbiter_data_o <= rs_array(to_integer(selected_store)).source1;
-
     comb_proc: process(state, rs_array, head_ptr, tail_ptr, load_in_pipeline, store_in_pipeline, selected_load, selected_store, insert_i, rs_entry_i, lsu_arbiter_load_valid_i, lsu_arbiter_store_valid_i, insert_result_i, cdb_i)
         variable found: boolean := false;
         variable found_index: integer;
@@ -256,7 +258,16 @@ begin
                 load_in_pipeline_next <= '0';
                 store_in_pipeline_next <= '0';
                 mem_read_enable_o <= '0';
+                mem_rob_id_o <= rs_array(to_integer(selected_load)).rob_id;
+                mem_format_o <= rs_array(to_integer(selected_load)).width_field & rs_array(to_integer(selected_load)).sign_field;
+                mem_address_o <= rs_array(to_integer(selected_load)).source2;
                 lsu_arbiter_store_enable_o <= '0';
+                lsu_arbiter_rob_id_o <= rs_array(to_integer(selected_store)).rob_id;
+                lsu_arbiter_address_o <= rs_array(to_integer(selected_store)).source2;
+                lsu_arbiter_data_o <= rs_array(to_integer(selected_store)).source1;
+                selected_load_next <= selected_load;
+                selected_store_next <= selected_store;
+
                 if insert_i = '1' then
                     insert_instruction(
                         rs_entry => rs_entry_i,
@@ -275,7 +286,13 @@ begin
                 load_in_pipeline_next <= load_in_pipeline;
                 store_in_pipeline_next <= store_in_pipeline;
                 mem_read_enable_o <= '0';
+                mem_rob_id_o <= rs_array(to_integer(selected_load)).rob_id;
+                mem_format_o <= rs_array(to_integer(selected_load)).width_field & rs_array(to_integer(selected_load)).sign_field;
+                mem_address_o <= rs_array(to_integer(selected_load)).source2;
                 lsu_arbiter_store_enable_o <= '0';
+                lsu_arbiter_rob_id_o <= rs_array(to_integer(selected_store)).rob_id;
+                lsu_arbiter_address_o <= rs_array(to_integer(selected_store)).source2;
+                lsu_arbiter_data_o <= rs_array(to_integer(selected_store)).source1;
                 selected_load_next <= selected_load;
                 selected_store_next <= selected_store;
 
@@ -300,6 +317,9 @@ begin
                         tail_ptr => tail_ptr,
                         rs_array_next => rs_array_next,
                         mem_read_enable => mem_read_enable_o,
+                        mem_rob_id => mem_rob_id_o,
+                        mem_format => mem_format_o,
+                        mem_address => mem_address_o,
                         selected_load_next => selected_load_next,
                         load_in_pipeline_next => load_in_pipeline_next
                     );
@@ -325,6 +345,9 @@ begin
                         tail_ptr => tail_ptr,
                         rs_array_next => rs_array_next,
                         lsu_arbiter_store_enable => lsu_arbiter_store_enable_o,
+                        lsu_arbiter_rob_id => lsu_arbiter_rob_id_o,
+                        lsu_arbiter_address => lsu_arbiter_address_o,
+                        lsu_arbiter_data => lsu_arbiter_data_o,
                         selected_store_next => selected_store_next,
                         store_in_pipeline_next => store_in_pipeline_next
                     );
@@ -367,7 +390,13 @@ begin
                 load_in_pipeline_next <= load_in_pipeline;
                 store_in_pipeline_next <= store_in_pipeline;
                 mem_read_enable_o <= '0';
+                mem_rob_id_o <= rs_array(to_integer(selected_load)).rob_id;
+                mem_format_o <= rs_array(to_integer(selected_load)).width_field & rs_array(to_integer(selected_load)).sign_field;
+                mem_address_o <= rs_array(to_integer(selected_load)).source2;
                 lsu_arbiter_store_enable_o <= '0';
+                lsu_arbiter_rob_id_o <= rs_array(to_integer(selected_store)).rob_id;
+                lsu_arbiter_address_o <= rs_array(to_integer(selected_store)).source2;
+                lsu_arbiter_data_o <= rs_array(to_integer(selected_store)).source1;
                 selected_load_next <= selected_load;
                 selected_store_next <= selected_store;
                 
@@ -383,6 +412,9 @@ begin
                         tail_ptr => tail_ptr,
                         rs_array_next => rs_array_next,
                         mem_read_enable => mem_read_enable_o,
+                        mem_rob_id => mem_rob_id_o,
+                        mem_format => mem_format_o,
+                        mem_address => mem_address_o,
                         selected_load_next => selected_load_next,
                         load_in_pipeline_next => load_in_pipeline_next
                     );
@@ -408,6 +440,9 @@ begin
                         tail_ptr => tail_ptr,
                         rs_array_next => rs_array_next,
                         lsu_arbiter_store_enable => lsu_arbiter_store_enable_o,
+                        lsu_arbiter_rob_id => lsu_arbiter_rob_id_o,
+                        lsu_arbiter_address => lsu_arbiter_address_o,
+                        lsu_arbiter_data => lsu_arbiter_data_o,
                         selected_store_next => selected_store_next,
                         store_in_pipeline_next => store_in_pipeline_next
                     );
