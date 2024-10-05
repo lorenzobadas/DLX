@@ -64,6 +64,7 @@ package o3_pkg is
         operation: std_logic_vector(clog2(max_operations)-1 downto 0);
         reg1: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
         reg2: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
+        busy: std_logic;
     end record exe_rs_entry_t;
 
     type ls_rs_entry_t is record
@@ -72,14 +73,15 @@ package o3_pkg is
         valid1: std_logic;
         source2: std_logic_vector(nbit-1 downto 0);
         valid2: std_logic;
-        valid_address: std_logic;
         immediate: std_logic_vector(nbit-1 downto 0);
         operation: std_logic; -- load & store
-        width: std_logic_vector(1 downto 0); -- 0: byte, 1: half, 2: word
-        signed_flag: std_logic; -- 0: unsigned, 1: signed
+        width_field: std_logic_vector(1 downto 0); -- 0: byte, 1: half, 2: word
+        sign_field: std_logic; -- 0: signed, 1: unsigned
         reg1: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
         reg2: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
-        wait_commit: std_logic;
+        wait_instr: std_logic;
+        wait_store: std_logic;
+        busy: std_logic;
     end record ls_rs_entry_t;
 
     type reservation_station_t is (lsu, alu, mult, none);
