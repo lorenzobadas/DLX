@@ -274,24 +274,27 @@ begin
     end process seq_proc;
 end beh;
 
--- ISSUE OPERATION:
--- issue pointer is used to rename the register
--- issue pointer is incremented
--- if issue pointer is equal to commit pointer, then the ROB is full
+-- Memory Data Format for Load Instructions
+-- There are five possible data formats for load instructions:
+-- 1. Signed Byte
+-- 2. Unsigned Byte
+-- 3. Signed Halfword
+-- 4. Unsigned Halfword
+-- 5. Word
 
--- COMMIT OPERATION:
--- every cycle the instruction pointed by the commit pointer is checked
--- if the instruction is ready, then the result is committed
--- if the instruction is a branch and branch_taken flag is different from result, then ROB is emptied (issue_ptr = commit_ptr)
+-- Memory Data Format for Store Instructions
+-- There are three possible data formats for load instructions:
+-- 1. Byte
+-- 2. Halfword
+-- 3. Word
 
--- CDB OPERATION:
--- every cycle the CDB is checked
--- if the CDB has a result for an instruction in the ROB, then the result is written in the ROB and the instruction is marked as ready
+-- For both load and store instructions, the data format
+-- can be encoded in the same format field.
+-- 000: Signed Byte
+-- 001: Unsigned Byte
+-- 010: Signed Halfword
+-- 011: Unsigned Halfword
+-- 100: Word
 
--- branch_taken flag is set by the branch prediction unit (BPU) (or simply hardcoded if we are not implementing branch prediction)
--- result to which branch_taken is compared is the result of the branch instruction, so it comes from the ALU
-
--- just to be clear, jump instructions do not pose any problem, since they are not speculative
-
--- in case of misprediction the PC has to be updated and the pipeline has to be flushed
--- the BPU retrieves the result of the branch from the CDB (no direct connection with the ROB is needed)
+-- LSB specifies signed/unsigned
+-- Store instructions only need to check the two MSBs
