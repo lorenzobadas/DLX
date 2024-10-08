@@ -18,7 +18,7 @@ entity reorder_buffer is
         
         -- CDB Arbiter Interface
         insert_result_i: in std_logic; -- acknowledge not needed (if rob data is consistent)
-        cdb_i:           in  cdb_t;
+        cdb_i:           in cdb_t;
         
         -- Issue Interface
         insert_instruction_i: in  std_logic; -- acknowledge not needed because insertion prevented if full
@@ -64,12 +64,16 @@ architecture beh of reorder_buffer is
     end procedure insert_instruction;
 
     procedure insert_result (
-        signal cdb:      in cdb_t;
-        signal rob_fifo: out rob_array
+        signal rob_fifo:      in  rob_array;
+        signal cdb:           in  cdb_t;
+        signal rob_fifo_next: out rob_array
     ) is
     begin
-        rob_fifo(to_integer(unsigned(cdb.rob_index))).result <= cdb.result;
-        rob_fifo(to_integer(unsigned(cdb.rob_index))).ready  <= '1';
+        if rob_fifo(to_integer(unsigned(cdb.rob_index))).instruction_type = to_mem then
+            rob_fifo_next(to_integer(unsigned(cdb.rob_index))).destination <= cdb.destination;
+        end if;
+        rob_fifo_next(to_integer(unsigned(cdb.rob_index))).result <= cdb.result;
+        rob_fifo_next(to_integer(unsigned(cdb.rob_index))).ready  <= '1';
     end procedure insert_result;
 
     procedure commit_instruction (
@@ -168,7 +172,7 @@ begin
                 branch_result_o.valid         <= '0';
                 misprediction_o <= '0';
                 if insert_result_i = '1' then
-                    insert_result(cdb_i, rob_fifo_next);
+                    insert_result(rob_fifo, cdb_i, rob_fifo_next);
                 end if;
                 if insert_instruction_i = '1' then
                     insert_instruction(instruction_i, issue_ptr, rob_fifo_next, issue_ptr_next);
@@ -209,7 +213,7 @@ begin
                 branch_result_o.valid        <= '0';
                 misprediction_o <= '0';
                 if insert_result_i = '1' then
-                    insert_result(cdb_i, rob_fifo_next);
+                    insert_result(rob_fifo, cdb_i, rob_fifo_next);
                 end if;
                 if rob_fifo(to_integer(commit_ptr)).ready = '1' then
                     commit_instruction(

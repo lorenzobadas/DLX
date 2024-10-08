@@ -77,13 +77,15 @@ architecture test of tb_reorder_buffer is
     procedure insert_result_proc (
         insert_result: std_logic;
         result:        integer;
+        destination:   integer;
         rob_index:     integer;
-
+        
         signal insert_result_s: out std_logic;
         signal cdb:             out cdb_t
     ) is
     begin
         insert_result_s <= insert_result;
+        cdb.destination <= std_logic_vector(to_unsigned(destination, nbit));
         cdb.result <= std_logic_vector(to_unsigned(result, nbit));
         cdb.rob_index <= std_logic_vector(to_unsigned(rob_index, clog2(n_entries_rob)));
     end procedure insert_result_proc;
@@ -308,6 +310,7 @@ begin
         -- result branch (the result should not be written because rob index is over the issue pointer)
         insert_result_proc(
             insert_result   => '1',
+            destination     => 0,
             result          => 1,
             rob_index       => 3,
             insert_result_s => insert_result,
@@ -352,6 +355,7 @@ begin
         -- result branch
         insert_result_proc(
             insert_result   => '1',
+            destination     => 0,
             result          => 0,
             rob_index       => 3,
             insert_result_s => insert_result,
@@ -377,6 +381,7 @@ begin
         -- result to_rf
         insert_result_proc(
             insert_result   => '1',
+            destination     => 0,
             result          => 2,
             rob_index       => 2,
             insert_result_s => insert_result,
@@ -402,6 +407,7 @@ begin
         -- result to_mem
         insert_result_proc(
             insert_result   => '1',
+            destination     => 5,
             result          => 1,
             rob_index       => 1,
             insert_result_s => insert_result,
@@ -427,6 +433,7 @@ begin
         -- result jump
         insert_result_proc(
             insert_result   => '1',
+            destination     => 0,
             result          => 0,
             rob_index       => 0,
             insert_result_s => insert_result,
@@ -493,7 +500,7 @@ begin
         -- assert result
         check_results_proc(
             commit_branch => false,
-            destination => 1,
+            destination => 5,
             result => 1,
             branch_taken => '-',
             branch_addr => 0,
@@ -596,6 +603,7 @@ begin
         -- result load (it should be ignored because the rob is empty)
         insert_result_proc(
             insert_result   => '1',
+            destination     => 0,
             result          => 100,
             rob_index       => 0,
             insert_result_s => insert_result,
@@ -633,6 +641,7 @@ begin
         -- result load
         insert_result_proc(
             insert_result   => '1',
+            destination     => 0,
             result          => 4,
             rob_index       => 0,
             insert_result_s => insert_result,
@@ -789,6 +798,7 @@ begin
         -- result branch (will cause a misprediction)
         insert_result_proc(
             insert_result   => '1',
+            destination     => 0,
             result          => 1,
             rob_index       => 1,
             insert_result_s => insert_result,

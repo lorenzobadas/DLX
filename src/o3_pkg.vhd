@@ -24,6 +24,7 @@ package o3_pkg is
 
     type cdb_t is record
         result:       std_logic_vector(nbit-1 downto 0);
+        destination:  std_logic_vector(nbit-1 downto 0);
         rob_index:    std_logic_vector(clog2(n_entries_rob)-1 downto 0);
     end record cdb_t;
     
