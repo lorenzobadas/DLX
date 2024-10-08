@@ -4,4 +4,4 @@ add wave /tb_reorder_buffer/reset
 add wave /tb_reorder_buffer/dut/state
 add wave /tb_reorder_buffer/dut/rob_fifo
 add wave /*
-run 300 ns
+run -all
