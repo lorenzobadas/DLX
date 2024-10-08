@@ -83,6 +83,20 @@ package o3_pkg is
         wait_store: std_logic;
         busy: std_logic;
     end record ls_rs_entry_t;
+    
+    type ls_rs_instruction_data_t is record
+        rob_id: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
+        source1: std_logic_vector(nbit-1 downto 0);
+        valid1: std_logic;
+        source2: std_logic_vector(nbit-1 downto 0);
+        valid2: std_logic;
+        immediate: std_logic_vector(nbit-1 downto 0);
+        operation: std_logic; -- load & store
+        width_field: std_logic_vector(1 downto 0); -- 0: byte, 1: half, 2: word
+        sign_field: std_logic; -- 0: signed, 1: unsigned
+        reg1: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
+        reg2: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
+    end record ls_rs_instruction_data_t;
 
     type reservation_station_t is (lsu, alu, mult, none);
 end o3_pkg;

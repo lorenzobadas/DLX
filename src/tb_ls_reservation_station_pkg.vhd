@@ -20,7 +20,7 @@ package tb_ls_reservation_station_pkg is
         reg2: integer;
 
         signal insert_instruction_s: out std_logic;
-        signal rs_entry_s: out ls_rs_entry_t
+        signal rs_entry_s: out ls_rs_instruction_data_t
     );
     procedure clean_inputs_proc (
         signal flush_s: out std_logic;
@@ -55,7 +55,7 @@ package body tb_ls_reservation_station_pkg is
         reg2: integer;
 
         signal insert_instruction_s: out std_logic;
-        signal rs_entry_s: out ls_rs_entry_t
+        signal rs_entry_s: out ls_rs_instruction_data_t
     ) is
     begin
         insert_instruction_s <= '1';
@@ -70,9 +70,6 @@ package body tb_ls_reservation_station_pkg is
         rs_entry_s.sign_field <= sign_field;
         rs_entry_s.reg1 <= std_logic_vector(to_unsigned(reg1, clog2(n_entries_rob)));
         rs_entry_s.reg2 <= std_logic_vector(to_unsigned(reg2, clog2(n_entries_rob)));
-        rs_entry_s.wait_instr <= '0';
-        rs_entry_s.wait_store <= '0';
-        rs_entry_s.busy <= '1';
     end insert_instruction_proc;
 
     procedure clean_inputs_proc (

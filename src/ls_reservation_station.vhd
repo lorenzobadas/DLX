@@ -9,35 +9,35 @@ entity ls_reservation_station is
         nbit: integer := 32
     );
     port (
-        clk_i: in std_logic;
-        reset_i: in std_logic;
-        flush_i: in std_logic;
-        full_o: out std_logic;
+        clk_i:   in  std_logic;
+        reset_i: in  std_logic;
+        flush_i: in  std_logic;
+        full_o:  out std_logic;
 
         -- Issue Interface
-        insert_i: in std_logic;
-        rs_entry_i: in ls_rs_entry_t;
+        insert_i:   in std_logic;
+        rs_entry_i: in ls_rs_instruction_data_t;
 
         -- Memory Interface for Loads
         mem_read_enable_o: out std_logic;
-        mem_rob_id_o: out std_logic_vector(clog2(n_entries_rob)-1 downto 0);
-        mem_format_o: out std_logic_vector(2 downto 0);
-        mem_address_o: out std_logic_vector(nbit-1 downto 0);
+        mem_rob_id_o:      out std_logic_vector(clog2(n_entries_rob)-1 downto 0);
+        mem_format_o:      out std_logic_vector(2 downto 0);
+        mem_address_o:     out std_logic_vector(nbit-1 downto 0);
 
         -- LSU Arbiter Interface
-        lsu_arbiter_load_valid_i: in std_logic; -- when valid, the load has been performed and result sent to ROB, entry in RS can be freed
-        lsu_arbiter_store_valid_i: in std_logic; -- when valid, the store has been performed and result sent to ROB, entry in RS can be marked as wait_instr
+        lsu_arbiter_load_valid_i:   in  std_logic; -- when valid, the load has been performed and result sent to ROB, entry in RS can be freed
+        lsu_arbiter_store_valid_i:  in  std_logic; -- when valid, the store has been performed and result sent to ROB, entry in RS can be marked as wait_instr
         lsu_arbiter_store_enable_o: out std_logic; -- when asserted, the LSU arbiter samples the store data
-        lsu_arbiter_rob_id_o: out std_logic_vector(clog2(n_entries_rob)-1 downto 0);
-        lsu_arbiter_address_o: out std_logic_vector(nbit-1 downto 0); -- destination field
-        lsu_arbiter_data_o: out std_logic_vector(nbit-1 downto 0); -- result field
+        lsu_arbiter_rob_id_o:       out std_logic_vector(clog2(n_entries_rob)-1 downto 0);
+        lsu_arbiter_address_o:      out std_logic_vector(nbit-1 downto 0); -- destination field
+        lsu_arbiter_data_o:         out std_logic_vector(nbit-1 downto 0); -- result field
 
         -- ROB Interface
         rob_commit_store_i: in std_logic; -- when valid, the store has been committed, entry in RS can be freed
 
         -- CDB Interface
         insert_result_i: in std_logic;
-        cdb_i: in cdb_t
+        cdb_i:           in cdb_t
     );
 end entity;
 
@@ -59,8 +59,8 @@ architecture beh of ls_reservation_station is
         address2: in std_logic_vector(31 downto 0);
         width2:   in std_logic_vector(1 downto 0)
     ) return boolean is
-        variable width1_v: integer;
-        variable width2_v: integer;
+        variable width1_v:  integer;
+        variable width2_v:  integer;
         variable max_width: integer;
     begin
         -- assumes:
@@ -96,27 +96,40 @@ architecture beh of ls_reservation_station is
     end function overlap;
 
     procedure insert_instruction (
-        signal rs_entry: in ls_rs_entry_t;
-        signal head_ptr: in unsigned(clog2(n_entries_rs)-1 downto 0);
+        signal rs_entry:      in  ls_rs_instruction_data_t;
+        signal head_ptr:      in  unsigned(clog2(n_entries_rs)-1 downto 0);
         signal head_ptr_next: out unsigned(clog2(n_entries_rs)-1 downto 0);
         signal rs_array_next: out rs_array_t
     ) is
     begin
         head_ptr_next <= head_ptr + 1;
-        rs_array_next(to_integer(head_ptr)) <= rs_entry;
+        rs_array_next(to_integer(head_ptr)).rob_id      <= rs_entry.rob_id;
+        rs_array_next(to_integer(head_ptr)).source1     <= rs_entry.source1;
+        rs_array_next(to_integer(head_ptr)).valid1      <= rs_entry.valid1;
+        rs_array_next(to_integer(head_ptr)).source2     <= rs_entry.source2;
+        rs_array_next(to_integer(head_ptr)).valid2      <= rs_entry.valid2;
+        rs_array_next(to_integer(head_ptr)).immediate   <= rs_entry.immediate;
+        rs_array_next(to_integer(head_ptr)).operation   <= rs_entry.operation;
+        rs_array_next(to_integer(head_ptr)).width_field <= rs_entry.width_field;
+        rs_array_next(to_integer(head_ptr)).sign_field  <= rs_entry.sign_field;
+        rs_array_next(to_integer(head_ptr)).reg1        <= rs_entry.reg1;
+        rs_array_next(to_integer(head_ptr)).reg2        <= rs_entry.reg2;
+        rs_array_next(to_integer(head_ptr)).wait_instr  <= '0';
+        rs_array_next(to_integer(head_ptr)).wait_store  <= '0';
+        rs_array_next(to_integer(head_ptr)).busy        <= '1';
     end procedure insert_instruction;
     procedure send_load_to_mem (
-        signal rs_array: in rs_array_t;
-        signal tail_ptr: in unsigned(clog2(n_entries_rs)-1 downto 0);
-        signal rs_array_next: out rs_array_t;
-        signal mem_read_enable: out std_logic;
-        signal mem_rob_id: out std_logic_vector(clog2(n_entries_rob)-1 downto 0);
-        signal mem_format: out std_logic_vector(2 downto 0);
-        signal mem_address: out std_logic_vector(nbit-1 downto 0);
-        signal selected_load_next: out unsigned(clog2(n_entries_rs)-1 downto 0);
+        signal rs_array:              in  rs_array_t;
+        signal tail_ptr:              in  unsigned(clog2(n_entries_rs)-1 downto 0);
+        signal rs_array_next:         out rs_array_t;
+        signal mem_read_enable:       out std_logic;
+        signal mem_rob_id:            out std_logic_vector(clog2(n_entries_rob)-1 downto 0);
+        signal mem_format:            out std_logic_vector(2 downto 0);
+        signal mem_address:           out std_logic_vector(nbit-1 downto 0);
+        signal selected_load_next:    out unsigned(clog2(n_entries_rs)-1 downto 0);
         signal load_in_pipeline_next: out std_logic
     ) is
-        variable found: boolean;
+        variable found:      boolean;
         variable condition1: boolean;
         variable condition2: boolean;
         variable condition3: boolean;
@@ -132,7 +145,7 @@ architecture beh of ls_reservation_station is
                           rs_array(to_integer(tail_ptr + i)).valid2 = '1' and
                           rs_array(to_integer(tail_ptr + i)).busy = '1';
             if (not found) and
-                (rs_array(to_integer(tail_ptr + i)).operation = '0') and
+                (rs_array(to_integer(tail_ptr + i)).operation = '0')  and
                 (rs_array(to_integer(tail_ptr + i)).wait_instr = '0') and
                 (condition1)
             then
@@ -157,26 +170,26 @@ architecture beh of ls_reservation_station is
                 if condition2 and condition3 then
                     found := true;
                     rs_array_next(to_integer(tail_ptr + i)).wait_instr <= '1';
-                    mem_read_enable <= '1';
-                    mem_rob_id <= rs_array(to_integer(tail_ptr + i)).rob_id;
-                    mem_format <= rs_array(to_integer(tail_ptr + i)).width_field & rs_array(to_integer(tail_ptr + i)).sign_field;
-                    mem_address <= rs_array(to_integer(tail_ptr + i)).source2;
-                    selected_load_next <= tail_ptr + i;
+                    mem_read_enable       <= '1';
+                    mem_rob_id            <= rs_array(to_integer(tail_ptr + i)).rob_id;
+                    mem_format            <= rs_array(to_integer(tail_ptr + i)).width_field & rs_array(to_integer(tail_ptr + i)).sign_field;
+                    mem_address           <= rs_array(to_integer(tail_ptr + i)).source2;
+                    selected_load_next    <= tail_ptr + i;
                     load_in_pipeline_next <= '1';
                 end if;
             end if;
         end loop;
     end procedure send_load_to_mem;
     procedure send_store_to_lsu (
-        signal rs_array: in rs_array_t;
-        signal tail_ptr: in unsigned(clog2(n_entries_rs)-1 downto 0);
-        signal rs_array_next: out rs_array_t;
+        signal rs_array:                 in  rs_array_t;
+        signal tail_ptr:                 in  unsigned(clog2(n_entries_rs)-1 downto 0);
+        signal rs_array_next:            out rs_array_t;
         signal lsu_arbiter_store_enable: out std_logic;
-        signal lsu_arbiter_rob_id: out std_logic_vector(clog2(n_entries_rob)-1 downto 0);
-        signal lsu_arbiter_address: out std_logic_vector(nbit-1 downto 0);
-        signal lsu_arbiter_data: out std_logic_vector(nbit-1 downto 0);
-        signal selected_store_next: out unsigned(clog2(n_entries_rs)-1 downto 0);
-        signal store_in_pipeline_next: out std_logic
+        signal lsu_arbiter_rob_id:       out std_logic_vector(clog2(n_entries_rob)-1 downto 0);
+        signal lsu_arbiter_address:      out std_logic_vector(nbit-1 downto 0);
+        signal lsu_arbiter_data:         out std_logic_vector(nbit-1 downto 0);
+        signal selected_store_next:      out unsigned(clog2(n_entries_rs)-1 downto 0);
+        signal store_in_pipeline_next:   out std_logic
     ) is
         variable found: boolean;
     begin
@@ -187,25 +200,25 @@ architecture beh of ls_reservation_station is
         found := false;
         for i in 0 to n_entries_rs-1 loop
             if (not found) and
-                (rs_array(to_integer(tail_ptr + i)).operation = '1') and
-                (rs_array(to_integer(tail_ptr + i)).valid1 = '1') and
-                (rs_array(to_integer(tail_ptr + i)).valid2 = '1') and
+                (rs_array(to_integer(tail_ptr + i)).operation = '1')  and
+                (rs_array(to_integer(tail_ptr + i)).valid1 = '1')     and
+                (rs_array(to_integer(tail_ptr + i)).valid2 = '1')     and
                 (rs_array(to_integer(tail_ptr + i)).wait_instr = '0')
             then
                 found := true;
                 lsu_arbiter_store_enable <= '1';
-                lsu_arbiter_rob_id <= rs_array(to_integer(tail_ptr + i)).rob_id;
-                lsu_arbiter_address <= rs_array(to_integer(tail_ptr + i)).source2;
-                lsu_arbiter_data <= rs_array(to_integer(tail_ptr + i)).source1;
-                selected_store_next <= tail_ptr + i;
+                lsu_arbiter_rob_id       <= rs_array(to_integer(tail_ptr + i)).rob_id;
+                lsu_arbiter_address      <= rs_array(to_integer(tail_ptr + i)).source2;
+                lsu_arbiter_data         <= rs_array(to_integer(tail_ptr + i)).source1;
+                selected_store_next      <= tail_ptr + i;
                 rs_array_next(to_integer(tail_ptr + i)).wait_instr <= '1';
-                store_in_pipeline_next <= '1';
+                store_in_pipeline_next   <= '1';
             end if;
         end loop;
     end procedure send_store_to_lsu;
     procedure remove_store_from_rs (
-        signal rs_array: in rs_array_t;
-        signal tail_ptr: in unsigned(clog2(n_entries_rs)-1 downto 0);
+        signal rs_array:      in  rs_array_t;
+        signal tail_ptr:      in  unsigned(clog2(n_entries_rs)-1 downto 0);
         signal rs_array_next: out rs_array_t
     ) is
         variable found: boolean;
@@ -224,8 +237,8 @@ architecture beh of ls_reservation_station is
         end loop;
     end procedure remove_store_from_rs;
     procedure insert_result (
-        signal rs_array: in rs_array_t;
-        signal cdb: in cdb_t;
+        signal rs_array:      in  rs_array_t;
+        signal cdb:           in  cdb_t;
         signal rs_array_next: out rs_array_t
     ) is
     begin
@@ -234,46 +247,48 @@ architecture beh of ls_reservation_station is
                rs_array(i).reg1 = cdb.rob_index
             then
                 rs_array_next(i).source1 <= cdb.result;
-                rs_array_next(i).valid1 <= '1';
+                rs_array_next(i).valid1  <= '1';
             end if;
             if rs_array(i).valid2 = '0' and
                rs_array(i).reg2 = cdb.rob_index
             then
                 rs_array_next(i).source2 <= std_logic_vector(unsigned(cdb.result) + unsigned(rs_array(i).immediate));
-                rs_array_next(i).valid2 <= '1';
+                rs_array_next(i).valid2  <= '1';
             end if;
         end loop;
     end procedure insert_result;
 begin
     comb_proc: process(state, rs_array, head_ptr, tail_ptr, load_in_pipeline, store_in_pipeline, selected_load, selected_store, insert_i, rs_entry_i, lsu_arbiter_load_valid_i, lsu_arbiter_store_valid_i, rob_commit_store_i, insert_result_i, cdb_i)
-        variable found: boolean := false;
+        variable found:       boolean := false;
         variable found_index: integer;
-        variable condition1, condition2, condition3: boolean;
+        variable condition1:  boolean;
+        variable condition2:  boolean;
+        variable condition3:  boolean;
     begin
         case state is
             when empty =>
-                state_next <= empty;
-                rs_array_next <= rs_array;
-                full_o <= '0';
-                head_ptr_next <= head_ptr;
-                tail_ptr_next <= tail_ptr;
-                load_in_pipeline_next <= '0';
-                store_in_pipeline_next <= '0';
-                mem_read_enable_o <= '0';
-                mem_rob_id_o <= rs_array(to_integer(selected_load)).rob_id;
-                mem_format_o <= rs_array(to_integer(selected_load)).width_field & rs_array(to_integer(selected_load)).sign_field;
-                mem_address_o <= rs_array(to_integer(selected_load)).source2;
+                state_next                 <= empty;
+                rs_array_next              <= rs_array;
+                full_o                     <= '0';
+                head_ptr_next              <= head_ptr;
+                tail_ptr_next              <= tail_ptr;
+                load_in_pipeline_next      <= '0';
+                store_in_pipeline_next     <= '0';
+                mem_read_enable_o          <= '0';
+                mem_rob_id_o               <= rs_array(to_integer(selected_load)).rob_id;
+                mem_format_o               <= rs_array(to_integer(selected_load)).width_field & rs_array(to_integer(selected_load)).sign_field;
+                mem_address_o              <= rs_array(to_integer(selected_load)).source2;
                 lsu_arbiter_store_enable_o <= '0';
-                lsu_arbiter_rob_id_o <= rs_array(to_integer(selected_store)).rob_id;
-                lsu_arbiter_address_o <= rs_array(to_integer(selected_store)).source2;
-                lsu_arbiter_data_o <= rs_array(to_integer(selected_store)).source1;
-                selected_load_next <= selected_load;
-                selected_store_next <= selected_store;
+                lsu_arbiter_rob_id_o       <= rs_array(to_integer(selected_store)).rob_id;
+                lsu_arbiter_address_o      <= rs_array(to_integer(selected_store)).source2;
+                lsu_arbiter_data_o         <= rs_array(to_integer(selected_store)).source1;
+                selected_load_next         <= selected_load;
+                selected_store_next        <= selected_store;
 
                 if insert_i = '1' then
                     insert_instruction(
-                        rs_entry => rs_entry_i,
-                        head_ptr => head_ptr,
+                        rs_entry      => rs_entry_i,
+                        head_ptr      => head_ptr,
                         head_ptr_next => head_ptr_next,
                         rs_array_next => rs_array_next
                     );
@@ -281,28 +296,28 @@ begin
                 end if;
 
             when idle =>
-                state_next <= idle;
-                rs_array_next <= rs_array;
-                full_o <= '0';
-                head_ptr_next <= head_ptr;
-                tail_ptr_next <= tail_ptr;
-                load_in_pipeline_next <= load_in_pipeline;
-                store_in_pipeline_next <= store_in_pipeline;
-                mem_read_enable_o <= '0';
-                mem_rob_id_o <= rs_array(to_integer(selected_load)).rob_id;
-                mem_format_o <= rs_array(to_integer(selected_load)).width_field & rs_array(to_integer(selected_load)).sign_field;
-                mem_address_o <= rs_array(to_integer(selected_load)).source2;
+                state_next                 <= idle;
+                rs_array_next              <= rs_array;
+                full_o                     <= '0';
+                head_ptr_next              <= head_ptr;
+                tail_ptr_next              <= tail_ptr;
+                load_in_pipeline_next      <= load_in_pipeline;
+                store_in_pipeline_next     <= store_in_pipeline;
+                mem_read_enable_o          <= '0';
+                mem_rob_id_o               <= rs_array(to_integer(selected_load)).rob_id;
+                mem_format_o               <= rs_array(to_integer(selected_load)).width_field & rs_array(to_integer(selected_load)).sign_field;
+                mem_address_o              <= rs_array(to_integer(selected_load)).source2;
                 lsu_arbiter_store_enable_o <= '0';
-                lsu_arbiter_rob_id_o <= rs_array(to_integer(selected_store)).rob_id;
-                lsu_arbiter_address_o <= rs_array(to_integer(selected_store)).source2;
-                lsu_arbiter_data_o <= rs_array(to_integer(selected_store)).source1;
-                selected_load_next <= selected_load;
-                selected_store_next <= selected_store;
+                lsu_arbiter_rob_id_o       <= rs_array(to_integer(selected_store)).rob_id;
+                lsu_arbiter_address_o      <= rs_array(to_integer(selected_store)).source2;
+                lsu_arbiter_data_o         <= rs_array(to_integer(selected_store)).source1;
+                selected_load_next         <= selected_load;
+                selected_store_next        <= selected_store;
 
                 if insert_i = '1' then
                     insert_instruction(
-                        rs_entry => rs_entry_i,
-                        head_ptr => head_ptr,
+                        rs_entry      => rs_entry_i,
+                        head_ptr      => head_ptr,
                         head_ptr_next => head_ptr_next,
                         rs_array_next => rs_array_next
                     );
@@ -316,14 +331,14 @@ begin
 
                 if load_in_pipeline = '0' or lsu_arbiter_load_valid_i = '1'  then
                     send_load_to_mem(
-                        rs_array => rs_array,
-                        tail_ptr => tail_ptr,
-                        rs_array_next => rs_array_next,
-                        mem_read_enable => mem_read_enable_o,
-                        mem_rob_id => mem_rob_id_o,
-                        mem_format => mem_format_o,
-                        mem_address => mem_address_o,
-                        selected_load_next => selected_load_next,
+                        rs_array              => rs_array,
+                        tail_ptr              => tail_ptr,
+                        rs_array_next         => rs_array_next,
+                        mem_read_enable       => mem_read_enable_o,
+                        mem_rob_id            => mem_rob_id_o,
+                        mem_format            => mem_format_o,
+                        mem_address           => mem_address_o,
+                        selected_load_next    => selected_load_next,
                         load_in_pipeline_next => load_in_pipeline_next
                     );
                 end if;
@@ -331,8 +346,8 @@ begin
                 -- remove store instruction from RS
                 if rob_commit_store_i = '1' then
                     remove_store_from_rs(
-                        rs_array => rs_array,
-                        tail_ptr => tail_ptr,
+                        rs_array      => rs_array,
+                        tail_ptr      => tail_ptr,
                         rs_array_next => rs_array_next
                     );
                 end if;
@@ -344,22 +359,22 @@ begin
 
                 if store_in_pipeline = '0' or lsu_arbiter_store_valid_i = '1' then
                     send_store_to_lsu(
-                        rs_array => rs_array,
-                        tail_ptr => tail_ptr,
-                        rs_array_next => rs_array_next,
+                        rs_array                 => rs_array,
+                        tail_ptr                 => tail_ptr,
+                        rs_array_next            => rs_array_next,
                         lsu_arbiter_store_enable => lsu_arbiter_store_enable_o,
-                        lsu_arbiter_rob_id => lsu_arbiter_rob_id_o,
-                        lsu_arbiter_address => lsu_arbiter_address_o,
-                        lsu_arbiter_data => lsu_arbiter_data_o,
-                        selected_store_next => selected_store_next,
-                        store_in_pipeline_next => store_in_pipeline_next
+                        lsu_arbiter_rob_id       => lsu_arbiter_rob_id_o,
+                        lsu_arbiter_address      => lsu_arbiter_address_o,
+                        lsu_arbiter_data         => lsu_arbiter_data_o,
+                        selected_store_next      => selected_store_next,
+                        store_in_pipeline_next   => store_in_pipeline_next
                     );
                 end if;
 
                 if insert_result_i = '1' then
                     insert_result(
-                        rs_array => rs_array,
-                        cdb => cdb_i,
+                        rs_array      => rs_array,
+                        cdb           => cdb_i,
                         rs_array_next => rs_array_next
                     );
                 end if;
@@ -379,30 +394,30 @@ begin
 
                 -- check if empty
                 if head_ptr = tail_ptr+1 and
-                   insert_i = '0' and
+                   insert_i = '0'        and
                    rs_array(to_integer(tail_ptr)).busy = '0'
                 then
                     state_next <= empty;
                 end if;
 
             when full =>
-                state_next <= full;
-                rs_array_next <= rs_array;
-                full_o <= '1';
-                head_ptr_next <= head_ptr;
-                tail_ptr_next <= tail_ptr;
-                load_in_pipeline_next <= load_in_pipeline;
-                store_in_pipeline_next <= store_in_pipeline;
-                mem_read_enable_o <= '0';
-                mem_rob_id_o <= rs_array(to_integer(selected_load)).rob_id;
-                mem_format_o <= rs_array(to_integer(selected_load)).width_field & rs_array(to_integer(selected_load)).sign_field;
-                mem_address_o <= rs_array(to_integer(selected_load)).source2;
+                state_next                 <= full;
+                rs_array_next              <= rs_array;
+                full_o                     <= '1';
+                head_ptr_next              <= head_ptr;
+                tail_ptr_next              <= tail_ptr;
+                load_in_pipeline_next      <= load_in_pipeline;
+                store_in_pipeline_next     <= store_in_pipeline;
+                mem_read_enable_o          <= '0';
+                mem_rob_id_o               <= rs_array(to_integer(selected_load)).rob_id;
+                mem_format_o               <= rs_array(to_integer(selected_load)).width_field & rs_array(to_integer(selected_load)).sign_field;
+                mem_address_o              <= rs_array(to_integer(selected_load)).source2;
                 lsu_arbiter_store_enable_o <= '0';
-                lsu_arbiter_rob_id_o <= rs_array(to_integer(selected_store)).rob_id;
-                lsu_arbiter_address_o <= rs_array(to_integer(selected_store)).source2;
-                lsu_arbiter_data_o <= rs_array(to_integer(selected_store)).source1;
-                selected_load_next <= selected_load;
-                selected_store_next <= selected_store;
+                lsu_arbiter_rob_id_o       <= rs_array(to_integer(selected_store)).rob_id;
+                lsu_arbiter_address_o      <= rs_array(to_integer(selected_store)).source2;
+                lsu_arbiter_data_o         <= rs_array(to_integer(selected_store)).source1;
+                selected_load_next         <= selected_load;
+                selected_store_next        <= selected_store;
                 
                 -- remove load instruction from RS
                 if lsu_arbiter_load_valid_i = '1' then
@@ -412,14 +427,14 @@ begin
 
                 if load_in_pipeline = '0' or lsu_arbiter_load_valid_i = '1'  then
                     send_load_to_mem(
-                        rs_array => rs_array,
-                        tail_ptr => tail_ptr,
-                        rs_array_next => rs_array_next,
-                        mem_read_enable => mem_read_enable_o,
-                        mem_rob_id => mem_rob_id_o,
-                        mem_format => mem_format_o,
-                        mem_address => mem_address_o,
-                        selected_load_next => selected_load_next,
+                        rs_array              => rs_array,
+                        tail_ptr              => tail_ptr,
+                        rs_array_next         => rs_array_next,
+                        mem_read_enable       => mem_read_enable_o,
+                        mem_rob_id            => mem_rob_id_o,
+                        mem_format            => mem_format_o,
+                        mem_address           => mem_address_o,
+                        selected_load_next    => selected_load_next,
                         load_in_pipeline_next => load_in_pipeline_next
                     );
                 end if;
@@ -427,8 +442,8 @@ begin
                 -- remove store instruction from RS
                 if rob_commit_store_i = '1' then
                     remove_store_from_rs(
-                        rs_array => rs_array,
-                        tail_ptr => tail_ptr,
+                        rs_array      => rs_array,
+                        tail_ptr      => tail_ptr,
                         rs_array_next => rs_array_next
                     );
                 end if;
@@ -440,22 +455,22 @@ begin
 
                 if store_in_pipeline = '0' or lsu_arbiter_store_valid_i = '1' then
                     send_store_to_lsu(
-                        rs_array => rs_array,
-                        tail_ptr => tail_ptr,
-                        rs_array_next => rs_array_next,
+                        rs_array                 => rs_array,
+                        tail_ptr                 => tail_ptr,
+                        rs_array_next            => rs_array_next,
                         lsu_arbiter_store_enable => lsu_arbiter_store_enable_o,
-                        lsu_arbiter_rob_id => lsu_arbiter_rob_id_o,
-                        lsu_arbiter_address => lsu_arbiter_address_o,
-                        lsu_arbiter_data => lsu_arbiter_data_o,
-                        selected_store_next => selected_store_next,
-                        store_in_pipeline_next => store_in_pipeline_next
+                        lsu_arbiter_rob_id       => lsu_arbiter_rob_id_o,
+                        lsu_arbiter_address      => lsu_arbiter_address_o,
+                        lsu_arbiter_data         => lsu_arbiter_data_o,
+                        selected_store_next      => selected_store_next,
+                        store_in_pipeline_next   => store_in_pipeline_next
                     );
                 end if;
 
                 if insert_result_i = '1' then
                     insert_result(
-                        rs_array => rs_array,
-                        cdb => cdb_i,
+                        rs_array      => rs_array,
+                        cdb           => cdb_i,
                         rs_array_next => rs_array_next
                     );
                 end if;
@@ -463,83 +478,83 @@ begin
                 -- update tail_ptr
                 if rs_array(to_integer(tail_ptr)).busy = '0' then
                     tail_ptr_next <= tail_ptr + 1;
-                    state_next <= idle;
+                    state_next    <= idle;
                 end if;
 
             when others =>
-                state_next <= empty;
-                full_o <= '1';
-                head_ptr_next <= (others => '0');
-                tail_ptr_next <= (others => '0');
-                load_in_pipeline_next <= '0';
-                store_in_pipeline_next <= '0';
-                mem_read_enable_o <= '0';
+                state_next                 <= empty;
+                full_o                     <= '1';
+                head_ptr_next              <= (others => '0');
+                tail_ptr_next              <= (others => '0');
+                load_in_pipeline_next      <= '0';
+                store_in_pipeline_next     <= '0';
+                mem_read_enable_o          <= '0';
                 lsu_arbiter_store_enable_o <= '0';
-                selected_load_next <= (others => '0');
-                selected_store_next <= (others => '0');                
+                selected_load_next         <= (others => '0');
+                selected_store_next        <= (others => '0');                
         end case;
     end process comb_proc;
     
     seq_proc: process(clk_i, reset_i)
     begin
         if reset_i = '1' then
-            state <= empty;
+            state    <= empty;
             head_ptr <= (others => '0');
             tail_ptr <= (others => '0');
             for i in 0 to n_entries_rs-1 loop
-                rs_array(i).rob_id <= (others => '-');
-                rs_array(i).source1 <= (others => '-');
-                rs_array(i).valid1 <= '0';
-                rs_array(i).source2 <= (others => '-');
-                rs_array(i).valid2 <= '0';
-                rs_array(i).immediate <= (others => '-');
-                rs_array(i).operation <= '-';
+                rs_array(i).rob_id      <= (others => '-');
+                rs_array(i).source1     <= (others => '-');
+                rs_array(i).valid1      <= '0';
+                rs_array(i).source2     <= (others => '-');
+                rs_array(i).valid2      <= '0';
+                rs_array(i).immediate   <= (others => '-');
+                rs_array(i).operation   <= '-';
                 rs_array(i).width_field <= (others => '-');
-                rs_array(i).sign_field <= '-';
-                rs_array(i).reg1 <= (others => '-');
-                rs_array(i).reg2 <= (others => '-');
-                rs_array(i).wait_instr <= '0';
-                rs_array(i).wait_store <= '0';
-                rs_array(i).busy <= '0';
+                rs_array(i).sign_field  <= '-';
+                rs_array(i).reg1        <= (others => '-');
+                rs_array(i).reg2        <= (others => '-');
+                rs_array(i).wait_instr  <= '0';
+                rs_array(i).wait_store  <= '0';
+                rs_array(i).busy        <= '0';
             end loop;
-            load_in_pipeline <= '0';
+            load_in_pipeline  <= '0';
             store_in_pipeline <= '0';
-            selected_load <= (others => '0');
-            selected_store <= (others => '0');
+            selected_load     <= (others => '0');
+            selected_store    <= (others => '0');
         elsif rising_edge(clk_i) then
             if flush_i = '1' then
-                state <= empty;
+                state    <= empty;
                 head_ptr <= (others => '0');
                 tail_ptr <= (others => '0');
                 for i in 0 to n_entries_rs-1 loop
-                    rs_array(i).rob_id <= (others => '-');
-                    rs_array(i).source1 <= (others => '-');
-                    rs_array(i).valid1 <= '0';
-                    rs_array(i).source2 <= (others => '-');
-                    rs_array(i).valid2 <= '0';
-                    rs_array(i).immediate <= (others => '-');
-                    rs_array(i).operation <= '-';
+                    rs_array(i).rob_id      <= (others => '-');
+                    rs_array(i).source1     <= (others => '-');
+                    rs_array(i).valid1      <= '0';
+                    rs_array(i).source2     <= (others => '-');
+                    rs_array(i).valid2      <= '0';
+                    rs_array(i).immediate   <= (others => '-');
+                    rs_array(i).operation   <= '-';
                     rs_array(i).width_field <= (others => '-');
-                    rs_array(i).sign_field <= '-';
-                    rs_array(i).reg1 <= (others => '-');
-                    rs_array(i).reg2 <= (others => '-');
-                    rs_array(i).wait_instr <= '0';
-                    rs_array(i).wait_store <= '0';
-                    rs_array(i).busy <= '0';
+                    rs_array(i).sign_field  <= '-';
+                    rs_array(i).reg1        <= (others => '-');
+                    rs_array(i).reg2        <= (others => '-');
+                    rs_array(i).wait_instr  <= '0';
+                    rs_array(i).wait_store  <= '0';
+                    rs_array(i).busy        <= '0';
                 end loop;
-                load_in_pipeline <= '0';
+                load_in_pipeline  <= '0';
                 store_in_pipeline <= '0';
-                selected_load <= (others => '0');
-                selected_store <= (others => '0');
+                selected_load     <= (others => '0');
+                selected_store    <= (others => '0');
             else
-                state <= state_next;
-                head_ptr <= head_ptr_next;
-                tail_ptr <= tail_ptr_next;
-                rs_array <= rs_array_next;
-                load_in_pipeline <= load_in_pipeline_next;
+                state             <= state_next;
+                head_ptr          <= head_ptr_next;
+                tail_ptr          <= tail_ptr_next;
+                rs_array          <= rs_array_next;
+                load_in_pipeline  <= load_in_pipeline_next;
                 store_in_pipeline <= store_in_pipeline_next;
-                selected_load <= selected_load_next;
-                selected_store <= selected_store_next;
+                selected_load     <= selected_load_next;
+                selected_store    <= selected_store_next;
             end if;
         end if;
     end process seq_proc;
