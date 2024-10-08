@@ -99,11 +99,11 @@ architecture beh of ls_reservation_station is
         signal rs_entry: in ls_rs_entry_t;
         signal head_ptr: in unsigned(clog2(n_entries_rs)-1 downto 0);
         signal head_ptr_next: out unsigned(clog2(n_entries_rs)-1 downto 0);
-        signal rs_array_next: out rs_array_t;
+        signal rs_array_next: out rs_array_t
     ) is
     begin
         head_ptr_next <= head_ptr + 1;
-        rs_array_next(to_integer(head_ptr)) := rs_entry;
+        rs_array_next(to_integer(head_ptr)) <= rs_entry;
     end procedure insert_instruction;
     procedure send_load_to_mem (
         signal rs_array: in rs_array_t;
@@ -134,7 +134,8 @@ architecture beh of ls_reservation_station is
             if (not found) and
                 (rs_array(to_integer(tail_ptr + i)).operation = '0') and
                 (rs_array(to_integer(tail_ptr + i)).wait_instr = '0') and
-                (condition1) then
+                (condition1)
+            then
                 -- condition2: all previous store instructions have valid2 set
                 condition2 := true;
                 -- condition3: no address overlap with previous store instructions
@@ -157,9 +158,9 @@ architecture beh of ls_reservation_station is
                     found := true;
                     rs_array_next(to_integer(tail_ptr + i)).wait_instr <= '1';
                     mem_read_enable <= '1';
-                    mem_rob_id_o <= rs_array(to_integer(tail_ptr + i)).rob_id;
-                    mem_format_o <= rs_array(to_integer(tail_ptr + i)).width_field & rs_array(to_integer(tail_ptr + i)).sign_field;
-                    mem_address_o <= rs_array(to_integer(tail_ptr + i)).source2;
+                    mem_rob_id <= rs_array(to_integer(tail_ptr + i)).rob_id;
+                    mem_format <= rs_array(to_integer(tail_ptr + i)).width_field & rs_array(to_integer(tail_ptr + i)).sign_field;
+                    mem_address <= rs_array(to_integer(tail_ptr + i)).source2;
                     selected_load_next <= tail_ptr + i;
                     load_in_pipeline_next <= '1';
                 end if;
@@ -192,10 +193,10 @@ architecture beh of ls_reservation_station is
                 (rs_array(to_integer(tail_ptr + i)).wait_instr = '0')
             then
                 found := true;
-                lsu_arbiter_store_enable_o <= '1';
-                lsu_arbiter_rob_id_o <= rs_array(to_integer(tail_ptr + i)).rob_id;
-                lsu_arbiter_address_o <= rs_array(to_integer(tail_ptr + i)).source2;
-                lsu_arbiter_data_o <= rs_array(to_integer(tail_ptr + i)).source1;
+                lsu_arbiter_store_enable <= '1';
+                lsu_arbiter_rob_id <= rs_array(to_integer(tail_ptr + i)).rob_id;
+                lsu_arbiter_address <= rs_array(to_integer(tail_ptr + i)).source2;
+                lsu_arbiter_data <= rs_array(to_integer(tail_ptr + i)).source1;
                 selected_store_next <= tail_ptr + i;
                 rs_array_next(to_integer(tail_ptr + i)).wait_instr <= '1';
                 store_in_pipeline_next <= '1';
@@ -244,7 +245,7 @@ architecture beh of ls_reservation_station is
         end loop;
     end procedure insert_result;
 begin
-    comb_proc: process(state, rs_array, head_ptr, tail_ptr, load_in_pipeline, store_in_pipeline, selected_load, selected_store, insert_i, rs_entry_i, lsu_arbiter_load_valid_i, lsu_arbiter_store_valid_i, insert_result_i, cdb_i)
+    comb_proc: process(state, rs_array, head_ptr, tail_ptr, load_in_pipeline, store_in_pipeline, selected_load, selected_store, insert_i, rs_entry_i, lsu_arbiter_load_valid_i, lsu_arbiter_store_valid_i, rob_commit_store_i, insert_result_i, cdb_i)
         variable found: boolean := false;
         variable found_index: integer;
         variable condition1, condition2, condition3: boolean;
@@ -252,6 +253,7 @@ begin
         case state is
             when empty =>
                 state_next <= empty;
+                rs_array_next <= rs_array;
                 full_o <= '0';
                 head_ptr_next <= head_ptr;
                 tail_ptr_next <= tail_ptr;
@@ -280,6 +282,7 @@ begin
 
             when idle =>
                 state_next <= idle;
+                rs_array_next <= rs_array;
                 full_o <= '0';
                 head_ptr_next <= head_ptr;
                 tail_ptr_next <= tail_ptr;
@@ -336,7 +339,7 @@ begin
 
                 if lsu_arbiter_store_valid_i = '1' then
                     store_in_pipeline_next <= '0';
-                    rs_array(to_integer(selected_store)).wait_store <= '1';
+                    rs_array_next(to_integer(selected_store)).wait_store <= '1';
                 end if;
 
                 if store_in_pipeline = '0' or lsu_arbiter_store_valid_i = '1' then
@@ -384,6 +387,7 @@ begin
 
             when full =>
                 state_next <= full;
+                rs_array_next <= rs_array;
                 full_o <= '1';
                 head_ptr_next <= head_ptr;
                 tail_ptr_next <= tail_ptr;
@@ -431,7 +435,7 @@ begin
 
                 if lsu_arbiter_store_valid_i = '1' then
                     store_in_pipeline_next <= '0';
-                    rs_array(to_integer(selected_store)).wait_store <= '1';
+                    rs_array_next(to_integer(selected_store)).wait_store <= '1';
                 end if;
 
                 if store_in_pipeline = '0' or lsu_arbiter_store_valid_i = '1' then
@@ -478,7 +482,7 @@ begin
     
     seq_proc: process(clk_i, reset_i)
     begin
-        if reset = '1' then
+        if reset_i = '1' then
             state <= empty;
             head_ptr <= (others => '0');
             tail_ptr <= (others => '0');
