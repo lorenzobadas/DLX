@@ -18,6 +18,7 @@ package o3_pkg is
         instruction_address:  std_logic_vector(nbit-1 downto 0);
         branch_taken:         std_logic;
         destination:          std_logic_vector(nbit-1 downto 0); -- either register or memory address
+        width_field:          std_logic_vector(1 downto 0); -- 0: byte, 1: half, 2: word
         branch_taken_address: std_logic_vector(nbit-1 downto 0);
         bpu_history:          std_logic_vector(1 downto 0);
     end record rob_decoded_instruction_t;
@@ -52,6 +53,7 @@ package o3_pkg is
         instruction_type: commit_option_t;
         result:           std_logic_vector(nbit-1 downto 0);
         destination:      std_logic_vector(nbit-1 downto 0); -- either register or memory address
+        width_field:      std_logic_vector(1 downto 0); -- 0: byte, 1: half, 2: word
         branch_data:      branch_data_t;
         ready:            std_logic; -- ready if result is available
     end record rob_entry_t;

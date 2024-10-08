@@ -26,6 +26,7 @@ entity reorder_buffer is
 
         -- RF/MEM Interface
         destination_o:     out std_logic_vector(nbit-1 downto 0);
+        width_field_o:     out std_logic_vector(1 downto 0);
         result_o:          out std_logic_vector(nbit-1 downto 0);
         memory_we_o:       out std_logic;
         registerfile_we_o: out std_logic;
@@ -54,6 +55,7 @@ architecture beh of reorder_buffer is
         issue_ptr_next <= issue_ptr + 1;
         rob_fifo(to_integer(issue_ptr)).instruction_type <= instruction.instruction_type;
         rob_fifo(to_integer(issue_ptr)).destination      <= instruction.destination;
+        rob_fifo(to_integer(issue_ptr)).width_field      <= instruction.width_field;
         rob_fifo(to_integer(issue_ptr)).result           <= (others => '-');
         rob_fifo(to_integer(issue_ptr)).ready            <= '0';
         -- branch info
@@ -83,6 +85,7 @@ architecture beh of reorder_buffer is
         signal commit_ptr_next:    out unsigned(clog2(n_entries_rob)-1 downto 0);
         signal issue_ptr_next:     out unsigned(clog2(n_entries_rob)-1 downto 0);
         signal destination_o:      out std_logic_vector(nbit-1 downto 0);
+        signal width_field_o:      out std_logic_vector(1 downto 0);
         signal result_o:           out std_logic_vector(nbit-1 downto 0);
         signal memory_we_o:        out std_logic;
         signal registerfile_we_o:  out std_logic;
@@ -92,12 +95,14 @@ architecture beh of reorder_buffer is
     begin
         commit_ptr_next <= commit_ptr + 1;
         destination_o <= rob_fifo(to_integer(commit_ptr)).destination;
+        width_field_o <= rob_fifo(to_integer(commit_ptr)).width_field;
         result_o <= rob_fifo(to_integer(commit_ptr)).result;
         case rob_fifo(to_integer(commit_ptr)).instruction_type is
             when to_mem =>
                 if mem_hazard = '0' then
                     memory_we_o   <= '1';
                     destination_o <= rob_fifo(to_integer(commit_ptr)).destination;
+                    width_field_o <= rob_fifo(to_integer(commit_ptr)).width_field;
                     result_o      <= rob_fifo(to_integer(commit_ptr)).result;
                 else
                     commit_ptr_next <= commit_ptr;
@@ -142,6 +147,7 @@ begin
                 state_next <= empty;
                 full_o <= '0';
                 destination_o     <= (others => '-');
+                width_field_o     <= (others => '-');
                 result_o          <= (others => '-');
                 memory_we_o       <= '0';
                 registerfile_we_o <= '0';
@@ -162,6 +168,7 @@ begin
                 state_next <= idle;
                 full_o <= '0';
                 destination_o     <= (others => '-');
+                width_field_o     <= (others => '-');
                 result_o          <= (others => '-');
                 memory_we_o    <= '0';
                 registerfile_we_o    <= '0';
@@ -185,6 +192,7 @@ begin
                         commit_ptr_next => commit_ptr_next,
                         issue_ptr_next => issue_ptr_next,
                         destination_o => destination_o,
+                        width_field_o => width_field_o,
                         result_o => result_o,
                         memory_we_o => memory_we_o,
                         registerfile_we_o => registerfile_we_o,
@@ -204,6 +212,7 @@ begin
                 state_next      <= full;
                 full_o          <= '1';
                 destination_o     <= (others => '-');
+                width_field_o     <= (others => '-');
                 result_o          <= (others => '-');
                 memory_we_o    <= '0';
                 registerfile_we_o    <= '0';
@@ -223,6 +232,7 @@ begin
                         commit_ptr_next => commit_ptr_next,
                         issue_ptr_next => issue_ptr_next,
                         destination_o => destination_o,
+                        width_field_o => width_field_o,
                         result_o => result_o,
                         memory_we_o => memory_we_o,
                         registerfile_we_o => registerfile_we_o,
@@ -242,6 +252,7 @@ begin
                 state_next <= empty;
                 full_o <= '0';
                 destination_o     <= (others => '-');
+                width_field_o     <= (others => '-');
                 result_o          <= (others => '-');
                 memory_we_o    <= '0';
                 registerfile_we_o    <= '0';
