@@ -18,34 +18,35 @@ entity reorder_buffer is
         
         -- CDB Arbiter Interface
         insert_result_i: in std_logic; -- acknowledge not needed (if rob data is consistent)
-        cdb_i:           in  cdb_t;
+        cdb_i:           in cdb_t;
         
         -- Issue Interface
         insert_instruction_i: in  std_logic; -- acknowledge not needed because insertion prevented if full
-        instruction_i:        in  rob_decoded_instruction;
+        instruction_i:        in  rob_decoded_instruction_t;
 
         -- RF/MEM Interface
         destination_o:     out std_logic_vector(nbit-1 downto 0);
+        width_field_o:     out std_logic_vector(1 downto 0);
         result_o:          out std_logic_vector(nbit-1 downto 0);
         memory_we_o:       out std_logic;
         registerfile_we_o: out std_logic;
 
         -- Branch Unit Interface
-        branch_result_o:    out rob_branch_result;
+        branch_result_o:    out rob_branch_result_t;
         misprediction_o:    out std_logic
     );
 end entity;
 
 architecture beh of reorder_buffer is
     type state_t is (empty, idle, full);
-    type rob_array is array(0 to n_entries_rob-1) of rob_entry;
+    type rob_array is array(0 to n_entries_rob-1) of rob_entry_t;
     signal state, state_next:           state_t;
     signal rob_fifo, rob_fifo_next:     rob_array;
     signal commit_ptr, commit_ptr_next: unsigned(clog2(n_entries_rob)-1 downto 0);
     signal issue_ptr, issue_ptr_next:   unsigned(clog2(n_entries_rob)-1 downto 0);
 
     procedure insert_instruction (
-        signal instruction:        in  rob_decoded_instruction;
+        signal instruction:        in  rob_decoded_instruction_t;
         signal issue_ptr:          in  unsigned;
         signal rob_fifo:           out rob_array;
         signal issue_ptr_next:     out unsigned
@@ -54,6 +55,7 @@ architecture beh of reorder_buffer is
         issue_ptr_next <= issue_ptr + 1;
         rob_fifo(to_integer(issue_ptr)).instruction_type <= instruction.instruction_type;
         rob_fifo(to_integer(issue_ptr)).destination      <= instruction.destination;
+        rob_fifo(to_integer(issue_ptr)).width_field      <= instruction.width_field;
         rob_fifo(to_integer(issue_ptr)).result           <= (others => '-');
         rob_fifo(to_integer(issue_ptr)).ready            <= '0';
         -- branch info
@@ -64,12 +66,16 @@ architecture beh of reorder_buffer is
     end procedure insert_instruction;
 
     procedure insert_result (
-        signal cdb:      in cdb_t;
-        signal rob_fifo: out rob_array
+        signal rob_fifo:      in  rob_array;
+        signal cdb:           in  cdb_t;
+        signal rob_fifo_next: out rob_array
     ) is
     begin
-        rob_fifo(to_integer(unsigned(cdb.rob_index))).result <= cdb.result;
-        rob_fifo(to_integer(unsigned(cdb.rob_index))).ready  <= '1';
+        if rob_fifo(to_integer(unsigned(cdb.rob_index))).instruction_type = to_mem then
+            rob_fifo_next(to_integer(unsigned(cdb.rob_index))).destination <= cdb.destination;
+        end if;
+        rob_fifo_next(to_integer(unsigned(cdb.rob_index))).result <= cdb.result;
+        rob_fifo_next(to_integer(unsigned(cdb.rob_index))).ready  <= '1';
     end procedure insert_result;
 
     procedure commit_instruction (
@@ -79,30 +85,29 @@ architecture beh of reorder_buffer is
         signal commit_ptr_next:    out unsigned(clog2(n_entries_rob)-1 downto 0);
         signal issue_ptr_next:     out unsigned(clog2(n_entries_rob)-1 downto 0);
         signal destination_o:      out std_logic_vector(nbit-1 downto 0);
+        signal width_field_o:      out std_logic_vector(1 downto 0);
         signal result_o:           out std_logic_vector(nbit-1 downto 0);
         signal memory_we_o:        out std_logic;
         signal registerfile_we_o:  out std_logic;
-        signal branch_result_o:    out rob_branch_result;
+        signal branch_result_o:    out rob_branch_result_t;
         signal misprediction_o:    out std_logic
     ) is
     begin
         commit_ptr_next <= commit_ptr + 1;
         destination_o <= rob_fifo(to_integer(commit_ptr)).destination;
+        width_field_o <= rob_fifo(to_integer(commit_ptr)).width_field;
         result_o <= rob_fifo(to_integer(commit_ptr)).result;
         case rob_fifo(to_integer(commit_ptr)).instruction_type is
-            when store =>
+            when to_mem =>
                 if mem_hazard = '0' then
                     memory_we_o   <= '1';
                     destination_o <= rob_fifo(to_integer(commit_ptr)).destination;
+                    width_field_o <= rob_fifo(to_integer(commit_ptr)).width_field;
                     result_o      <= rob_fifo(to_integer(commit_ptr)).result;
                 else
                     commit_ptr_next <= commit_ptr;
                 end if;
-            when to_reg =>
-                registerfile_we_o <= '1';
-                destination_o     <= rob_fifo(to_integer(commit_ptr)).destination;
-                result_o          <= rob_fifo(to_integer(commit_ptr)).result;
-            when load => -- same as to_reg since a load writes to a register
+            when to_rf =>
                 registerfile_we_o <= '1';
                 destination_o     <= rob_fifo(to_integer(commit_ptr)).destination;
                 result_o          <= rob_fifo(to_integer(commit_ptr)).result;
@@ -129,7 +134,7 @@ begin
         variable push, pop, misp, test_full, test_empty: boolean;
     begin
         push       := insert_instruction_i = '1';
-        pop        := rob_fifo(to_integer(commit_ptr)).ready = '1' and not(rob_fifo(to_integer(commit_ptr)).instruction_type = store and mem_hazard_i = '1');
+        pop        := rob_fifo(to_integer(commit_ptr)).ready = '1' and not(rob_fifo(to_integer(commit_ptr)).instruction_type = to_mem and mem_hazard_i = '1');
         misp       := pop and (rob_fifo(to_integer(commit_ptr)).instruction_type = branch) and (rob_fifo(to_integer(commit_ptr)).branch_data.branch_taken /= rob_fifo(to_integer(commit_ptr)).result(0));
         test_full  := issue_ptr = commit_ptr-1;
         test_empty := issue_ptr = commit_ptr+1;
@@ -142,6 +147,7 @@ begin
                 state_next <= empty;
                 full_o <= '0';
                 destination_o     <= (others => '-');
+                width_field_o     <= (others => '-');
                 result_o          <= (others => '-');
                 memory_we_o       <= '0';
                 registerfile_we_o <= '0';
@@ -162,6 +168,7 @@ begin
                 state_next <= idle;
                 full_o <= '0';
                 destination_o     <= (others => '-');
+                width_field_o     <= (others => '-');
                 result_o          <= (others => '-');
                 memory_we_o    <= '0';
                 registerfile_we_o    <= '0';
@@ -172,7 +179,7 @@ begin
                 branch_result_o.valid         <= '0';
                 misprediction_o <= '0';
                 if insert_result_i = '1' then
-                    insert_result(cdb_i, rob_fifo_next);
+                    insert_result(rob_fifo, cdb_i, rob_fifo_next);
                 end if;
                 if insert_instruction_i = '1' then
                     insert_instruction(instruction_i, issue_ptr, rob_fifo_next, issue_ptr_next);
@@ -185,6 +192,7 @@ begin
                         commit_ptr_next => commit_ptr_next,
                         issue_ptr_next => issue_ptr_next,
                         destination_o => destination_o,
+                        width_field_o => width_field_o,
                         result_o => result_o,
                         memory_we_o => memory_we_o,
                         registerfile_we_o => registerfile_we_o,
@@ -204,6 +212,7 @@ begin
                 state_next      <= full;
                 full_o          <= '1';
                 destination_o     <= (others => '-');
+                width_field_o     <= (others => '-');
                 result_o          <= (others => '-');
                 memory_we_o    <= '0';
                 registerfile_we_o    <= '0';
@@ -213,7 +222,7 @@ begin
                 branch_result_o.valid        <= '0';
                 misprediction_o <= '0';
                 if insert_result_i = '1' then
-                    insert_result(cdb_i, rob_fifo_next);
+                    insert_result(rob_fifo, cdb_i, rob_fifo_next);
                 end if;
                 if rob_fifo(to_integer(commit_ptr)).ready = '1' then
                     commit_instruction(
@@ -223,6 +232,7 @@ begin
                         commit_ptr_next => commit_ptr_next,
                         issue_ptr_next => issue_ptr_next,
                         destination_o => destination_o,
+                        width_field_o => width_field_o,
                         result_o => result_o,
                         memory_we_o => memory_we_o,
                         registerfile_we_o => registerfile_we_o,
@@ -242,6 +252,7 @@ begin
                 state_next <= empty;
                 full_o <= '0';
                 destination_o     <= (others => '-');
+                width_field_o     <= (others => '-');
                 result_o          <= (others => '-');
                 memory_we_o    <= '0';
                 registerfile_we_o    <= '0';
@@ -260,7 +271,7 @@ begin
             commit_ptr <= (others => '0');
             issue_ptr <= (others => '0');
             for i in 0 to n_entries_rob-1 loop
-                rob_fifo(i).instruction_type <= to_reg;
+                rob_fifo(i).instruction_type <= to_rf;
                 rob_fifo(i).result           <= (others => '-');
                 rob_fifo(i).destination      <= (others => '-');
                 rob_fifo(i).branch_data.branch_taken   <= '-';
@@ -278,24 +289,27 @@ begin
     end process seq_proc;
 end beh;
 
--- ISSUE OPERATION:
--- issue pointer is used to rename the register
--- issue pointer is incremented
--- if issue pointer is equal to commit pointer, then the ROB is full
+-- Memory Data Format for Load Instructions
+-- There are five possible data formats for load instructions:
+-- 1. Signed Byte
+-- 2. Unsigned Byte
+-- 3. Signed Halfword
+-- 4. Unsigned Halfword
+-- 5. Word
 
--- COMMIT OPERATION:
--- every cycle the instruction pointed by the commit pointer is checked
--- if the instruction is ready, then the result is committed
--- if the instruction is a branch and branch_taken flag is different from result, then ROB is emptied (issue_ptr = commit_ptr)
+-- Memory Data Format for Store Instructions
+-- There are three possible data formats for load instructions:
+-- 1. Byte
+-- 2. Halfword
+-- 3. Word
 
--- CDB OPERATION:
--- every cycle the CDB is checked
--- if the CDB has a result for an instruction in the ROB, then the result is written in the ROB and the instruction is marked as ready
+-- For both load and store instructions, the data format
+-- can be encoded in the same format field.
+-- 000: Signed Byte
+-- 001: Unsigned Byte
+-- 010: Signed Halfword
+-- 011: Unsigned Halfword
+-- 100: Word
 
--- branch_taken flag is set by the branch prediction unit (BPU) (or simply hardcoded if we are not implementing branch prediction)
--- result to which branch_taken is compared is the result of the branch instruction, so it comes from the ALU
-
--- just to be clear, jump instructions do not pose any problem, since they are not speculative
-
--- in case of misprediction the PC has to be updated and the pipeline has to be flushed
--- the BPU retrieves the result of the branch from the CDB (no direct connection with the ROB is needed)
+-- LSB specifies signed/unsigned
+-- Store instructions only need to check the two MSBs
