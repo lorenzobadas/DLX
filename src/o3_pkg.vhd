@@ -51,4 +51,26 @@ package o3_pkg is
         branch_data:      branch_data_t;
         ready:            std_logic; -- ready if result is available
     end record rob_entry;
+
+    type alu_op_t is (
+        alu_add,
+        alu_sub,
+        alu_and, 
+        alu_or, 
+        alu_xor, 
+        alu_sll, 
+        alu_srl, 
+        alu_sne, 
+        alu_sle,   
+        alu_sge, 
+        alu_sra, 
+        alu_seq, 
+        alu_slt, 
+        alu_sgt, 
+        alu_sltu, 
+        alu_sgeu, 
+        alu_sleu, 
+        alu_sgeu
+    );
+
 end o3_pkg;
