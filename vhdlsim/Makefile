@@ -97,11 +97,13 @@ exe-reservation-station-tb: clean
 	cp ../src/utils_pkg.vhd .
 	cp ../src/o3_pkg.vhd .
 	cp ../src/exe_reservation_station.vhd .
+	cp ../tb/tb_exe_reservation_station_pkg.vhd .
 	cp ../tb/tb_exe_reservation_station.vhd .
 
 	vcom utils_pkg.vhd
 	vcom o3_pkg.vhd
 	vcom exe_reservation_station.vhd
+	vcom tb_exe_reservation_station_pkg.vhd
 	vcom tb_exe_reservation_station.vhd
 
 	vsim \

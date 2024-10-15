@@ -16,7 +16,7 @@ entity exe_reservation_station is
 
         -- Issue Interface
         insert_i:   in std_logic;
-        rs_entry_i: in exe_rs_entry_t;
+        rs_entry_i: in exe_rs_instruction_data_t;
         
         -- Execution unit interface
         exe_stall_i:     in  std_logic;
@@ -41,13 +41,22 @@ architecture beh of exe_reservation_station is
     signal tail_ptr, tail_ptr_next: unsigned(clog2(n_entries_rs)-1 downto 0);
 
     procedure insert_instruction (
-        signal rs_entry:      in  exe_rs_entry_t;
+        signal rs_entry:      in  exe_rs_instruction_data_t;
         signal head_ptr:      in  unsigned(clog2(n_entries_rs)-1 downto 0);
         signal rs_array_next: out rs_array_t;
         signal head_ptr_next: out unsigned(clog2(n_entries_rs)-1 downto 0)
     ) is
     begin
-        rs_array_next(to_integer(head_ptr)) <= rs_entry;
+        rs_array_next(to_integer(head_ptr)).rob_id <= rs_entry.rob_id;
+        rs_array_next(to_integer(head_ptr)).source1 <= rs_entry.source1;
+        rs_array_next(to_integer(head_ptr)).valid1 <= rs_entry.valid1;
+        rs_array_next(to_integer(head_ptr)).source2 <= rs_entry.source2;
+        rs_array_next(to_integer(head_ptr)).valid2 <= rs_entry.valid2;
+        rs_array_next(to_integer(head_ptr)).operation <= rs_entry.operation;
+        rs_array_next(to_integer(head_ptr)).reg1 <= rs_entry.reg1;
+        rs_array_next(to_integer(head_ptr)).reg2 <= rs_entry.reg2;
+        rs_array_next(to_integer(head_ptr)).busy <= '1';
+        
         head_ptr_next <= head_ptr + 1;
     end procedure insert_instruction;
 
@@ -120,8 +129,12 @@ begin
                 exe_operation_o <= (others => '-');
                 if insert_i = '1' then
                     state_next    <= idle;
-                    head_ptr_next <= head_ptr + 1;
-                    rs_array_next(to_integer(head_ptr)) <= rs_entry_i;
+                    insert_instruction(
+                        rs_entry      => rs_entry_i,
+                        head_ptr      => head_ptr,
+                        rs_array_next => rs_array_next,
+                        head_ptr_next => head_ptr_next
+                    );
                 end if;
             when idle =>
                 state_next      <= idle;
@@ -244,6 +257,7 @@ begin
         if reset_i = '1' then
             state    <= empty;
             head_ptr <= (others => '0');
+            tail_ptr <= (others => '0');
             for i in 0 to n_entries_rs-1 loop
                 rs_array(i).rob_id    <= (others => '-');
                 rs_array(i).source1   <= (others => '-');
@@ -258,6 +272,7 @@ begin
             if flush_i = '1' then
                 state    <= empty;
                 head_ptr <= (others => '0');
+                tail_ptr <= (others => '0');
                 for i in 0 to n_entries_rs-1 loop
                     rs_array(i).rob_id    <= (others => '-');
                     rs_array(i).source1   <= (others => '-');
@@ -271,6 +286,7 @@ begin
             else
                 state    <= state_next;
                 head_ptr <= head_ptr_next;
+                tail_ptr <= tail_ptr_next;
                 rs_array <= rs_array_next;
             end if;
         end if;
