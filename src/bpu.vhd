@@ -4,6 +4,9 @@ use ieee.numeric_std.all;
 use work.utils_pkg.all;
 use work.o3_pkg.all;
 
+-- Branch Prediction Unit
+-- 2,2 Predictor with saturating counters
+-- Non-speculative updating (consequently no repair mechanism)
 entity bpu is
     generic (
         n_entries_bpu: integer := 64
