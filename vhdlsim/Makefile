@@ -1,11 +1,9 @@
-.PHONY: all
-
 t2-shifter-tb: clean
 	cp ../src/utils_pkg.vhd .
-	cp ../src/t2_shifter_levels_1_2.vhd .
-	cp ../src/t2_shifter_level_3.vhd .
-	cp ../src/t2_shifter.vhd .
-	cp ../tb/tb_t2_shifter.vhd .
+	cp ../src/t2_shifter/t2_shifter_levels_1_2.vhd .
+	cp ../src/t2_shifter/t2_shifter_level_3.vhd .
+	cp ../src/t2_shifter/t2_shifter.vhd .
+	cp ../src/tb/tb_t2_shifter.vhd .
 
 	vcom utils_pkg.vhd
 	vcom t2_shifter_levels_1_2.vhd
@@ -17,17 +15,17 @@ t2-shifter-tb: clean
 		-do ../scripts/tb_t2_shifter.do
 
 p4-adder-tb: clean
-	cp ../src/g_p.vhd .
-	cp ../src/g_g.vhd .
-	cp ../src/g_pg.vhd .
 	cp ../src/utils_pkg.vhd .
-	cp ../src/carry_generator.vhd .
-	cp ../src/rca.vhd .
-	cp ../src/carry_select_adder.vhd .
-	cp ../src/sum_generator.vhd .
-	cp ../src/xor_layer.vhd .
-	cp ../src/p4_adder.vhd .
-	cp ../tb/tb_p4_adder.vhd .
+	cp ../src/p4_adder/g_p.vhd .
+	cp ../src/p4_adder/g_g.vhd .
+	cp ../src/p4_adder/g_pg.vhd .
+	cp ../src/p4_adder/carry_generator.vhd .
+	cp ../src/p4_adder/rca.vhd .
+	cp ../src/p4_adder/carry_select_adder.vhd .
+	cp ../src/p4_adder/sum_generator.vhd .
+	cp ../src/p4_adder/xor_layer.vhd .
+	cp ../src/p4_adder/p4_adder.vhd .
+	cp ../src/tb/tb_p4_adder.vhd .
 
 	vcom g_p.vhd
 	vcom g_g.vhd
@@ -45,20 +43,20 @@ p4-adder-tb: clean
 		-do ../scripts/tb_p4_adder.do
 
 boothmul-tb: clean
-	cp ../src/g_p.vhd .
-	cp ../src/g_g.vhd .
-	cp ../src/g_pg.vhd .
 	cp ../src/utils_pkg.vhd .
-	cp ../src/carry_generator.vhd .
-	cp ../src/rca.vhd .
-	cp ../src/carry_select_adder.vhd .
-	cp ../src/sum_generator.vhd .
-	cp ../src/xor_layer.vhd .
-	cp ../src/p4_adder.vhd .
-	cp ../src/shifter_left.vhd .
-	cp ../src/mux_mul.vhd .
-	cp ../src/boothmul.vhd .
-	cp ../tb/tb_boothmul.vhd .
+	cp ../src/p4_adder/g_p.vhd .
+	cp ../src/p4_adder/g_g.vhd .
+	cp ../src/p4_adder/g_pg.vhd .
+	cp ../src/p4_adder/carry_generator.vhd .
+	cp ../src/p4_adder/rca.vhd .
+	cp ../src/p4_adder/carry_select_adder.vhd .
+	cp ../src/p4_adder/sum_generator.vhd .
+	cp ../src/p4_adder/xor_layer.vhd .
+	cp ../src/p4_adder/p4_adder.vhd .
+	cp ../src/multiplier/shifter_left.vhd .
+	cp ../src/multiplier/mux_mul.vhd .
+	cp ../src/multiplier/boothmul.vhd .
+	cp ../src/tb/tb_boothmul.vhd .
 
 	vcom g_p.vhd
 	vcom g_g.vhd
@@ -81,8 +79,8 @@ boothmul-tb: clean
 reorder-buffer-tb: clean
 	cp ../src/utils_pkg.vhd .
 	cp ../src/o3_pkg.vhd .
-	cp ../src/reorder_buffer.vhd .
-	cp ../tb/tb_reorder_buffer.vhd .
+	cp ../src/reorder_buffer/reorder_buffer.vhd .
+	cp ../src/tb/tb_reorder_buffer.vhd .
 
 	vcom utils_pkg.vhd
 	vcom o3_pkg.vhd
@@ -95,9 +93,9 @@ reorder-buffer-tb: clean
 exe-reservation-station-tb: clean
 	cp ../src/utils_pkg.vhd .
 	cp ../src/o3_pkg.vhd .
-	cp ../src/exe_reservation_station.vhd .
-	cp ../tb/tb_exe_reservation_station_pkg.vhd .
-	cp ../tb/tb_exe_reservation_station.vhd .
+	cp ../src/exe_reservation_station/exe_reservation_station.vhd .
+	cp ../src/tb/tb_exe_reservation_station_pkg.vhd .
+	cp ../src/tb/tb_exe_reservation_station.vhd .
 
 	vcom utils_pkg.vhd
 	vcom o3_pkg.vhd
@@ -111,9 +109,9 @@ exe-reservation-station-tb: clean
 ls-reservation-station-tb: clean
 	cp ../src/utils_pkg.vhd .
 	cp ../src/o3_pkg.vhd .
-	cp ../src/ls_reservation_station.vhd .
-	cp ../tb/tb_ls_reservation_station_pkg.vhd .
-	cp ../tb/tb_ls_reservation_station.vhd .
+	cp ../src/load_store_unit/ls_reservation_station.vhd .
+	cp ../src/tb/tb_ls_reservation_station_pkg.vhd .
+	cp ../src/tb/tb_ls_reservation_station.vhd .
 
 	vcom utils_pkg.vhd
 	vcom o3_pkg.vhd
