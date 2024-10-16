@@ -14,6 +14,7 @@ entity data_formatter is
     );
 end entity;
 
+-- it does not detect misaligned accesses
 architecture beh of data_formatter is
 begin
     process(data_in, last_two_bits_i, format_i)
