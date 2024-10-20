@@ -32,8 +32,8 @@ entity reorder_buffer is
         registerfile_we_o: out std_logic;
 
         -- Branch Unit Interface
-        branch_result_o:    out rob_branch_result_t;
-        misprediction_o:    out std_logic
+        branch_result_o: out rob_branch_result_t;
+        misprediction_o: out std_logic
     );
 end entity;
 
