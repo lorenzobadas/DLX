@@ -111,17 +111,17 @@ package o3_pkg is
         alu_xor, 
         alu_sll, 
         alu_srl, 
+        alu_seq,
         alu_sne, 
         alu_sle,   
         alu_sge, 
-        alu_sra, 
-        alu_seq, 
+        alu_sra,  
         alu_slt, 
         alu_sgt, 
         alu_sltu, 
         alu_sgeu, 
         alu_sleu, 
-        alu_sgeu
+        alu_sgtu
     );
     
 end o3_pkg;

@@ -2,35 +2,35 @@ library ieee;
 use ieee.std_logic_1164.all;
 use work.o3_pkg.all;
 
-----------------------------
--- ALU bitwise operations --
--- c = a AND/OR/XOR b ------
-----------------------------
+---------------------------------
+-- ALU bitwise operations -------
+-- result = a AND/OR/XOR b ------
+---------------------------------
 entity alu_logic_ops is
     generic (
         nbit: integer := 32;
     );
     port (
-        a       : in std_logic_vector(nbit-1 downto 0);
-        b       : in std_logic_vector(nbit-1 downto 0);
-        alu_op  : in alu_op_t(5 downto 0);
-        c       : out std_logic_vector(nbit-1 downto 0);       
+        a_i         : in std_logic_vector(nbit-1 downto 0);
+        b_i         : in std_logic_vector(nbit-1 downto 0);
+        alu_op_i    : in alu_op_t;
+        result_o    : out std_logic_vector(nbit-1 downto 0);       
     );
 end entity;
 
 architecture behav of alu_logic_ops is
     begin
-        process(a, b, alu_op)
+        process(a_i, b_i, alu_op_i)
         begin
-            case alu_op is
+            case alu_op_i is
                 when alu_and => -- AND operation
-                    c <= a and b;
+                    result_o <= a_i and b_i;
                 when alu_or => -- OR operation
-                    c <= a or b;
+                    result_o <= a_i or b_i;
                 when alu_xor => -- XOR operation
-                    c <= a xor b;
+                    result_o <= a_i xor b_i;
                 when others =>
-                    c <= (others => '0'); -- Default case
+                    result_o <= (others => '0'); -- Default case
             end case;
         end process;
     end architecture;
