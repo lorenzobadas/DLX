@@ -4,11 +4,11 @@ use work.utils_pkg.all;
 
 package o3_pkg is
     constant n_entries_rs:          integer := 4;
-    constant n_operations_alu:      integer := 1;
+    constant n_operations_alu:      integer := 10;
     constant n_operations_mult:     integer := 1;
     constant n_operations_lsu:      integer := 2;
     constant max_operations:        integer := max(n_operations_alu, n_operations_mult);
-    constant n_entries_rob:         integer := 4;
+    constant n_entries_rob:         integer := 16;
     constant n_entries_bpu:         integer := 64;
 
     type commit_option_t is (none, branch, to_mem, to_rf);
@@ -69,6 +69,17 @@ package o3_pkg is
         reg2: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
         busy: std_logic;
     end record exe_rs_entry_t;
+
+    type exe_rs_instruction_data_t is record
+        rob_id: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
+        source1: std_logic_vector(nbit-1 downto 0);
+        valid1: std_logic;
+        source2: std_logic_vector(nbit-1 downto 0);
+        valid2: std_logic;
+        operation: std_logic_vector(clog2(max_operations)-1 downto 0);
+        reg1: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
+        reg2: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
+    end record exe_rs_instruction_data_t;
 
     type ls_rs_entry_t is record
         rob_id: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
