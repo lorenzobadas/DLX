@@ -1,126 +1,102 @@
-t2-shifter-tb: clean
-	cp ../src/utils_pkg.vhd .
-	cp ../src/t2_shifter/t2_shifter_levels_1_2.vhd .
-	cp ../src/t2_shifter/t2_shifter_level_3.vhd .
-	cp ../src/t2_shifter/t2_shifter.vhd .
-	cp ../src/tb/tb_t2_shifter.vhd .
+PKG_FILES := ../src/utils_pkg.vhd ../src/o3_pkg.vhd
+T2_SRC := ../src/t2_shifter/t2_shifter_levels_1_2.vhd ../src/t2_shifter/t2_shifter_level_3.vhd ../src/t2_shifter/t2_shifter.vhd
+T2_TB_SRC := ../src/tb/tb_t2_shifter.vhd
+P4_SRC := ../src/p4_adder/g_p.vhd ../src/p4_adder/g_g.vhd ../src/p4_adder/g_pg.vhd ../src/p4_adder/carry_generator.vhd ../src/p4_adder/rca.vhd ../src/p4_adder/carry_select_adder.vhd ../src/p4_adder/sum_generator.vhd ../src/p4_adder/xor_layer.vhd ../src/p4_adder/p4_adder.vhd
+P4_TB_SRC := ../src/tb/tb_p4_adder.vhd
+BOOTHMUL_SRC := ../src/multiplier/shifter_left.vhd ../src/multiplier/mux_mul.vhd ../src/multiplier/boothmul.vhd
+BOOTHMUL_TB_SRC := ../src/tb/tb_boothmul.vhd
+REORDER_BUFFER_SRC := ../src/reorder_buffer/reorder_buffer.vhd
+REORDER_BUFFER_TB_SRC := ../src/tb/tb_reorder_buffer.vhd
+EXE_RESERVATION_STATION_SRC := ../src/exe_reservation_station/exe_reservation_station.vhd
+EXE_RESERVATION_STATION_TB_SRC := ../src/tb/tb_exe_reservation_station_pkg.vhd ../src/tb/tb_exe_reservation_station.vhd
+LS_RESERVATION_STATION_SRC := ../src/load_store_unit/ls_reservation_station.vhd
+LS_RESERVATION_STATION_TB_SRC := ../src/tb/tb_ls_reservation_station_pkg.vhd ../src/tb/tb_ls_reservation_station.vhd
+ALU_SRC := ../src/alu/comparator.vhd ../src/alu/logic_ops.vhd ../src/alu/alu.vhd
+ALU_TB_SRC := ../src/tb/tb_alu.vhd
 
-	vcom utils_pkg.vhd
-	vcom t2_shifter_levels_1_2.vhd
-	vcom t2_shifter_level_3.vhd
-	vcom t2_shifter.vhd
-	vcom tb_t2_shifter.vhd
+t2-shifter-tb: clean
+	@for file in $(PKG_FILES) $(T2_SRC) $(T2_TB_SRC); do \
+		cp $$file .; \
+	done
+
+	@for file in $(PKG_FILES) $(T2_SRC) $(T2_TB_SRC); do \
+		vcom $$(basename $$file); \
+	done
 
 	vsim \
 		-do ../scripts/tb_t2_shifter.do
 
 p4-adder-tb: clean
-	cp ../src/utils_pkg.vhd .
-	cp ../src/p4_adder/g_p.vhd .
-	cp ../src/p4_adder/g_g.vhd .
-	cp ../src/p4_adder/g_pg.vhd .
-	cp ../src/p4_adder/carry_generator.vhd .
-	cp ../src/p4_adder/rca.vhd .
-	cp ../src/p4_adder/carry_select_adder.vhd .
-	cp ../src/p4_adder/sum_generator.vhd .
-	cp ../src/p4_adder/xor_layer.vhd .
-	cp ../src/p4_adder/p4_adder.vhd .
-	cp ../src/tb/tb_p4_adder.vhd .
+	@for file in $(PKG_FILES) $(P4_SRC) $(P4_TB_SRC); do \
+		cp $$file .; \
+	done
 
-	vcom g_p.vhd
-	vcom g_g.vhd
-	vcom g_pg.vhd
-	vcom utils_pkg.vhd
-	vcom carry_generator.vhd
-	vcom rca.vhd
-	vcom carry_select_adder.vhd
-	vcom sum_generator.vhd
-	vcom xor_layer.vhd
-	vcom p4_adder.vhd
-	vcom tb_p4_adder.vhd
+	@for file in $(PKG_FILES) $(P4_SRC) $(P4_TB_SRC); do \
+		vcom $$(basename $$file); \
+	done
 
 	vsim \
 		-do ../scripts/tb_p4_adder.do
 
 boothmul-tb: clean
-	cp ../src/utils_pkg.vhd .
-	cp ../src/p4_adder/g_p.vhd .
-	cp ../src/p4_adder/g_g.vhd .
-	cp ../src/p4_adder/g_pg.vhd .
-	cp ../src/p4_adder/carry_generator.vhd .
-	cp ../src/p4_adder/rca.vhd .
-	cp ../src/p4_adder/carry_select_adder.vhd .
-	cp ../src/p4_adder/sum_generator.vhd .
-	cp ../src/p4_adder/xor_layer.vhd .
-	cp ../src/p4_adder/p4_adder.vhd .
-	cp ../src/multiplier/shifter_left.vhd .
-	cp ../src/multiplier/mux_mul.vhd .
-	cp ../src/multiplier/boothmul.vhd .
-	cp ../src/tb/tb_boothmul.vhd .
+	@for file in $(PKG_FILES) $(P4_SRC) $(P4_TB_SRC) $(BOOTHMUL_SRC) $(BOOTHMUL_TB_SRC); do \
+		cp $$file .; \
+	done
 
-	vcom g_p.vhd
-	vcom g_g.vhd
-	vcom g_pg.vhd
-	vcom utils_pkg.vhd
-	vcom carry_generator.vhd
-	vcom rca.vhd
-	vcom carry_select_adder.vhd
-	vcom sum_generator.vhd
-	vcom xor_layer.vhd
-	vcom p4_adder.vhd
-	vcom shifter_left.vhd
-	vcom mux_mul.vhd
-	vcom boothmul.vhd
-	vcom tb_boothmul.vhd
+	@for file in $(PKG_FILES) $(P4_SRC) $(P4_TB_SRC) $(BOOTHMUL_SRC) $(BOOTHMUL_TB_SRC); do \
+		vcom $$(basename $$file); \
+	done
 
 	vsim \
 		-do ../scripts/tb_boothmul.do
 
 reorder-buffer-tb: clean
-	cp ../src/utils_pkg.vhd .
-	cp ../src/o3_pkg.vhd .
-	cp ../src/reorder_buffer/reorder_buffer.vhd .
-	cp ../src/tb/tb_reorder_buffer.vhd .
+	@for file in $(PKG_FILES) $(REORDER_BUFFER_SRC) $(REORDER_BUFFER_TB_SRC); do \
+		cp $$file .; \
+	done
 
-	vcom utils_pkg.vhd
-	vcom o3_pkg.vhd
-	vcom reorder_buffer.vhd
-	vcom tb_reorder_buffer.vhd
+	@for file in $(PKG_FILES) $(REORDER_BUFFER_SRC) $(REORDER_BUFFER_TB_SRC); do \
+		vcom $$(basename $$file); \
+	done
 
 	vsim \
 		-do ../scripts/tb_reorder_buffer.do
 
 exe-reservation-station-tb: clean
-	cp ../src/utils_pkg.vhd .
-	cp ../src/o3_pkg.vhd .
-	cp ../src/exe_reservation_station/exe_reservation_station.vhd .
-	cp ../src/tb/tb_exe_reservation_station_pkg.vhd .
-	cp ../src/tb/tb_exe_reservation_station.vhd .
+	@for file in $(PKG_FILES) $(EXE_RESERVATION_STATION_SRC) $(EXE_RESERVATION_STATION_TB_SRC); do \
+		cp $$file .; \
+	done
 
-	vcom utils_pkg.vhd
-	vcom o3_pkg.vhd
-	vcom exe_reservation_station.vhd
-	vcom tb_exe_reservation_station_pkg.vhd
-	vcom tb_exe_reservation_station.vhd
+	@for file in $(PKG_FILES) $(EXE_RESERVATION_STATION_SRC) $(EXE_RESERVATION_STATION_TB_SRC); do \
+		vcom $$(basename $$file); \
+	done
 
 	vsim \
 		-do ../scripts/tb_exe_reservation_station.do
 
 ls-reservation-station-tb: clean
-	cp ../src/utils_pkg.vhd .
-	cp ../src/o3_pkg.vhd .
-	cp ../src/load_store_unit/ls_reservation_station.vhd .
-	cp ../src/tb/tb_ls_reservation_station_pkg.vhd .
-	cp ../src/tb/tb_ls_reservation_station.vhd .
+	@for file in $(PKG_FILES) $(LS_RESERVATION_STATION_SRC) $(LS_RESERVATION_STATION_TB_SRC); do \
+		cp $$file .; \
+	done
 
-	vcom utils_pkg.vhd
-	vcom o3_pkg.vhd
-	vcom ls_reservation_station.vhd
-	vcom tb_ls_reservation_station_pkg.vhd
-	vcom tb_ls_reservation_station.vhd
+	@for file in $(PKG_FILES) $(LS_RESERVATION_STATION_SRC) $(LS_RESERVATION_STATION_TB_SRC); do \
+		vcom $$(basename $$file); \
+	done
 
 	vsim \
 		-do ../scripts/tb_ls_reservation_station.do
+
+alu-tb: clean
+	@for file in $(PKG_FILES) $(P4_SRC) $(P4_TB_SRC) $(ALU_SRC) $(ALU_TB_SRC); do \
+		cp $$file .; \
+	done
+
+	@for file in $(PKG_FILES) $(P4_SRC) $(P4_TB_SRC) $(ALU_SRC) $(ALU_TB_SRC); do \
+		vcom $$(basename $$file); \
+	done
+
+	vsim \
+		-do ../scripts/tb_alu.do
 
 clean:
 	rm -f ./*.vhd
