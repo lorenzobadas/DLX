@@ -2,27 +2,28 @@ library ieee;
 use ieee.std_logic_1164.all;
 use work.o3_pkg.all;
 
-entity alu_comparator_logic is
+entity comparator is
     generic (
         nbit : integer := 32
     );
     port (
-        a_last_i:       in  std_logic;
-        b_last_i:       in  std_logic;
-        result_last_i:  in  std_logic;
-        cout_i  :       in  std_logic;
-        alu_op_i:       in  alu_op_t;
-        result_o:       out std_logic_vector(nbit-1 downto 0)
+        a_last_i:      in  std_logic;
+        b_last_i:      in  std_logic;
+        result_last_i: in  std_logic;
+        cout_i  :      in  std_logic;
+        alu_op_i:      in  alu_op_t;
+        result_o:      out std_logic_vector(nbit-1 downto 0)
     );
 end entity;
 
-architecture behav of alu_comparator_logic is
+architecture beh of comparator is
     signal comparison_result: std_logic;
     signal N, Z, V, C: std_logic;
 begin
 
-    N <= result_last_i(nbit-1);
-    Z <= '1' when result_last_i = (nbit-1 downto 0 => '0') else '0';
+    N <= result_last_i;
+    Z <= '1' when result_last_i = '0' else
+         '0';
     V <= (a_last_i and (not b_last_i) and (not result_last_i)) or
             ((not a_last_i) and b_last_i and result_last_i);
     C <= cout_i;
@@ -35,13 +36,13 @@ begin
             when alu_sne =>
                 comparison_result <= not Z;
             when alu_sle =>
-                comparison_result <= Z or (N /= V);
+                comparison_result <= Z or (N xor V);
             when alu_sge =>
-                comparison_result <= N = V;
+                comparison_result <= N xnor V;
             when alu_slt =>
-                comparison_result <= N /= V;
+                comparison_result <= N xor V;
             when alu_sgt =>
-                comparison_result <= (not Z) and (N = V);
+                comparison_result <= (not Z) and (N xnor V);
             when alu_sltu =>
                 comparison_result <= not C;
             when alu_sgeu =>
@@ -56,4 +57,4 @@ begin
 
     result_o <= (0 => comparison_result, others => '0');
     end process;
-end architecture;
+end beh;
