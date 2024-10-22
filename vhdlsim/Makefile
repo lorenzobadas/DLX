@@ -39,7 +39,7 @@ p4-adder-tb: clean
 		-do ../scripts/tb_p4_adder.do
 
 boothmul-tb: clean
-	@for file in $(PKG_FILES) $(P4_SRC) $(P4_TB_SRC) $(BOOTHMUL_SRC) $(BOOTHMUL_TB_SRC); do \
+	@for file in $(PKG_FILES) $(P4_SRC) $(BOOTHMUL_SRC) $(BOOTHMUL_TB_SRC); do \
 		cp $$file .; \
 	done
 
@@ -87,11 +87,11 @@ ls-reservation-station-tb: clean
 		-do ../scripts/tb_ls_reservation_station.do
 
 alu-tb: clean
-	@for file in $(PKG_FILES) $(P4_SRC) $(P4_TB_SRC) $(ALU_SRC) $(ALU_TB_SRC); do \
+	@for file in $(PKG_FILES) $(P4_SRC) $(ALU_SRC) $(ALU_TB_SRC); do \
 		cp $$file .; \
 	done
 
-	@for file in $(PKG_FILES) $(P4_SRC) $(P4_TB_SRC) $(ALU_SRC) $(ALU_TB_SRC); do \
+	@for file in $(PKG_FILES) $(P4_SRC) $(ALU_SRC) $(ALU_TB_SRC); do \
 		vcom $$(basename $$file); \
 	done
 
