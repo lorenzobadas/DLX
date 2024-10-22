@@ -113,4 +113,26 @@ package o3_pkg is
     end record ls_rs_instruction_data_t;
 
     type reservation_station_t is (lsu, alu, mult, none);
+
+    type alu_op_t is (
+        alu_add,
+        alu_sub,
+        alu_and, 
+        alu_or, 
+        alu_xor, 
+        alu_sll, 
+        alu_srl, 
+        alu_seq,
+        alu_sne, 
+        alu_sle,   
+        alu_sge, 
+        alu_sra,  
+        alu_slt, 
+        alu_sgt, 
+        alu_sltu, 
+        alu_sgeu, 
+        alu_sleu, 
+        alu_sgtu
+    );
+    
 end o3_pkg;
