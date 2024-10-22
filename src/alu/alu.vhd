@@ -1,5 +1,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use work.utils_pkg.all;
 use work.o3_pkg.all;
 
 entity alu is 
@@ -10,7 +11,7 @@ entity alu is
         alu_op_i:   in  alu_op_t;
         a_i:        in  std_logic_vector(nbit-1 downto 0);
         b_i:        in  std_logic_vector(nbit-1 downto 0); 
-        alu_out_o:  out std_logic_vector(nbit-1 downto 0);  
+        alu_out_o:  out std_logic_vector(nbit-1 downto 0)
     );
 end entity;
 
@@ -24,7 +25,7 @@ architecture struct of alu is
             a_i:        in std_logic_vector(nbit-1 downto 0);
             b_i:        in std_logic_vector(nbit-1 downto 0);
             alu_op_i:   in alu_op_t;
-            result_o:   out std_logic_vector(nbit-1 downto 0);       
+            result_o:   out std_logic_vector(nbit-1 downto 0)
         );
     end component;
 
@@ -73,8 +74,11 @@ architecture struct of alu is
     -- Signals
     signal logic_ops_result: std_logic_vector(nbit-1 downto 0);
     signal shifter_data_o: std_logic_vector(nbit-1 downto 0);
+    signal shifter_amount: std_logic_vector(clog2(nbit)-1 downto 0);
     signal shifter_logic_arith: std_logic;
     signal shifter_left_right: std_logic;
+    signal adder_cin: std_logic;
+    signal adder_sub: std_logic;
     signal adder_result: std_logic_vector(nbit-1 downto 0);
     signal adder_cout: std_logic;
     signal comparator_result: std_logic_vector(nbit-1 downto 0);
@@ -122,9 +126,9 @@ begin
         nbit => nbit
     )
     port map (
-        a_last_i      => a_i,
-        b_last_i      => b_i,
-        result_last_i => adder_result,
+        a_last_i      => a_i(nbit-1),
+        b_last_i      => b_i(nbit-1),
+        result_last_i => adder_result(nbit-1),
         cout_i   => adder_cout,
         alu_op_i => alu_op_i,
         result_o => comparator_result
