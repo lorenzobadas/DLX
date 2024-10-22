@@ -54,7 +54,11 @@ begin
             when others =>
                 comparison_result <= '0';
         end case;
-
-    result_o <= (0 => comparison_result, others => '0');
     end process;
+
+    extend_result_proc: process(comparison_result)
+    begin
+        result_o <= (others => '0');
+        result_o(0) <= comparison_result;
+    end process extend_result_proc;
 end beh;
