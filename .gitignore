@@ -5,3 +5,10 @@
 # except for the following files
 !**/Makefile
 !**/.gitkeep
+
+# dvt
+dvt_build.log
+build.config.xml
+default.build
+default.build.auto.1
+default.ls
