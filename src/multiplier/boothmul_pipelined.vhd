@@ -169,7 +169,7 @@ begin
                         port map (
                             clk => clk,
                             rst => rst,             
-                            clr => clr,
+                            clr => clr(i-1),
                             en  => en_pipeline(i-1), -- perche' parti da 1-1 = 0, 2-1 = 1 ..
                             d   => shift_array(i-1, j), -- simply copied from the shift_inst
                             q   => regw_stage(i-1, j-1) -- (0,0), (0,1), (0,2), (0,3)
@@ -211,7 +211,7 @@ begin
                 port map (
                     clk => clk,
                     rst => rst,
-                    clr => clr,
+                    clr => clr(i-1),
                     en => en_pipeline(i-1),
                     d => sum_array(i-1, 0),
                     q => regw_stage(i-1,4)
@@ -244,7 +244,7 @@ begin
                 port map (
                     clk => clk,
                     rst => rst,
-                    clr => clr,
+                    clr => clr(i-1),
                     en  => en_pipeline(i-1),
                     d   => b_array(i-1), -- the input is the reg in the previous layer
                     q   => b_array(i)
