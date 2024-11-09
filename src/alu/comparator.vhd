@@ -24,8 +24,9 @@ begin
     N <= result_last_i;
     Z <= '1' when result_last_i = '0' else
          '0';
+    -- V = A'BR + AB'R'
     V <= (a_last_i and (not b_last_i) and (not result_last_i)) or
-            ((not a_last_i) and b_last_i and result_last_i);
+         ((not a_last_i) and b_last_i and result_last_i);
     C <= cout_i;
 
     process(alu_op_i, N, Z, V, C)
