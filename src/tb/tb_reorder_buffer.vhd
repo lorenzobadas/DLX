@@ -23,8 +23,14 @@ architecture test of tb_reorder_buffer is
             commit_ptr_o: out std_logic_vector(clog2(n_entries_rob)-1 downto 0);
             insert_result_i: in std_logic;
             cdb_i:           in  cdb_t;
-            insert_instruction_i: in  std_logic;
-            instruction_i:        in  rob_decoded_instruction_t;
+            insert_instruction_i:       in  std_logic;
+            instruction_i:              in  rob_decoded_instruction_t;
+            physical_register1_index_i: in  unsigned(clog2(n_entries_rob)-1 downto 0);
+            physical_register2_index_i: in  unsigned(clog2(n_entries_rob)-1 downto 0);
+            physical_register1_value_i: out std_logic_vector(nbit-1 downto 0);
+            physical_register2_value_i: out std_logic_vector(nbit-1 downto 0);
+            physical_register1_valid_i: out std_logic;
+            physical_register2_valid_i: out std_logic;
             destination_o:     out std_logic_vector(nbit-1 downto 0);
             width_field_o:     out std_logic_vector(1 downto 0);
             result_o:          out std_logic_vector(nbit-1 downto 0);
@@ -45,6 +51,12 @@ architecture test of tb_reorder_buffer is
     signal cdb: cdb_t;
     signal insert_instruction: std_logic;
     signal instruction: rob_decoded_instruction_t;
+    signal physical_register1_index: unsigned(clog2(n_entries_rob)-1 downto 0);
+    signal physical_register2_index: unsigned(clog2(n_entries_rob)-1 downto 0);
+    signal physical_register1_value: std_logic_vector(nbit-1 downto 0);
+    signal physical_register2_value: std_logic_vector(nbit-1 downto 0);
+    signal physical_register1_valid: std_logic;
+    signal physical_register2_valid: std_logic;
     signal destination: std_logic_vector(nbit-1 downto 0);
     signal width_field: std_logic_vector(1 downto 0);
     signal result: std_logic_vector(nbit-1 downto 0);
@@ -170,23 +182,29 @@ begin
             nbit => nbit
         )
         port map (
-            clk_i                => clk,
-            reset_i              => reset,
-            mem_hazard_i         => mem_hazard,
-            full_o               => full,
-            issue_ptr_o          => issue_ptr,
-            commit_ptr_o         => commit_ptr,
-            insert_result_i      => insert_result,
-            cdb_i                => cdb,
-            insert_instruction_i => insert_instruction,
-            instruction_i        => instruction,
-            destination_o        => destination,
-            width_field_o        => width_field,
-            result_o             => result,
-            memory_we_o          => memory_we,
-            registerfile_we_o    => registerfile_we,
-            branch_result_o      => branch_result,
-            misprediction_o      => misprediction
+            clk_i                      => clk,
+            reset_i                    => reset,
+            mem_hazard_i               => mem_hazard,
+            full_o                     => full,
+            issue_ptr_o                => issue_ptr,
+            commit_ptr_o               => commit_ptr,
+            insert_result_i            => insert_result,
+            cdb_i                      => cdb,
+            insert_instruction_i       => insert_instruction,
+            instruction_i              => instruction,
+            physical_register1_index_i => physical_register1_index,
+            physical_register2_index_i => physical_register2_index,
+            physical_register1_value_i => physical_register1_value,
+            physical_register2_value_i => physical_register2_value,
+            physical_register1_valid_i => physical_register1_valid,
+            physical_register2_valid_i => physical_register2_valid,
+            destination_o              => destination,
+            width_field_o              => width_field,
+            result_o                   => result,
+            memory_we_o                => memory_we,
+            registerfile_we_o          => registerfile_we,
+            branch_result_o            => branch_result,
+            misprediction_o            => misprediction
         );
     -- clock generation
     clk_proc: process
@@ -214,6 +232,8 @@ begin
         instruction.instruction_type <= commit_option_t'low;
         instruction.branch_taken <= '0';
         instruction.destination <= (others => '0');
+        physical_register1_index <= (others => '0');
+        physical_register2_index <= (others => '0');
         wait for 10 ns; -- time 10 ns
         reset <= '0';
         wait for 10 ns; -- time 20 ns

@@ -21,8 +21,14 @@ entity reorder_buffer is
         cdb_i:           in cdb_t;
         
         -- Issue Interface
-        insert_instruction_i: in  std_logic; -- acknowledge not needed because insertion prevented if full
-        instruction_i:        in  rob_decoded_instruction_t;
+        insert_instruction_i:       in  std_logic; -- acknowledge not needed because insertion prevented if full
+        instruction_i:              in  rob_decoded_instruction_t;
+        physical_register1_index_i: in  unsigned(clog2(n_entries_rob)-1 downto 0);
+        physical_register2_index_i: in  unsigned(clog2(n_entries_rob)-1 downto 0);
+        physical_register1_value_i: out std_logic_vector(nbit-1 downto 0);
+        physical_register2_value_i: out std_logic_vector(nbit-1 downto 0);
+        physical_register1_valid_i: out std_logic;
+        physical_register2_valid_i: out std_logic;
 
         -- RF/MEM Interface
         destination_o:     out std_logic_vector(nbit-1 downto 0);
@@ -129,6 +135,10 @@ architecture beh of reorder_buffer is
 begin
     issue_ptr_o  <= std_logic_vector(issue_ptr);
     commit_ptr_o <= std_logic_vector(commit_ptr);
+    physical_register1_value_i <= rob_fifo(to_integer(unsigned(physical_register1_index_i))).result;
+    physical_register2_value_i <= rob_fifo(to_integer(unsigned(physical_register2_index_i))).result;
+    physical_register1_valid_i <= rob_fifo(to_integer(unsigned(physical_register1_index_i))).ready;
+    physical_register2_valid_i <= rob_fifo(to_integer(unsigned(physical_register2_index_i))).ready;
 
     comb_proc: process (state, mem_hazard_i, rob_fifo, commit_ptr, issue_ptr, insert_result_i, cdb_i, insert_instruction_i, instruction_i)
         variable push, pop, misp, test_full, test_empty: boolean;
