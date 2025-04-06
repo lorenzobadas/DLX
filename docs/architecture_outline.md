@@ -45,10 +45,11 @@ In the backend, the ROB commits the instructions in the same order as they were 
 Every instruction goes through the following steps.
 The instruction is fetched from the instruction cache, concurrently the PC is also used to get a prediction from the branch predictor (this is independent of the actual instruction, in case of a branch instruction the prediction is used to update the PC, else it is ignored).
 The instruction is then decoded.
-After decoding, the instruction is tagged with a ROB entry ID, the destination register is renamed using the RAT. For source registers there are three possibilities:
+After decoding, the instruction is tagged with a ROB entry ID, the destination register is renamed using the RAT. For source registers there are four possibilities:
 1. The source register is not renamed, in this case the value is read from the register file and the source value entry marked as valid.
 2. The source register is renamed and the CDB contains the value, in this case the value is read from the CDB and again the source value entry marked as valid.
-3. The source register is renamed but the CDB does not contain the value, in this case source value entry is marked as invalid.
+3. The source register is renamed, the CDB does not contain the value, but the physical register is ready in the ROB, in this case the value is read from the ROB and the source value entry marked as valid.
+4. The source register is renamed, the CDB does not contain the value, and the physical register is not ready in the ROB, in this case source value entry is marked as invalid.
 
 The instruction is then issued to the reservation station of the corresponding unit and also to the ROB.
 
