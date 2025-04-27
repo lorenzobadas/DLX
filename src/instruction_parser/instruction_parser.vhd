@@ -2,7 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity decoder is
+entity instruction_parser is
     port (
         instruction_i:  in  std_logic_vector(31 downto 0);
         opcode_o:       out std_logic_vector( 5 downto 0);
@@ -20,7 +20,7 @@ entity decoder is
     );
 end entity;
 
-architecture behav of decoder is
+architecture behav of instruction_parser is
 begin
     opcode_o      <= instruction_i(31 downto 26);
     func_o        <= instruction_i(10 downto  0);
