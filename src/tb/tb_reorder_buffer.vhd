@@ -27,12 +27,11 @@ architecture test of tb_reorder_buffer is
             instruction_i:              in  rob_decoded_instruction_t;
             physical_register1_index_i: in  unsigned(clog2(n_entries_rob)-1 downto 0);
             physical_register2_index_i: in  unsigned(clog2(n_entries_rob)-1 downto 0);
-            physical_register1_value_i: out std_logic_vector(nbit-1 downto 0);
-            physical_register2_value_i: out std_logic_vector(nbit-1 downto 0);
-            physical_register1_valid_i: out std_logic;
-            physical_register2_valid_i: out std_logic;
-            destination_o:     out std_logic_vector(nbit-1 downto 0);
-            width_field_o:     out std_logic_vector(1 downto 0);
+            physical_register1_value_o: out std_logic_vector(nbit-1 downto 0);
+            physical_register2_value_o: out std_logic_vector(nbit-1 downto 0);
+            physical_register1_valid_o: out std_logic;
+            physical_register2_valid_o: out std_logic;
+            destination_o:     out std_logic_vector(clog2(32)-1 downto 0);
             result_o:          out std_logic_vector(nbit-1 downto 0);
             memory_we_o:       out std_logic;
             registerfile_we_o: out std_logic;
@@ -57,8 +56,7 @@ architecture test of tb_reorder_buffer is
     signal physical_register2_value: std_logic_vector(nbit-1 downto 0);
     signal physical_register1_valid: std_logic;
     signal physical_register2_valid: std_logic;
-    signal destination: std_logic_vector(nbit-1 downto 0);
-    signal width_field: std_logic_vector(1 downto 0);
+    signal destination: std_logic_vector(clog2(32)-1 downto 0);
     signal result: std_logic_vector(nbit-1 downto 0);
     signal memory_we: std_logic;
     signal registerfile_we: std_logic;
@@ -70,7 +68,6 @@ architecture test of tb_reorder_buffer is
         insert_instruction: std_logic;
         instruction_type: commit_option_t;
         destination:      integer;
-        width_field:      integer;
         branch_taken:     std_logic;
         branch_addr:      integer;
         taken_addr:       integer;
@@ -84,8 +81,7 @@ architecture test of tb_reorder_buffer is
         instruction.instruction_type <= instruction_type;
         instruction.instruction_address <= std_logic_vector(to_unsigned(branch_addr, nbit));
         instruction.branch_taken <= branch_taken;
-        instruction.destination <= std_logic_vector(to_unsigned(destination, nbit));
-        instruction.width_field <= std_logic_vector(to_unsigned(width_field, 2));
+        instruction.destination <= std_logic_vector(to_unsigned(destination, clog2(32)));
         instruction.branch_taken_address <= std_logic_vector(to_unsigned(taken_addr, nbit));
         instruction.bpu_history <= bpu_history;
     end procedure insert_instruction_proc;
@@ -93,7 +89,6 @@ architecture test of tb_reorder_buffer is
     procedure insert_result_proc (
         insert_result: std_logic;
         result:        integer;
-        destination:   integer;
         rob_index:     integer;
         
         signal insert_result_s: out std_logic;
@@ -101,7 +96,6 @@ architecture test of tb_reorder_buffer is
     ) is
     begin
         insert_result_s <= insert_result;
-        cdb.destination <= std_logic_vector(to_unsigned(destination, nbit));
         cdb.result <= std_logic_vector(to_unsigned(result, nbit));
         cdb.rob_index <= std_logic_vector(to_unsigned(rob_index, clog2(n_entries_rob)));
     end procedure insert_result_proc;
@@ -142,25 +136,24 @@ architecture test of tb_reorder_buffer is
 
     procedure check_results_proc(
         commit_branch: boolean;
+        commit_mem: boolean;
         destination: integer;
-        width_field: integer;
         result: integer;
         branch_taken: std_logic;
         branch_addr: integer;
         taken_addr: integer;
         bpu_history: std_logic_vector(1 downto 0);
 
-        signal destination_s: in std_logic_vector(nbit-1 downto 0);
-        signal width_field_s: in std_logic_vector(1 downto 0);
+        signal destination_s: in std_logic_vector(clog2(32)-1 downto 0);
         signal result_s: in std_logic_vector(nbit-1 downto 0);
         signal branch_result: in rob_branch_result_t
     ) is
     begin
         if not commit_branch then
-            assert destination_s = std_logic_vector(to_unsigned(destination, nbit))
-                report "destination error" severity error;
-            assert width_field_s = std_logic_vector(to_unsigned(width_field, 2))
-                report "width_field error" severity error;
+            if not commit_mem then
+                assert destination_s = std_logic_vector(to_unsigned(destination, clog2(32)))
+                    report "destination error" severity error;
+            end if;
             assert result_s = std_logic_vector(to_unsigned(result, nbit))
                 report "result error" severity error;
         else
@@ -194,12 +187,11 @@ begin
             instruction_i              => instruction,
             physical_register1_index_i => physical_register1_index,
             physical_register2_index_i => physical_register2_index,
-            physical_register1_value_i => physical_register1_value,
-            physical_register2_value_i => physical_register2_value,
-            physical_register1_valid_i => physical_register1_valid,
-            physical_register2_valid_i => physical_register2_valid,
+            physical_register1_value_o => physical_register1_value,
+            physical_register2_value_o => physical_register2_value,
+            physical_register1_valid_o => physical_register1_valid,
+            physical_register2_valid_o => physical_register2_valid,
             destination_o              => destination,
-            width_field_o              => width_field,
             result_o                   => result,
             memory_we_o                => memory_we,
             registerfile_we_o          => registerfile_we,
@@ -242,7 +234,6 @@ begin
             insert_instruction => '1',
             instruction_type => none,
             destination => 0,
-            width_field => 0,
             branch_taken => '0',
             branch_addr => 0,
             taken_addr => 0,
@@ -272,7 +263,6 @@ begin
             insert_instruction => '1',
             instruction_type => to_mem,
             destination => 1,
-            width_field => 1,
             branch_taken => '0',
             branch_addr => 1,
             taken_addr => 1,
@@ -302,7 +292,6 @@ begin
             insert_instruction => '1',
             instruction_type => to_rf,
             destination => 2,
-            width_field => 0,
             branch_taken => '0',
             branch_addr => 2,
             taken_addr => 2,
@@ -332,7 +321,6 @@ begin
             insert_instruction => '1',
             instruction_type => branch,
             destination => 3,
-            width_field => 0,
             branch_taken => '0',
             branch_addr => 3,
             taken_addr => 3,
@@ -343,7 +331,6 @@ begin
         -- result branch (the result should not be written because rob index is over the issue pointer)
         insert_result_proc(
             insert_result   => '1',
-            destination     => 0,
             result          => 1,
             rob_index       => 3,
             insert_result_s => insert_result,
@@ -388,7 +375,6 @@ begin
         -- result branch
         insert_result_proc(
             insert_result   => '1',
-            destination     => 0,
             result          => 0,
             rob_index       => 3,
             insert_result_s => insert_result,
@@ -414,7 +400,6 @@ begin
         -- result to_rf
         insert_result_proc(
             insert_result   => '1',
-            destination     => 0,
             result          => 2,
             rob_index       => 2,
             insert_result_s => insert_result,
@@ -440,7 +425,6 @@ begin
         -- result to_mem
         insert_result_proc(
             insert_result   => '1',
-            destination     => 5,
             result          => 1,
             rob_index       => 1,
             insert_result_s => insert_result,
@@ -466,7 +450,6 @@ begin
         -- result jump
         insert_result_proc(
             insert_result   => '1',
-            destination     => 0,
             result          => 0,
             rob_index       => 0,
             insert_result_s => insert_result,
@@ -533,15 +516,14 @@ begin
         -- assert result
         check_results_proc(
             commit_branch => false,
+            commit_mem => true,
             destination => 5,
-            width_field => 1,
             result => 1,
             branch_taken => '-',
             branch_addr => 0,
             taken_addr => 0,
             bpu_history => "00",
             destination_s => destination,
-            width_field_s => width_field,
             result_s => result,
             branch_result => branch_result
         );   
@@ -566,15 +548,14 @@ begin
         -- assert result
         check_results_proc(
             commit_branch => false,
+            commit_mem => false,
             destination => 2,
-            width_field => 0,
             result => 2,
             branch_taken => '-',
             branch_addr => 0,
             taken_addr => 0,
             bpu_history => "00",
             destination_s => destination,
-            width_field_s => width_field,
             result_s => result,
             branch_result => branch_result
         );
@@ -598,15 +579,14 @@ begin
         -- assert result
         check_results_proc(
             commit_branch => true,
+            commit_mem => false,
             destination => 0,
-            width_field => 0,
             result => 0,
             branch_taken => '0',
             branch_addr => 3,
             taken_addr => 3,
             bpu_history => "00",
             destination_s => destination,
-            width_field_s => width_field,
             result_s => result,
             branch_result => branch_result
         );
@@ -632,7 +612,6 @@ begin
             insert_instruction => '1',
             instruction_type => to_rf,
             destination => 4,
-            width_field => 0,
             branch_taken => '0',
             branch_addr => 4,
             taken_addr => 4,
@@ -643,7 +622,6 @@ begin
         -- result load (it should be ignored because the rob is empty)
         insert_result_proc(
             insert_result   => '1',
-            destination     => 0,
             result          => 100,
             rob_index       => 0,
             insert_result_s => insert_result,
@@ -671,7 +649,6 @@ begin
             insert_instruction => '1',
             instruction_type => branch,
             destination => 5,
-            width_field => 0,
             branch_taken => '0',
             branch_addr => 5,
             taken_addr => 5,
@@ -682,7 +659,6 @@ begin
         -- result load
         insert_result_proc(
             insert_result   => '1',
-            destination     => 0,
             result          => 4,
             rob_index       => 0,
             insert_result_s => insert_result,
@@ -708,15 +684,14 @@ begin
         -- assert result
         check_results_proc(
             commit_branch => false,
+            commit_mem => false,
             destination => 4,
-            width_field => 0,
             result => 4,
             branch_taken => '-',
             branch_addr => 0,
             taken_addr => 0,
             bpu_history => "00",
             destination_s => destination,
-            width_field_s => width_field,
             result_s => result,
             branch_result => branch_result
         );
@@ -725,7 +700,6 @@ begin
             insert_instruction => '1',
             instruction_type => branch,
             destination => 6,
-            width_field => 0,
             branch_taken => '0',
             branch_addr => 6,
             taken_addr => 6,
@@ -756,7 +730,6 @@ begin
             insert_instruction => '1',
             instruction_type => branch,
             destination => 7,
-            width_field => 0,
             branch_taken => '0',
             branch_addr => 7,
             taken_addr => 7,
@@ -804,7 +777,6 @@ begin
             insert_instruction => '1',
             instruction_type => branch,
             destination => 8,
-            width_field => 0,
             branch_taken => '0',
             branch_addr => 8,
             taken_addr => 8,
@@ -834,7 +806,6 @@ begin
             insert_instruction => '1',
             instruction_type => to_rf,
             destination => 9,
-            width_field => 0,
             branch_taken => '0',
             branch_addr => 9,
             taken_addr => 9,
@@ -845,7 +816,6 @@ begin
         -- result branch (will cause a misprediction)
         insert_result_proc(
             insert_result   => '1',
-            destination     => 0,
             result          => 1,
             rob_index       => 1,
             insert_result_s => insert_result,
@@ -871,15 +841,14 @@ begin
         -- assert result
         check_results_proc(
             commit_branch => true,
+            commit_mem => false,
             destination => 0,
-            width_field => 0,
             result => 0,
             branch_taken => '1',
             branch_addr => 5,
             taken_addr => 5,
             bpu_history => "00",
             destination_s => destination,
-            width_field_s => width_field,
             result_s => result,
             branch_result => branch_result
         );
