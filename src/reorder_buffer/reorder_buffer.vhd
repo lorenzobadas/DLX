@@ -30,11 +30,14 @@ entity reorder_buffer is
         physical_register1_valid_o: out std_logic;
         physical_register2_valid_o: out std_logic;
 
-        -- RF/MEM Interface
+        -- RF Interface
         destination_o:     out std_logic_vector(clog2(32)-1 downto 0);
         result_o:          out std_logic_vector(nbit-1 downto 0);
-        memory_we_o:       out std_logic;
         registerfile_we_o: out std_logic;
+        
+        -- MEM Interface
+        lsu_store_stall_i: in  std_logic;
+        memory_we_o:       out std_logic;
 
         -- Branch Unit Interface
         branch_result_o: out rob_branch_result_t;
@@ -134,7 +137,7 @@ begin
         variable push, pop, misp, test_full, test_empty: boolean;
     begin
         push       := insert_instruction_i = '1';
-        pop        := rob_fifo(to_integer(commit_ptr)).ready = '1' and not(rob_fifo(to_integer(commit_ptr)).instruction_type = to_mem and mem_hazard_i = '1');
+        pop        := rob_fifo(to_integer(commit_ptr)).ready = '1' and lsu_store_stall_i = '0' and not(rob_fifo(to_integer(commit_ptr)).instruction_type = to_mem and mem_hazard_i = '1');
         misp       := pop and (rob_fifo(to_integer(commit_ptr)).instruction_type = branch) and (rob_fifo(to_integer(commit_ptr)).branch_data.branch_taken /= rob_fifo(to_integer(commit_ptr)).result(0));
         test_full  := issue_ptr = commit_ptr-1;
         test_empty := issue_ptr = commit_ptr+1;
@@ -182,7 +185,7 @@ begin
                 if insert_instruction_i = '1' then
                     insert_instruction(instruction_i, issue_ptr, rob_fifo_next, issue_ptr_next);
                 end if;
-                if rob_fifo(to_integer(commit_ptr)).ready = '1' then
+                if rob_fifo(to_integer(commit_ptr)).ready = '1' and lsu_store_stall_i = '0' then
                     commit_instruction(
                         rob_fifo => rob_fifo,
                         commit_ptr => commit_ptr,
@@ -220,7 +223,7 @@ begin
                 if insert_result_i = '1' then
                     insert_result(rob_fifo, cdb_i, rob_fifo_next);
                 end if;
-                if rob_fifo(to_integer(commit_ptr)).ready = '1' then
+                if rob_fifo(to_integer(commit_ptr)).ready = '1' and lsu_store_stall_i = '0' then
                     commit_instruction(
                         rob_fifo => rob_fifo,
                         commit_ptr => commit_ptr,

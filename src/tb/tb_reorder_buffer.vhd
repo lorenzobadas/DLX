@@ -33,6 +33,7 @@ architecture test of tb_reorder_buffer is
             physical_register2_valid_o: out std_logic;
             destination_o:     out std_logic_vector(clog2(32)-1 downto 0);
             result_o:          out std_logic_vector(nbit-1 downto 0);
+            lsu_store_stall_i: in  std_logic;
             memory_we_o:       out std_logic;
             registerfile_we_o: out std_logic;
             branch_result_o:    out rob_branch_result_t;
@@ -58,6 +59,7 @@ architecture test of tb_reorder_buffer is
     signal physical_register2_valid: std_logic;
     signal destination: std_logic_vector(clog2(32)-1 downto 0);
     signal result: std_logic_vector(nbit-1 downto 0);
+    signal lsu_store_stall: std_logic;
     signal memory_we: std_logic;
     signal registerfile_we: std_logic;
     signal branch_result: rob_branch_result_t;
@@ -193,6 +195,7 @@ begin
             physical_register2_valid_o => physical_register2_valid,
             destination_o              => destination,
             result_o                   => result,
+            lsu_store_stall_i          => lsu_store_stall,
             memory_we_o                => memory_we,
             registerfile_we_o          => registerfile_we,
             branch_result_o            => branch_result,
@@ -210,7 +213,7 @@ begin
             wait;
         end if;
     end process;
-
+    lsu_store_stall <= '0'; -- no store stall
     -- test process
     test_proc: process
     begin

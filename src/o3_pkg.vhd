@@ -90,7 +90,6 @@ package o3_pkg is
         sign_field: std_logic; -- 0: signed, 1: unsigned
         reg1: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
         reg2: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
-        wait_instr: std_logic;
         wait_store: std_logic;
         busy: std_logic;
     end record ls_rs_entry_t;
