@@ -23,12 +23,12 @@ package tb_ls_reservation_station_pkg is
         signal rs_entry_s:           out ls_rs_instruction_data_t
     );
     procedure clean_inputs_proc (
-        signal flush_s:                   out std_logic;
-        signal insert_s:                  out std_logic;
-        signal lsu_arbiter_load_valid_s:  out std_logic;
-        signal lsu_arbiter_store_valid_s: out std_logic;
-        signal rob_commit_store_s:        out std_logic;
-        signal insert_result_s:           out std_logic
+        signal flush_s:                       out std_logic;
+        signal insert_s:                      out std_logic;
+        signal lsu_arbiter_load_slot_taken_s: out std_logic;
+        signal lsu_arbiter_load_valid_s:      out std_logic;
+        signal rob_commit_store_s:            out std_logic;
+        signal insert_result_s:               out std_logic
     );
     procedure cdb_result_proc (
         rob_id: integer;
@@ -73,20 +73,20 @@ package body tb_ls_reservation_station_pkg is
     end insert_instruction_proc;
 
     procedure clean_inputs_proc (
-        signal flush_s:                   out std_logic;
-        signal insert_s:                  out std_logic;
-        signal lsu_arbiter_load_valid_s:  out std_logic;
-        signal lsu_arbiter_store_valid_s: out std_logic;
-        signal rob_commit_store_s:        out std_logic;
-        signal insert_result_s:           out std_logic
+        signal flush_s:                       out std_logic;
+        signal insert_s:                      out std_logic;
+        signal lsu_arbiter_load_slot_taken_s: out std_logic;
+        signal lsu_arbiter_load_valid_s:      out std_logic;
+        signal rob_commit_store_s:            out std_logic;
+        signal insert_result_s:               out std_logic
     ) is
     begin
-        flush_s                   <= '0';
-        insert_s                  <= '0';
-        lsu_arbiter_load_valid_s  <= '0';
-        lsu_arbiter_store_valid_s <= '0';
-        rob_commit_store_s        <= '0';
-        insert_result_s           <= '0';
+        flush_s                       <= '0';
+        insert_s                      <= '0';
+        lsu_arbiter_load_slot_taken_s <= '0';
+        lsu_arbiter_load_valid_s      <= '0';
+        rob_commit_store_s            <= '0';
+        insert_result_s               <= '0';
     end clean_inputs_proc;
 
     procedure cdb_result_proc (

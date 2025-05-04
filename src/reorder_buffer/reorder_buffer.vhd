@@ -25,17 +25,19 @@ entity reorder_buffer is
         instruction_i:              in  rob_decoded_instruction_t;
         physical_register1_index_i: in  unsigned(clog2(n_entries_rob)-1 downto 0);
         physical_register2_index_i: in  unsigned(clog2(n_entries_rob)-1 downto 0);
-        physical_register1_value_i: out std_logic_vector(nbit-1 downto 0);
-        physical_register2_value_i: out std_logic_vector(nbit-1 downto 0);
-        physical_register1_valid_i: out std_logic;
-        physical_register2_valid_i: out std_logic;
+        physical_register1_value_o: out std_logic_vector(nbit-1 downto 0);
+        physical_register2_value_o: out std_logic_vector(nbit-1 downto 0);
+        physical_register1_valid_o: out std_logic;
+        physical_register2_valid_o: out std_logic;
 
-        -- RF/MEM Interface
-        destination_o:     out std_logic_vector(nbit-1 downto 0);
-        width_field_o:     out std_logic_vector(1 downto 0);
+        -- RF Interface
+        destination_o:     out std_logic_vector(clog2(32)-1 downto 0);
         result_o:          out std_logic_vector(nbit-1 downto 0);
-        memory_we_o:       out std_logic;
         registerfile_we_o: out std_logic;
+        
+        -- MEM Interface
+        lsu_store_stall_i: in  std_logic;
+        memory_we_o:       out std_logic;
 
         -- Branch Unit Interface
         branch_result_o: out rob_branch_result_t;
@@ -61,7 +63,6 @@ architecture beh of reorder_buffer is
         issue_ptr_next <= issue_ptr + 1;
         rob_fifo(to_integer(issue_ptr)).instruction_type <= instruction.instruction_type;
         rob_fifo(to_integer(issue_ptr)).destination      <= instruction.destination;
-        rob_fifo(to_integer(issue_ptr)).width_field      <= instruction.width_field;
         rob_fifo(to_integer(issue_ptr)).result           <= (others => '-');
         rob_fifo(to_integer(issue_ptr)).ready            <= '0';
         -- branch info
@@ -77,9 +78,6 @@ architecture beh of reorder_buffer is
         signal rob_fifo_next: out rob_array
     ) is
     begin
-        if rob_fifo(to_integer(unsigned(cdb.rob_index))).instruction_type = to_mem then
-            rob_fifo_next(to_integer(unsigned(cdb.rob_index))).destination <= cdb.destination;
-        end if;
         rob_fifo_next(to_integer(unsigned(cdb.rob_index))).result <= cdb.result;
         rob_fifo_next(to_integer(unsigned(cdb.rob_index))).ready  <= '1';
     end procedure insert_result;
@@ -90,8 +88,7 @@ architecture beh of reorder_buffer is
         signal mem_hazard:         in  std_logic;
         signal commit_ptr_next:    out unsigned(clog2(n_entries_rob)-1 downto 0);
         signal issue_ptr_next:     out unsigned(clog2(n_entries_rob)-1 downto 0);
-        signal destination_o:      out std_logic_vector(nbit-1 downto 0);
-        signal width_field_o:      out std_logic_vector(1 downto 0);
+        signal destination_o:      out std_logic_vector(clog2(32)-1 downto 0);
         signal result_o:           out std_logic_vector(nbit-1 downto 0);
         signal memory_we_o:        out std_logic;
         signal registerfile_we_o:  out std_logic;
@@ -101,15 +98,11 @@ architecture beh of reorder_buffer is
     begin
         commit_ptr_next <= commit_ptr + 1;
         destination_o <= rob_fifo(to_integer(commit_ptr)).destination;
-        width_field_o <= rob_fifo(to_integer(commit_ptr)).width_field;
         result_o <= rob_fifo(to_integer(commit_ptr)).result;
         case rob_fifo(to_integer(commit_ptr)).instruction_type is
             when to_mem =>
                 if mem_hazard = '0' then
                     memory_we_o   <= '1';
-                    destination_o <= rob_fifo(to_integer(commit_ptr)).destination;
-                    width_field_o <= rob_fifo(to_integer(commit_ptr)).width_field;
-                    result_o      <= rob_fifo(to_integer(commit_ptr)).result;
                 else
                     commit_ptr_next <= commit_ptr;
                 end if;
@@ -135,16 +128,16 @@ architecture beh of reorder_buffer is
 begin
     issue_ptr_o  <= std_logic_vector(issue_ptr);
     commit_ptr_o <= std_logic_vector(commit_ptr);
-    physical_register1_value_i <= rob_fifo(to_integer(unsigned(physical_register1_index_i))).result;
-    physical_register2_value_i <= rob_fifo(to_integer(unsigned(physical_register2_index_i))).result;
-    physical_register1_valid_i <= rob_fifo(to_integer(unsigned(physical_register1_index_i))).ready;
-    physical_register2_valid_i <= rob_fifo(to_integer(unsigned(physical_register2_index_i))).ready;
+    physical_register1_value_o <= rob_fifo(to_integer(unsigned(physical_register1_index_i))).result;
+    physical_register2_value_o <= rob_fifo(to_integer(unsigned(physical_register2_index_i))).result;
+    physical_register1_valid_o <= rob_fifo(to_integer(unsigned(physical_register1_index_i))).ready;
+    physical_register2_valid_o <= rob_fifo(to_integer(unsigned(physical_register2_index_i))).ready;
 
     comb_proc: process (state, mem_hazard_i, rob_fifo, commit_ptr, issue_ptr, insert_result_i, cdb_i, insert_instruction_i, instruction_i)
         variable push, pop, misp, test_full, test_empty: boolean;
     begin
         push       := insert_instruction_i = '1';
-        pop        := rob_fifo(to_integer(commit_ptr)).ready = '1' and not(rob_fifo(to_integer(commit_ptr)).instruction_type = to_mem and mem_hazard_i = '1');
+        pop        := rob_fifo(to_integer(commit_ptr)).ready = '1' and lsu_store_stall_i = '0' and not(rob_fifo(to_integer(commit_ptr)).instruction_type = to_mem and mem_hazard_i = '1');
         misp       := pop and (rob_fifo(to_integer(commit_ptr)).instruction_type = branch) and (rob_fifo(to_integer(commit_ptr)).branch_data.branch_taken /= rob_fifo(to_integer(commit_ptr)).result(0));
         test_full  := issue_ptr = commit_ptr-1;
         test_empty := issue_ptr = commit_ptr+1;
@@ -157,7 +150,6 @@ begin
                 state_next <= empty;
                 full_o <= '0';
                 destination_o     <= (others => '-');
-                width_field_o     <= (others => '-');
                 result_o          <= (others => '-');
                 memory_we_o       <= '0';
                 registerfile_we_o <= '0';
@@ -178,7 +170,6 @@ begin
                 state_next <= idle;
                 full_o <= '0';
                 destination_o     <= (others => '-');
-                width_field_o     <= (others => '-');
                 result_o          <= (others => '-');
                 memory_we_o    <= '0';
                 registerfile_we_o    <= '0';
@@ -194,7 +185,7 @@ begin
                 if insert_instruction_i = '1' then
                     insert_instruction(instruction_i, issue_ptr, rob_fifo_next, issue_ptr_next);
                 end if;
-                if rob_fifo(to_integer(commit_ptr)).ready = '1' then
+                if rob_fifo(to_integer(commit_ptr)).ready = '1' and lsu_store_stall_i = '0' then
                     commit_instruction(
                         rob_fifo => rob_fifo,
                         commit_ptr => commit_ptr,
@@ -202,7 +193,6 @@ begin
                         commit_ptr_next => commit_ptr_next,
                         issue_ptr_next => issue_ptr_next,
                         destination_o => destination_o,
-                        width_field_o => width_field_o,
                         result_o => result_o,
                         memory_we_o => memory_we_o,
                         registerfile_we_o => registerfile_we_o,
@@ -222,7 +212,6 @@ begin
                 state_next      <= full;
                 full_o          <= '1';
                 destination_o     <= (others => '-');
-                width_field_o     <= (others => '-');
                 result_o          <= (others => '-');
                 memory_we_o    <= '0';
                 registerfile_we_o    <= '0';
@@ -234,7 +223,7 @@ begin
                 if insert_result_i = '1' then
                     insert_result(rob_fifo, cdb_i, rob_fifo_next);
                 end if;
-                if rob_fifo(to_integer(commit_ptr)).ready = '1' then
+                if rob_fifo(to_integer(commit_ptr)).ready = '1' and lsu_store_stall_i = '0' then
                     commit_instruction(
                         rob_fifo => rob_fifo,
                         commit_ptr => commit_ptr,
@@ -242,7 +231,6 @@ begin
                         commit_ptr_next => commit_ptr_next,
                         issue_ptr_next => issue_ptr_next,
                         destination_o => destination_o,
-                        width_field_o => width_field_o,
                         result_o => result_o,
                         memory_we_o => memory_we_o,
                         registerfile_we_o => registerfile_we_o,
@@ -262,7 +250,6 @@ begin
                 state_next <= empty;
                 full_o <= '0';
                 destination_o     <= (others => '-');
-                width_field_o     <= (others => '-');
                 result_o          <= (others => '-');
                 memory_we_o    <= '0';
                 registerfile_we_o    <= '0';
