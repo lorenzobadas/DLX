@@ -1,6 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use ieee.math_real.UNIFORM;
 use work.utils_pkg.all;
 use work.o3_pkg.all;
 
@@ -26,6 +27,7 @@ architecture test of tb_alu is
     signal alu_out: std_logic_vector(nbit-1 downto 0);
     signal simulation_done: boolean := false;
     signal expected: std_logic_vector(nbit-1 downto 0);
+
 begin
 
     dut: alu
@@ -45,12 +47,9 @@ begin
         b <= (others => '0');
         for operation in alu_op_t'low to alu_op_t'high loop
             alu_op <= operation;
-            a <= "11111111111111111111111111111111";
-            b <= "00000000000000000000000000000001";
+            a <= rand_slv(nbit, 111);
+            b <= rand_slv(nbit, 444);
             wait for 10 ns;
-            -- a <= "10101010101010101010101010101010";
-            -- b <= "01010101010101010101010101010101";
-            -- wait for 10 ns;
         end loop;
         simulation_done <= true;
         wait for 10 ns;
@@ -71,9 +70,9 @@ begin
             when alu_xor =>
                 expected <= (a xor b);
             when alu_sll =>
-                expected <= std_logic_vector(shift_left(unsigned(a), to_integer(unsigned(b))));
+                expected <= std_logic_vector(shift_left(unsigned(a), to_integer(unsigned(b(clog2(nbit)-1 downto 0)))));
             when alu_srl =>
-                expected <= std_logic_vector(shift_right(unsigned(a), to_integer(unsigned(b))));
+                expected <= std_logic_vector(shift_right(unsigned(a), to_integer(unsigned(b(clog2(nbit)-1 downto 0)))));
             when alu_seq =>
                 if a = b then
                     expected <= std_logic_vector(to_signed(1, alu_out'length));    
@@ -99,7 +98,7 @@ begin
                     expected <= std_logic_vector(to_signed(0, alu_out'length));    
                 end if;
             when alu_sra =>
-                expected <= std_logic_vector(shift_right(signed(a), to_integer(unsigned(b))));
+                expected <= std_logic_vector(shift_right(signed(a), to_integer(unsigned(b(clog2(nbit)-1 downto 0)))));
             when alu_slt =>
                 if signed(a) < signed(b) then
                     expected <= std_logic_vector(to_signed(1, alu_out'length));    
@@ -163,67 +162,27 @@ begin
             when alu_srl =>
                 assert alu_out = expected report "alu_srl failed" severity error;
             when alu_seq =>
-                if a = b then
-                    assert alu_out = expected report "alu_seq failed" severity error;
-                else
-                    assert alu_out = expected report "alu_seq failed" severity error;
-                end if;
+                assert alu_out = expected report "alu_seq failed" severity error;
             when alu_sne =>
-                if a /= b then
-                    assert alu_out = expected report "alu_sne failed" severity error;
-                else
-                    assert alu_out = expected report "alu_sne failed" severity error;
-                end if;
+                assert alu_out = expected report "alu_sne failed" severity error;
             when alu_sle =>
-                if signed(a) <= signed(b) then
-                    assert alu_out = expected report "alu_sle failed" severity error;
-                else
-                    assert alu_out = expected report "alu_sle failed" severity error;
-                end if;
+                assert alu_out = expected report "alu_sle failed" severity error;
             when alu_sge =>
-                if signed(a) >= signed(b) then
-                    assert alu_out = expected report "alu_sge failed" severity error;
-                else
-                    assert alu_out = expected report "alu_sge failed" severity error;
-                end if;
+                assert alu_out = expected report "alu_sge failed" severity error;
             when alu_sra =>
                 assert alu_out = expected report "alu_sra failed" severity error;
             when alu_slt =>
-                if signed(a) < signed(b) then
-                    assert alu_out = expected report "alu_slt failed" severity error;
-                else
-                    assert alu_out = expected report "alu_slt failed" severity error;
-                end if;
+                assert alu_out = expected report "alu_slt failed" severity error;
             when alu_sgt =>
-                if signed(a) > signed(b) then
-                    assert alu_out = expected report "alu_sgt failed" severity error;
-                else
-                    assert alu_out = expected report "alu_sgt failed" severity error;
-                end if;
+                assert alu_out = expected report "alu_sgt failed" severity error;
             when alu_sltu =>
-                if unsigned(a) < unsigned(b) then
-                    assert alu_out = expected report "alu_sltu failed" severity error;
-                else
-                    assert alu_out = expected report "alu_sltu failed" severity error;
-                end if;
+                assert alu_out = expected report "alu_sltu failed" severity error;
             when alu_sgeu =>
-                if unsigned(a) >= unsigned(b) then
-                    assert alu_out = expected report "alu_sgeu failed" severity error;
-                else
-                    assert alu_out = expected report "alu_sgeu failed" severity error;
-                end if;
+                assert alu_out = expected report "alu_sgeu failed" severity error;
             when alu_sleu => 
-                if unsigned(a) <= unsigned(b) then
-                    assert alu_out = expected report "alu_sleu failed" severity error;
-                else
-                    assert alu_out = expected report "alu_sleu failed" severity error;
-                end if;
+                assert alu_out = expected report "alu_sleu failed" severity error;
             when alu_sgtu => 
-                if unsigned(a) > unsigned(b) then
-                    assert alu_out = expected report "alu_sgtu failed" severity error;
-                else
-                    assert alu_out = expected report "alu_sgtu failed" severity error;
-                end if;
+                assert alu_out = expected report "alu_sgtu failed" severity error;
             when others =>
                 report "not an alu operation" severity error;
         end case;

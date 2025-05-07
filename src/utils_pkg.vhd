@@ -9,6 +9,7 @@ package utils_pkg is
     function max (a: integer; b: integer) return integer;
     function slv_to_string ( a: std_logic_vector) return string;
     function bv_to_string ( a: bit_vector) return string;
+    function rand_slv(len: integer; seed: integer) return std_logic_vector;
 end package;
 
 package body utils_pkg is
@@ -42,5 +43,21 @@ package body utils_pkg is
             b(i) := bit'image(a((i-1)))(2);
             end loop;
         return b;
+    end function;
+
+    function rand_slv(len: integer; seed: integer) return std_logic_vector is
+        variable r : real;
+        variable slv : std_logic_vector(len - 1 downto 0);
+        variable seed1, seed2 : integer := seed;
+    begin
+        for i in slv'range loop
+            uniform(seed1, seed2, r);
+                if r > 0.5 then
+                    slv(i) := '1';
+                else
+                    slv(i) := '0';
+          end if;
+        end loop;
+        return slv;
     end function;
 end package body;

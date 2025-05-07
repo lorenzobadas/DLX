@@ -64,7 +64,7 @@ architecture struct of alu is
         port (
             a_last_i:      in  std_logic;
             b_last_i:      in  std_logic;
-            result_last_i: in  std_logic;
+            result_i:      in  std_logic_vector(nbit-1 downto 0);
             cout_i  :      in  std_logic;
             alu_op_i:      in  alu_op_t;
             result_o:      out std_logic_vector(nbit-1 downto 0)
@@ -127,7 +127,7 @@ begin
     port map (
         a_last_i      => a_i(nbit-1),
         b_last_i      => b_i(nbit-1),
-        result_last_i => adder_result(nbit-1),
+        result_i      => adder_result,
         cout_i        => adder_cout,
         alu_op_i      => alu_op_i,
         result_o      => comparator_result
