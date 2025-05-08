@@ -9,7 +9,7 @@ entity comparator is
     port (
         a_last_i:      in  std_logic;
         b_last_i:      in  std_logic;
-        result_last_i: in  std_logic;
+        result_i:      in  std_logic_vector(nbit-1 downto 0);
         cout_i  :      in  std_logic;
         alu_op_i:      in  alu_op_t;
         result_o:      out std_logic_vector(nbit-1 downto 0)
@@ -21,11 +21,12 @@ architecture beh of comparator is
     signal N, Z, V, C: std_logic;
 begin
 
-    N <= result_last_i;
-    Z <= '1' when result_last_i = '0' else
+    N <= result_i(nbit-1);
+    Z <= '1' when result_i = (result_i'range => '0') else
          '0';
-    V <= (a_last_i and (not b_last_i) and (not result_last_i)) or
-            ((not a_last_i) and b_last_i and result_last_i);
+    -- V = A'BR + AB'R'
+    V <= (a_last_i and (not b_last_i) and (not result_i(nbit-1))) or
+         ((not a_last_i) and b_last_i and result_i(nbit-1));
     C <= cout_i;
 
     process(alu_op_i, N, Z, V, C)

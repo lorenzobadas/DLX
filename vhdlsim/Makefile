@@ -63,9 +63,9 @@ ls-reservation-station-tb: clean
 		-do ../scripts/tb_ls_reservation_station.do
 
 alu-tb: clean
-	cp $(PKG_FILES) $(P4_SRC) $(ALU_SRC) $(ALU_TB_SRC) .
+	cp $(PKG_FILES) $(P4_SRC) $(T2_SRC) $(ALU_SRC) $(ALU_TB_SRC) .
 
-	vcom $$(basename -a $(PKG_FILES) $(P4_SRC) $(ALU_SRC) $(ALU_TB_SRC)) -autoorder -autoorderquiet
+	vcom $$(basename -a $(PKG_FILES) $(P4_SRC) $(T2_SRC) $(ALU_SRC) $(ALU_TB_SRC)) -autoorder -autoorderquiet
 
 	vsim \
 		-do ../scripts/tb_alu.do
