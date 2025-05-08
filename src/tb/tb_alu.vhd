@@ -27,7 +27,7 @@ architecture test of tb_alu is
     signal alu_out: std_logic_vector(nbit-1 downto 0);
     signal simulation_done: boolean := false;
     signal expected: std_logic_vector(nbit-1 downto 0);
-
+    constant iterations: integer := 1000;
 begin
 
     dut: alu
@@ -45,11 +45,13 @@ begin
     begin
         a <= (others => '0');
         b <= (others => '0');
-        for operation in alu_op_t'low to alu_op_t'high loop
-            alu_op <= operation;
-            a <= rand_slv(nbit, 111);
-            b <= rand_slv(nbit, 444);
-            wait for 10 ns;
+        for i in 1 to iterations loop
+            for operation in alu_op_t'low to alu_op_t'high loop
+                alu_op <= operation;
+                a <= rand_slv(nbit, i);
+                b <= rand_slv(nbit, i+iterations);
+                wait for 10 ns;
+            end loop;
         end loop;
         simulation_done <= true;
         wait for 10 ns;
@@ -75,65 +77,65 @@ begin
                 expected <= std_logic_vector(shift_right(unsigned(a), to_integer(unsigned(b(clog2(nbit)-1 downto 0)))));
             when alu_seq =>
                 if a = b then
-                    expected <= std_logic_vector(to_signed(1, alu_out'length));    
+                    expected <= std_logic_vector(to_signed(1, expected'length));    
                 else
-                    expected <= std_logic_vector(to_signed(0, alu_out'length));    
+                    expected <= std_logic_vector(to_signed(0, expected'length));    
                 end if;
             when alu_sne =>
                 if a /= b then
-                    expected <= std_logic_vector(to_signed(1, alu_out'length));   
+                    expected <= std_logic_vector(to_signed(1, expected'length));   
                 else
-                    expected <= std_logic_vector(to_signed(0, alu_out'length));    
+                    expected <= std_logic_vector(to_signed(0, expected'length));    
                 end if;
             when alu_sle =>
                 if signed(a) <= signed(b) then
-                    expected <= std_logic_vector(to_signed(1, alu_out'length));
+                    expected <= std_logic_vector(to_signed(1, expected'length));
                 else
-                    expected <= std_logic_vector(to_signed(0, alu_out'length));    
+                    expected <= std_logic_vector(to_signed(0, expected'length));    
                 end if;
             when alu_sge =>
                 if signed(a) >= signed(b) then
-                    expected <= std_logic_vector((to_signed(1, alu_out'length)));    
+                    expected <= std_logic_vector((to_signed(1, expected'length)));    
                 else
-                    expected <= std_logic_vector(to_signed(0, alu_out'length));    
+                    expected <= std_logic_vector(to_signed(0, expected'length));    
                 end if;
             when alu_sra =>
                 expected <= std_logic_vector(shift_right(signed(a), to_integer(unsigned(b(clog2(nbit)-1 downto 0)))));
             when alu_slt =>
                 if signed(a) < signed(b) then
-                    expected <= std_logic_vector(to_signed(1, alu_out'length));    
+                    expected <= std_logic_vector(to_signed(1, expected'length));    
                 else
-                    expected <= std_logic_vector(to_signed(0, alu_out'length));    
+                    expected <= std_logic_vector(to_signed(0, expected'length));    
                 end if;
             when alu_sgt =>
                 if signed(a) > signed(b) then
-                    expected <= std_logic_vector(to_signed(1, alu_out'length));    
+                    expected <= std_logic_vector(to_signed(1, expected'length));    
                 else
-                    expected <= std_logic_vector(to_signed(0, alu_out'length));    
+                    expected <= std_logic_vector(to_signed(0, expected'length));    
                 end if;
             when alu_sltu =>
                 if unsigned(a) < unsigned(b) then
-                    expected <= std_logic_vector(to_unsigned(1, alu_out'length));    
+                    expected <= std_logic_vector(to_unsigned(1, expected'length));    
                 else
-                    expected <= std_logic_vector(to_signed(0, alu_out'length));    
+                    expected <= std_logic_vector(to_signed(0, expected'length));    
                 end if;
             when alu_sgeu =>
                 if unsigned(a) >= unsigned(b) then
-                    expected <= std_logic_vector(to_unsigned(1, alu_out'length));    
+                    expected <= std_logic_vector(to_unsigned(1, expected'length));    
                 else
-                    expected <= std_logic_vector(to_signed(0, alu_out'length));    
+                    expected <= std_logic_vector(to_signed(0, expected'length));    
                 end if;
             when alu_sleu => 
                 if unsigned(a) <= unsigned(b) then
-                    expected <= std_logic_vector(to_unsigned(1, alu_out'length));    
+                    expected <= std_logic_vector(to_unsigned(1, expected'length));    
                 else
-                    expected <= std_logic_vector(to_signed(0, alu_out'length));    
+                    expected <= std_logic_vector(to_signed(0, expected'length));    
                 end if;
             when alu_sgtu => 
                 if unsigned(a) > unsigned(b) then
-                    expected <= std_logic_vector(to_unsigned(1, alu_out'length));    
+                    expected <= std_logic_vector(to_unsigned(1, expected'length));    
                 else
-                    expected <= std_logic_vector(to_signed(0, alu_out'length));    
+                    expected <= std_logic_vector(to_signed(0, expected'length));    
                 end if;
             when others =>
                 report "not an alu operation" severity error;
