@@ -174,29 +174,47 @@ architecture beh of ls_reservation_station is
         end loop;
     end procedure send_load_to_mem;
     procedure commit_store (
-        signal rs_array:      in  rs_array_t;
-        signal tail_ptr:      in  unsigned(clog2(n_entries_rs)-1 downto 0);
-        signal rs_array_next: out rs_array_t
+        signal rs_array:               in  rs_array_t;
+        signal tail_ptr:               in  unsigned(clog2(n_entries_rs)-1 downto 0);
+        signal rob_commit_store:       in  std_logic;
+        signal rob_commit_store_stall: out std_logic;
+        signal mem_write_data:         out std_logic_vector(nbit-1 downto 0);
+        signal mem_write_address:      out std_logic_vector(nbit-1 downto 0);
+        signal mem_write_width:        out std_logic_vector(1 downto 0);
+        signal mem_write_enable:       out std_logic;
+        signal rs_array_next:          out rs_array_t
     ) is
         variable found: boolean := false;
+        variable found_index: integer := 0;
     begin
-        -- look for first two instructions in RS
+        -- look for the first store instruction in the RS
         -- if ready, mark RS entry as not busy
-        for i in 0 to 1 loop
+        for i in 0 to n_entries_rs-1 loop
             if not found and
                rs_array(to_integer(tail_ptr+i)).operation = '1' and 
                rs_array(to_integer(tail_ptr+i)).busy = '1'
             then
                 found := true;
-                rs_array_next(to_integer(tail_ptr+i)).wait_store <= '1';
+                found_index := to_integer(tail_ptr+i);
             end if;
         end loop;
-        
-        if rs_array(to_integer(tail_ptr)).valid1 = '1' and
-           rs_array(to_integer(tail_ptr)).valid2 = '1' 
+
+        rs_array_next(found_index).wait_store <= '1';
+
+        if rs_array(found_index).valid1 = '1' and
+           rs_array(found_index).valid2 = '1' 
         then
-            rs_array_next(to_integer(tail_ptr)).busy <= '0';
+            rs_array_next(found_index).busy <= '0';
         end if;
+        rob_commit_store_stall <= rs_array(found_index).wait_store and
+                                  rs_array(found_index).busy;
+        mem_write_data         <= rs_array(found_index).source1;
+        mem_write_address      <= rs_array(found_index).source2;
+        mem_write_width        <= rs_array(found_index).width_field;
+        mem_write_enable       <= (rob_commit_store or (rs_array(found_index).wait_store and rs_array(found_index).busy)) and
+                                   rs_array(found_index).operation and
+                                   rs_array(found_index).valid1 and
+                                   rs_array(found_index).valid2;
     end procedure commit_store;
     procedure insert_result (
         signal rs_array:      in  rs_array_t;
@@ -220,17 +238,6 @@ architecture beh of ls_reservation_station is
         end loop;
     end procedure insert_result;
 begin
-    rob_commit_store_stall_o <= rs_array(to_integer(tail_ptr)).wait_store and
-                                rs_array(to_integer(tail_ptr)).busy;
-
-    mem_write_data_o    <= rs_array(to_integer(tail_ptr)).source1;
-    mem_write_address_o <= rs_array(to_integer(tail_ptr)).source2;
-    mem_write_width_o   <= rs_array(to_integer(tail_ptr)).width_field;
-    mem_write_enable_o  <= (rob_commit_store_i or (rs_array(to_integer(tail_ptr)).wait_store and rs_array(to_integer(tail_ptr)).busy)) and
-                           rs_array(to_integer(tail_ptr)).operation and
-                           rs_array(to_integer(tail_ptr)).valid1 and
-                           rs_array(to_integer(tail_ptr)).valid2;
-
     comb_proc: process(state, rs_array, head_ptr, tail_ptr, insert_i, rs_entry_i, lsu_arbiter_load_valid_i, rob_commit_store_i, insert_result_i, cdb_i, lsu_arbiter_load_slot_taken_i)
         variable found:       boolean := false;
         variable found_index: integer;
@@ -249,6 +256,11 @@ begin
                 mem_rob_id_o               <= (others => '0');
                 mem_format_o               <= (others => '0');
                 mem_address_o              <= (others => '0');
+                rob_commit_store_stall_o   <= '0';
+                mem_write_enable_o         <= '0';
+                mem_write_data_o           <= (others => '0');
+                mem_write_address_o        <= (others => '0');
+                mem_write_width_o          <= (others => '0');
 
                 if insert_i = '1' then
                     insert_instruction(
@@ -270,6 +282,12 @@ begin
                 mem_rob_id_o               <= (others => '0');
                 mem_format_o               <= (others => '0');
                 mem_address_o              <= (others => '0');
+                rob_commit_store_stall_o   <= '0';
+                mem_write_enable_o         <= '0';
+                mem_write_data_o           <= (others => '0');
+                mem_write_address_o        <= (others => '0');
+                mem_write_width_o          <= (others => '0');
+
                 if insert_i = '1' then
                     insert_instruction(
                         rs_entry      => rs_entry_i,
@@ -297,9 +315,15 @@ begin
                     rs_array(to_integer(tail_ptr)).busy = '1')
                 then
                     commit_store(
-                        rs_array      => rs_array,
-                        tail_ptr      => tail_ptr,
-                        rs_array_next => rs_array_next
+                        rs_array               => rs_array,
+                        tail_ptr               => tail_ptr,
+                        rob_commit_store       => rob_commit_store_i,
+                        rob_commit_store_stall => rob_commit_store_stall_o,
+                        mem_write_data         => mem_write_data_o,
+                        mem_write_address      => mem_write_address_o,
+                        mem_write_width        => mem_write_width_o,
+                        mem_write_enable       => mem_write_enable_o,
+                        rs_array_next          => rs_array_next
                     );
                 end if;
 
@@ -342,6 +366,11 @@ begin
                 mem_rob_id_o               <= (others => '0');
                 mem_format_o               <= (others => '0');
                 mem_address_o              <= (others => '0');
+                rob_commit_store_stall_o   <= '0';
+                mem_write_enable_o         <= '0';
+                mem_write_data_o           <= (others => '0');
+                mem_write_address_o        <= (others => '0');
+                mem_write_width_o          <= (others => '0');
                 
                 if lsu_arbiter_load_slot_taken_i = '0' or lsu_arbiter_load_valid_i = '1'  then
                     send_load_to_mem(
@@ -361,9 +390,15 @@ begin
                     rs_array(to_integer(tail_ptr)).busy = '1')
                 then
                     commit_store(
-                        rs_array      => rs_array,
-                        tail_ptr      => tail_ptr,
-                        rs_array_next => rs_array_next
+                        rs_array               => rs_array,
+                        tail_ptr               => tail_ptr,
+                        rob_commit_store       => rob_commit_store_i,
+                        rob_commit_store_stall => rob_commit_store_stall_o,
+                        mem_write_data         => mem_write_data_o,
+                        mem_write_address      => mem_write_address_o,
+                        mem_write_width        => mem_write_width_o,
+                        mem_write_enable       => mem_write_enable_o,
+                        rs_array_next          => rs_array_next
                     );
                 end if;
 
