@@ -36,7 +36,7 @@ begin
                 data_out <= data_in;
             when others =>
                 -- default case, should not happen -> write undefined value
-                data_out <= (others => 'u');
+                data_out <= (others => 'U');
         end case;
     end process;
 end beh;
