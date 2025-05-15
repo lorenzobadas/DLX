@@ -13,10 +13,6 @@ entity instruction_parser is
         i_immediate_o:  out std_logic_vector(31 downto 0);
         i_uimmediate_o: out std_logic_vector(31 downto 0);
         j_immediate_o:  out std_logic_vector(31 downto 0);
-
-        reservation_station_i: out reservation_station_t;
-        alu_operation_i:       out alu_operation_t;
-        commit_type_i:         out commit_type_t
     );
 end entity;
 
