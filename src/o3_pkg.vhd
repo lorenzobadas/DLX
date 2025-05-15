@@ -4,7 +4,7 @@ use work.utils_pkg.all;
 
 package o3_pkg is
     constant n_entries_rs:          integer := 4;
-    constant n_operations_alu:      integer := 1;
+    constant n_operations_alu:      integer := 10;
     constant n_operations_mult:     integer := 1;
     constant n_operations_lsu:      integer := 2;
     constant max_operations:        integer := max(n_operations_alu, n_operations_mult);
@@ -17,7 +17,7 @@ package o3_pkg is
         instruction_type:     commit_option_t;
         instruction_address:  std_logic_vector(nbit-1 downto 0);
         branch_taken:         std_logic;
-        destination:          std_logic_vector(nbit-1 downto 0); -- either register or memory address
+        destination:          std_logic_vector(clog2(32)-1 downto 0); -- register address
         branch_taken_address: std_logic_vector(nbit-1 downto 0);
         bpu_history:          std_logic_vector(1 downto 0);
     end record rob_decoded_instruction_t;
@@ -50,7 +50,7 @@ package o3_pkg is
     type rob_entry_t is record
         instruction_type: commit_option_t;
         result:           std_logic_vector(nbit-1 downto 0);
-        destination:      std_logic_vector(nbit-1 downto 0); -- either register or memory address
+        destination:      std_logic_vector(clog2(32)-1 downto 0); -- register address
         branch_data:      branch_data_t;
         ready:            std_logic; -- ready if result is available
     end record rob_entry_t;
@@ -67,6 +67,17 @@ package o3_pkg is
         busy: std_logic;
     end record exe_rs_entry_t;
 
+    type exe_rs_instruction_data_t is record
+        rob_id: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
+        source1: std_logic_vector(nbit-1 downto 0);
+        valid1: std_logic;
+        source2: std_logic_vector(nbit-1 downto 0);
+        valid2: std_logic;
+        operation: std_logic_vector(clog2(max_operations)-1 downto 0);
+        reg1: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
+        reg2: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
+    end record exe_rs_instruction_data_t;
+
     type ls_rs_entry_t is record
         rob_id: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
         source1: std_logic_vector(nbit-1 downto 0);
@@ -79,7 +90,6 @@ package o3_pkg is
         sign_field: std_logic; -- 0: signed, 1: unsigned
         reg1: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
         reg2: std_logic_vector(clog2(n_entries_rob)-1 downto 0);
-        wait_instr: std_logic;
         wait_store: std_logic;
         busy: std_logic;
     end record ls_rs_entry_t;
@@ -99,4 +109,28 @@ package o3_pkg is
     end record ls_rs_instruction_data_t;
 
     type reservation_station_t is (lsu, alu, mult, none);
+
+    type alu_op_t is (
+        alu_add,
+        alu_sub,
+        alu_and, 
+        alu_or, 
+        alu_xor, 
+        alu_sll, 
+        alu_srl, 
+        alu_seq,
+        alu_sne, 
+        alu_sle,   
+        alu_sge, 
+        alu_sra,  
+        alu_slt, 
+        alu_sgt, 
+        alu_sltu, 
+        alu_sgeu, 
+        alu_sleu, 
+        alu_sgtu,
+        alu_nop,
+        none
+    );
+    
 end o3_pkg;

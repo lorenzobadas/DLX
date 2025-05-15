@@ -7,7 +7,7 @@ entity instr_decoder is
         opcode_i:              in   std_logic_vector(5 downto 0);
         func_i:                in   std_logic_vector(10 downto 0);
         reservation_station_o: out  reservation_station_t; -- lsu, alu, mult, none
-        alu_operation_o:       out  alu_op_t; --TODO merge o3pkg form main, add none  
+        alu_operation_o:       out  alu_op_t;  
         commit_type_o:         out  commit_option_t --TODO rename -- none, branch, to_mem, to_rf
     );
 end entity;
