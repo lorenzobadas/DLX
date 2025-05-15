@@ -27,7 +27,7 @@ begin
                 reservation_station_o <= alu;
                 commit_type_o         <= to_rf;
 
-                case opcode_o is
+                case opcode_i is
                     when opcode_addi  => alu_operation_o <= alu_add;
                     when opcode_subi  => alu_operation_o <= alu_sub;
                     when opcode_andi  => alu_operation_o <= alu_and;
@@ -73,7 +73,7 @@ begin
                 reservation_station_o <= alu;
                 commit_type_o         <= to_rf;
 
-                case func_o is
+                case func_i is
                     when "10000000000" => alu_operation_o <= alu_add;
                     when "10001000000" => alu_operation_o <= alu_sub;
                     when "10010000000" => alu_operation_o <= alu_and;
