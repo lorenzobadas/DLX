@@ -73,11 +73,28 @@ architecture structural of boothmul_pipelined is
     end component;
 
 
-    type array3d_shift is array(0 to (nbit/2)-1, 0 to 4) of std_logic_vector((2*nbit)-1 downto 0);
-    type array3d_sum is array(0 to (nbit/2)-1, 0 to 1) of std_logic_vector((2*nbit)-1 downto 0);
-    type array2d_enc is array(0 to (nbit/2)-1) of std_logic_vector(2 downto 0);
-    type reg_stage_wire_array is array(0 to (nbit/2)-1, 0 to 5) of std_logic_vector((2*nbit)-1 downto 0);
-    type nbit_array is array(0 to (nbit/2)-1) of std_logic_vector(nbit-1 downto 0);
+    type array3d_shift is array
+        (0 to (nbit/2)-1, -- **slice index**: one entry per Booth slice
+        0 to 4) -- **shift variant**: fixe "atoms" {0, +1, -1, +2, -2}
+        of std_logic_vector((2*nbit)-1 downto 0); -- **element width**: partial product, double precision
+
+    type array3d_sum is array
+        (0 to (nbit/2)-1, --**slice index**
+        0 to 1) --**sum stage**: two per slice, pre & post add, 0 post-adder running sum leaving slice i, 1 pre-adder new partial from slice i.
+        of std_logic_vector((2*nbit)-1 downto 0); -- **element width**
+
+    type array2d_enc is array
+        (0 to (nbit/2)-1) -- **slice index**
+        of std_logic_vector(2 downto 0); -- 3 bits, tells the mux_mul which of the five shift variants to select
+
+    type reg_stage_wire_array is array
+        (0 to (nbit/2)-1, -- **slice index** 
+        0 to 5) -- 6 registers per slice, TODO: in theory we are not using the 6th reg?
+        of std_logic_vector((2*nbit)-1 downto 0); -- **element width**
+
+    type nbit_array is array -- stores b along the different stages
+        (0 to (nbit/2)-1) -- **slice index**
+        of std_logic_vector(nbit-1 downto 0);
 
 
     signal shift_array: array3d_shift;
@@ -89,6 +106,7 @@ architecture structural of boothmul_pipelined is
     signal regw_stage : reg_stage_wire_array;
     signal b_array    : nbit_array;
 begin
+
     extend_a: for i in 0 to a_ext'length-1 generate
         copy: if i < a'length generate
             a_ext(i) <= a(i);
