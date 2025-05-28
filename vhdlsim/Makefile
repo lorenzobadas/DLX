@@ -54,6 +54,14 @@ boothmul-ctrl-tb: clean
 	vsim \
 		-do ../scripts/tb_boothmul_ctrl.do
 
+boothmul-wrapper-tb: clean
+	cp $(PKG_FILES) $(P4_SRC) $(BOOTHMUL_SRC) $(BOOTHMUL_TB_SRC) .
+
+	vcom $$(basename -a $(PKG_FILES) $(P4_SRC) $(BOOTHMUL_SRC) $(BOOTHMUL_TB_SRC)) -autoorder -autoorderquiet
+
+	vsim \
+		-do ../scripts/tb_boothmul_wrapper.do
+
 reorder-buffer-tb: clean
 	cp $(PKG_FILES) $(REORDER_BUFFER_SRC) $(REORDER_BUFFER_TB_SRC) .
 
