@@ -16,7 +16,7 @@ entity instr_fetch is
 end entity;
 
 architecture struct of instr_fetch is
-    component reg is 
+    component pc is 
         generic (
             nbit: integer := 32
         ); 
@@ -60,11 +60,9 @@ architecture struct of instr_fetch is
         ); 
     end component;
 
-    signal next_pc, npc, next_npc, ir, next_ir: std_logic_vector(nbit-1 downto 0);
+    signal next_pc: std_logic_vector(nbit-1 downto 0);
 begin
-    npc_o <= next_npc;
-    ir_o <= next_ir;
-    pc_reg: reg
+    pc_reg: pc
         generic map (
             nbit => nbit
         )
@@ -85,19 +83,8 @@ begin
             b => (3 => '1', others => '0'), -- add 4
             cin => '0',
             sub => '0',
-            s => npc,
+            s => npc_o,
             cout => open
-        );
-
-    npc_reg: reg
-        generic map (
-            nbit => nbit
-        )
-        port map (
-            clk_i => clk_i,
-            reset_i => reset_i,
-            in_i => npc,
-            out_o => next_npc
         );
 
     instr_mem: imem
@@ -113,18 +100,7 @@ begin
             en_i => '1',
             addr_i => next_pc(9 downto 0),
             rd_o => open, -- TODO
-            dout_o => ir
-        );
-
-    ir_reg: reg
-        generic map (
-            nbit => nbit
-        )
-        port map (
-            clk_i => clk_i,
-            reset_i => reset_i,
-            in_i => ir,
-            out_o => next_ir
+            dout_o => ir_o
         );
 
 end architecture;
