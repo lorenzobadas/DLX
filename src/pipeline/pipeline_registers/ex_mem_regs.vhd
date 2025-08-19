@@ -1,0 +1,43 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity ex_mem_reg is
+    generic(
+        nbit: integer := 32
+    );
+    port (
+        clk_i:     in  std_logic;
+        reset_i:   in  std_logic;
+        pc_i:      in  std_logic_vector(nbit-1 downto 0);
+        npc_i:     in  std_logic_vector(nbit-1 downto 0);
+        aluout_i:  in  std_logic_vector(nbit-1 downto 0);
+        rdata2_i:  in  std_logic_vector(nbit-1 downto 0);
+        wdata_i:   in  std_logic_vector(nbit-1 downto 0);
+        pc_o:      out std_logic_vector(nbit-1 downto 0);
+        npc_o:     out std_logic_vector(nbit-1 downto 0);
+        aluout_o:  out std_logic_vector(nbit-1 downto 0);
+        rdata2_o:  out std_logic_vector(nbit-1 downto 0);
+        wdata_o:   out std_logic_vector(nbit-1 downto 0)
+    );
+end ex_mem_reg;
+
+architecture behav of ex_mem_reg is
+begin
+    process(clk_i, reset_i)
+    begin
+        if reset_i = '1' then
+            pc_o <= (others => '0');
+            npc_o <= (others => '0');
+            aluout_o <= (others => '0');
+            rdata2_o <= (others => '0');
+            wdata_o <= (others => '0');
+        elsif rising_edge(clk_i) then
+            pc_o <= pc_i;
+            npc_o <= npc_i;
+            aluout_o <= aluout_i;
+            rdata2_o <= rdata2_i;
+            wdata_o <= wdata_i;
+        end if;
+    end process;
+end behav;

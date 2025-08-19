@@ -1,0 +1,35 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity if_id_regs is
+    generic(
+        nbit: integer := 32
+    );
+    port (
+        clk_i:   in  std_logic;
+        reset_i: in  std_logic;
+        pc_i:    in  std_logic_vector(nbit-1 downto 0);
+        npc_i:   in  std_logic_vector(nbit-1 downto 0);
+        ir_i:    in  std_logic_vector(nbit-1 downto 0);
+        pc_o:    out std_logic_vector(nbit-1 downto 0);
+        npc_o:   out std_logic_vector(nbit-1 downto 0);
+        ir_o:    out std_logic_vector(nbit-1 downto 0)
+    );
+end if_id_regs;
+
+architecture behav of if_id_regs is
+begin
+    process(clk_i, reset_i)
+    begin
+        if reset_i = '1' then
+            pc_o <= (others => '0');
+            npc_o <= (others => '0');
+            ir_o <= (others => '0');
+        elsif rising_edge(clk_i) then
+            pc_o <= pc_i;
+            npc_o <= npc_i;
+            ir_o <= ir_i;
+        end if;
+    end process;
+end behav;
