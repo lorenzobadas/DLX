@@ -1,0 +1,40 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity write_back is
+    generic (
+        nbit: integer := 32
+    );
+    port (
+        aluout_i:   in  std_logic_vector(nbit-1 downto 0);
+        lmd_i:      in  std_logic_vector(nbit-1 downto 0);
+        sel_i:      in  std_logic;
+        wr_data_o:  out std_logic_vector(nbit-1 downto 0)
+    );
+end entity;
+
+architecture struct of write_back is
+    component mux2to1 is
+        generic(
+            nbit: integer := 32
+        );
+        port(
+            in0_i:  in  std_logic_vector(nbit-1 downto 0);
+            in1_i:  in  std_logic_vector(nbit-1 downto 0);
+            sel_i:  in  std_logic;
+            out_o:  out std_logic_vector(nbit-1 downto 0)
+        );
+    end component;
+begin
+    mux: mux2to1
+        generic map (
+            nbit => nbit
+        )
+        port map (
+            in0_i => aluout_i,
+            in1_i => lmd_i,
+            sel_i => sel_i,
+            out_o => wr_data_o
+        );
+end architecture;
