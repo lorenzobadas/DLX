@@ -52,6 +52,8 @@ architecture struct of execution is
 
     signal mux1_out, mux2_out: std_logic_vector(nbit-1 downto 0);
 begin
+    pc_o <= pc_i;
+    npc_o <= npc_i;
     alu_inst: alu
         generic map (
             nbit => nbit
