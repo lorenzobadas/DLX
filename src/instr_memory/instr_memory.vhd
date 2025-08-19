@@ -3,12 +3,12 @@ use ieee.std_logic_1164.all;
 use std.textio.all;
 use ieee.numeric_std.all;
 
-entity imem is
+entity instr_memory is
     generic(
         ram_width : integer := 32;
         ram_depth : integer := 32;
         ram_add   : integer := 5;
-        init_file : string := "imem.mem"
+        init_file : string := "instr_memory.mem"
     );
     port(
         clk_i  : in std_logic;
@@ -18,9 +18,9 @@ entity imem is
         rd_o   : out std_logic;
         dout_o : out std_logic_vector(ram_width-1 downto 0)
     );
-end imem;
+end instr_memory;
 
-architecture behav of imem is
+architecture behav of instr_memory is
 
 type ram_type is array (0 to ram_depth-1) of std_logic_vector(ram_width-1 downto 0);
 
@@ -40,8 +40,8 @@ end function;
 
 impure function init_from_file_or_zeroes(ramfile : string) return ram_type is
 begin
-    if ramfile = "imem.mem" then
-        return InitRamFromFile("imem.mem") ;
+    if ramfile = "instr_memory.mem" then
+        return InitRamFromFile("instr_memory.mem") ;
     else
         return (others => (others => '0'));
     end if;
