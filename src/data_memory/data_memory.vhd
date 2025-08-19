@@ -17,7 +17,7 @@ entity data_memory is
         we_i    : in std_logic;
         addr_i  : in std_logic_vector(ram_add-1 downto 0);  
         din_i   : in std_logic_vector(ram_width-1 downto 0);
-        dout_i  : out std_logic_vector(ram_width-1 downto 0)
+        dout_o  : out std_logic_vector(ram_width-1 downto 0)
     );
 end data_memory;
 
