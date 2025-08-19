@@ -17,10 +17,11 @@ end entity;
 architecture behav of pc is 
 begin
     process (clk_i, reset_i)
-         if reset_i = '1' then
+    begin
+        if reset_i = '1' then
             out_o <= (others => '0');
         elsif rising_edge(clk_i) then
             out_o <= in_i;
-        end if
+        end if;
     end process;
 end architecture;
