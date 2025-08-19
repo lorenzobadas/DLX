@@ -12,8 +12,8 @@ entity instr_decode is
         pc_i:       in  std_logic_vector(nbit-1 downto 0);
         npc_i:      in  std_logic_vector(nbit-1 downto 0);
         ir_i:       in  std_logic_vector(nbit-1 downto 0);
-        rdata1_o:        out std_logic_vector(nbit-1 downto 0);
-        rdata2_o:        out std_logic_vector(nbit-1 downto 0);
+        rdata1_o:   out std_logic_vector(nbit-1 downto 0);
+        rdata2_o:   out std_logic_vector(nbit-1 downto 0);
         b_o:        out std_logic_vector(nbit-1 downto 0);
         imm_o:      out std_logic_vector(nbit-1 downto 0);
         pc_o:       out std_logic_vector(nbit-1 downto 0);
