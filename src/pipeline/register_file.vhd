@@ -12,7 +12,7 @@ entity register_file is
         clk_i   : in  std_logic;
         we_i    : in  std_logic;
         waddr_i : in  std_logic_vector(clog2(nreg)-1 downto 0);
-        wdata_i : in  std_logic_vector(nbit-1 downto 0);
+        wbdata_i : in  std_logic_vector(nbit-1 downto 0);
         raddr1_i: in  std_logic_vector(clog2(nreg)-1 downto 0);
         raddr2_i: in  std_logic_vector(clog2(nreg)-1 downto 0);
         rdata1_o: out std_logic_vector(nbit-1 downto 0);
@@ -31,7 +31,7 @@ begin
     begin
         if rising_edge(clk_i) then
             if (we_i = '1' and waddr_i /= "00000") then
-                regs(to_integer(unsigned(waddr_i))) <= wdata_i;
+                regs(to_integer(unsigned(waddr_i))) <= wbdata_i;
             end if;
         end if;
     end process;

@@ -16,7 +16,7 @@ entity execution is
         npc_i:      in  std_logic_vector(nbit-1 downto 0);
         rdata1_i:   in  std_logic_vector(nbit-1 downto 0);
         rdata2_i:   in  std_logic_vector(nbit-1 downto 0);
-        wdata_i:    in  std_logic_vector(nbit-1 downto 0);
+        wbdata_i:    in  std_logic_vector(nbit-1 downto 0);
         imm_i:      in  std_logic_vector(nbit-1 downto 0);
         rdest_i_type_i: in std_logic_vector(4 downto 0);
         rdest_r_type_i: in std_logic_vector(4 downto 0);
@@ -25,7 +25,7 @@ entity execution is
         pc_o:       out std_logic_vector(nbit-1 downto 0);
         npc_o:      out std_logic_vector(nbit-1 downto 0);
         aluout_o:   out std_logic_vector(nbit-1 downto 0);
-        wdata_o:    out std_logic_vector(nbit-1 downto 0);
+        wbdata_o:    out std_logic_vector(nbit-1 downto 0);
         rdest_o:    out std_logic_vector(4 downto 0)
     );
 end entity;
@@ -59,7 +59,7 @@ architecture struct of execution is
 begin
     pc_o <= pc_i;
     npc_o <= npc_i;
-    wdata_o <= wdata_i;
+    wbdata_o <= wbdata_i;
     alu_inst: alu
         generic map (
             nbit => nbit

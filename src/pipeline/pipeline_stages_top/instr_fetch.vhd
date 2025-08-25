@@ -11,7 +11,7 @@ entity instr_fetch is
         reset_i:    in  std_logic;
         pc_i:       in  std_logic_vector(nbit-1 downto 0);
         npc_o:      out std_logic_vector(nbit-1 downto 0);
-        ir_o:       out std_logic_vector(nbit-1 downto 0)
+        instr_o:       out std_logic_vector(nbit-1 downto 0)
     );
 end entity;
 
@@ -100,7 +100,7 @@ begin
             en_i => '1',
             addr_i => next_pc(9 downto 0),
             rd_o => open, -- TODO
-            dout_o => ir_o
+            dout_o => instr_o
         );
 
 end architecture;

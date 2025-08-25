@@ -11,7 +11,7 @@ entity write_back is
         lmd_i:      in  std_logic_vector(nbit-1 downto 0);
         sel_i:      in  std_logic;
         rdest_i:    in  std_logic_vector(4 downto 0);
-        wdata_o:    out std_logic_vector(nbit-1 downto 0);
+        wbdata_o:    out std_logic_vector(nbit-1 downto 0);
         rdest_o:    out std_logic_vector(4 downto 0)
     );
 end entity;
@@ -38,6 +38,6 @@ begin
             in0_i => aluout_i,
             in1_i => lmd_i,
             sel_i => sel_i,
-            out_o => wdata_o
+            out_o => wbdata_o
         );
 end architecture;

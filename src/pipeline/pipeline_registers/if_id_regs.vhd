@@ -11,10 +11,10 @@ entity if_id_regs is
         reset_i: in  std_logic;
         pc_i:    in  std_logic_vector(nbit-1 downto 0);
         npc_i:   in  std_logic_vector(nbit-1 downto 0);
-        ir_i:    in  std_logic_vector(nbit-1 downto 0);
+        instr_i:    in  std_logic_vector(nbit-1 downto 0);
         pc_o:    out std_logic_vector(nbit-1 downto 0);
         npc_o:   out std_logic_vector(nbit-1 downto 0);
-        ir_o:    out std_logic_vector(nbit-1 downto 0)
+        instr_o:    out std_logic_vector(nbit-1 downto 0)
     );
 end if_id_regs;
 
@@ -25,11 +25,11 @@ begin
         if reset_i = '1' then
             pc_o <= (others => '0');
             npc_o <= (others => '0');
-            ir_o <= (others => '0');
+            instr_o <= (others => '0');
         elsif rising_edge(clk_i) then
             pc_o <= pc_i;
             npc_o <= npc_i;
-            ir_o <= ir_i;
+            instr_o <= instr_i;
         end if;
     end process;
 end behav;
