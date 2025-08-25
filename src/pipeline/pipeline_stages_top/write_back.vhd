@@ -10,7 +10,9 @@ entity write_back is
         aluout_i:   in  std_logic_vector(nbit-1 downto 0);
         lmd_i:      in  std_logic_vector(nbit-1 downto 0);
         sel_i:      in  std_logic;
-        wr_data_o:  out std_logic_vector(nbit-1 downto 0)
+        rdest_i:    in  std_logic_vector(4 downto 0);
+        wdata_o:    out std_logic_vector(nbit-1 downto 0);
+        rdest_o:    out std_logic_vector(4 downto 0)
     );
 end entity;
 
@@ -27,6 +29,7 @@ architecture struct of write_back is
         );
     end component;
 begin
+    rdest_o <= rdest_i;
     mux: mux2to1
         generic map (
             nbit => nbit
@@ -35,6 +38,6 @@ begin
             in0_i => aluout_i,
             in1_i => lmd_i,
             sel_i => sel_i,
-            out_o => wr_data_o
+            out_o => wdata_o
         );
 end architecture;

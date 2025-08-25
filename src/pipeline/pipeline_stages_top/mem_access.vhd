@@ -15,9 +15,13 @@ entity mem_access is
         rdata2_i:   in  std_logic_vector(nbit-1 downto 0);
         mem_en_i:   in  std_logic;
         mem_we_i:   in  std_logic;
+        wreg_i:     in  std_logic_vector(nbit-1 downto 0);
+        rdest_i:    in  std_logic_vector(4 downto 0);
         pc_o:       out std_logic_vector(nbit-1 downto 0);
         npc_o:      out std_logic_vector(nbit-1 downto 0);
-        lmd_o:      out std_logic_vector(nbit-1 downto 0)
+        lmd_o:      out std_logic_vector(nbit-1 downto 0);
+        wreg_o:     out std_logic_vector(nbit-1 downto 0);
+        rdest_o:    out std_logic_vector(4 downto 0)
     );
 end entity;
 
@@ -56,7 +60,8 @@ architecture struct of mem_access is
 
 begin
     lmd_o <= mem_data_out;
-
+    wreg_o <= wreg_i;
+    rdest_o <= rdest_i;
     data_mem: data_memory
         generic map (
             ram_width => nbit,
@@ -74,7 +79,6 @@ begin
             dout_o  => mem_data_out
         );
 
-    -- Instantiate the multiplexer
     mux: mux2to1
         generic map (
             nbit => nbit
