@@ -1,7 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use work.utils_pkg.all;
-use work.o3_pkg.all;
+use work.alu_instr_pkg.all;
 
 entity alu is
     generic(
