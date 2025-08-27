@@ -4,12 +4,12 @@ use ieee.numeric_std.all;
 use work.alu_instr_pkg.all;
 use work.instructions_pkg.all;
 
-entity control is
+entity control_unit is
     generic(
         nbit: integer := 32
     );
     port (
-        istr_i: in std_logic_vector(nbit-1 downto 0);
+        instr_i: in std_logic_vector(nbit-1 downto 0);
         zero_i: in std_logic;
         immSrc_o: out std_logic;
         ALUSrc1_o: out std_logic;
@@ -21,17 +21,17 @@ entity control is
         memWrite_o: out std_logic;
         memToReg_o: out std_logic;
         regWrite_o: out std_logic;
-        jalEn_o: out std_logic;
+        jalEn_o: out std_logic
     );
 end entity;
 
-architecture behav of control is
+architecture behav of control_unit is
     signal opcode: std_logic_vector(5 downto 0);
     signal func: std_logic_vector(10 downto 0);
     signal branchEn, jumpEn, branchOnZero: std_logic;
 begin
-    opcode <= instr_i(31 downto 21);
-    func <= instr_i(5 downto 0);
+    func <= instr_i(31 downto 21);
+    opcode <= instr_i(5 downto 0);
 
     process(opcode, func, zero_i)
     begin
@@ -41,13 +41,13 @@ begin
         ALUOp_o <= alu_add;
         regDest_o <= '0';
         branchEn <= '0';
-        jumpEn_o <= '0';
+        jumpEn <= '0';
         branchOnZero <= '0';
         memRead_o <= '0';
         memWrite_o <= '0';
         memToReg_o <= '0';
         regWrite_o <= '0';
-        jalEn <= '0';
+        jalEn_o <= '0';
 
         case opcode is 
             when "000000" =>
@@ -101,7 +101,7 @@ begin
                 ALUSrc1_o <= '0'; -- npc
                 ALUSrc2_o <= '1'; -- imm (offset)
                 ALUOp_o <= alu_add;
-                jumpEn_o <= '1';
+                jumpEn <= '1';
                 regWrite_o <= '0';
 
             when opcode_jal =>
@@ -109,9 +109,9 @@ begin
                 ALUSrc1_o <= '0'; -- npc
                 ALUSrc2_o <= '1'; -- imm (offset)
                 ALUOp_o <= alu_add;
-                jumpEn_o <= '1';
+                jumpEn <= '1';
                 memToReg_o <= '0';
-                jalEn <= '1';
+                jalEn_o <= '1';
                 regWrite_o <= '1';
 
             when opcode_beqz =>
@@ -141,10 +141,10 @@ begin
                 ALUOp_o <= alu_add;
                 regDest_o <= '0'; -- rdest_i_type
                 branchEn <= '0';
-                jumpEn_o <= '0';
+                jumpEn <= '0';
                 memToReg_o <= '0';
                 regWrite_o <= '1';
-                jalEn <= '0';
+                jalEn_o <= '0';
             
             when opcode_subi =>
                 immSrc_o <= '0'; -- i-type immediate
@@ -153,10 +153,10 @@ begin
                 ALUOp_o <= alu_sub;
                 regDest_o <= '0'; -- rdest_i_type
                 branchEn <= '0';
-                jumpEn_o <= '0';
+                jumpEn <= '0';
                 memToReg_o <= '0';
                 regWrite_o <= '1';
-                jalEn <= '0';
+                jalEn_o <= '0';
             
             when opcode_andi =>
                 immSrc_o <= '0'; -- i-type immediate
@@ -165,10 +165,10 @@ begin
                 ALUOp_o <= alu_and;
                 regDest_o <= '0'; -- rdest_i_type
                 branchEn <= '0';
-                jumpEn_o <= '0';
+                jumpEn <= '0';
                 memToReg_o <= '0';
                 regWrite_o <= '1';
-                jalEn <= '0';
+                jalEn_o <= '0';
             
             when opcode_ori =>
                 immSrc_o <= '0'; -- i-type immediate
@@ -177,10 +177,10 @@ begin
                 ALUOp_o <= alu_or;
                 regDest_o <= '0'; -- rdest_i_type
                 branchEn <= '0';
-                jumpEn_o <= '0';
+                jumpEn <= '0';
                 memToReg_o <= '0';
                 regWrite_o <= '1';
-                jalEn <= '0';
+                jalEn_o <= '0';
             
             when opcode_xori =>
                 immSrc_o <= '0'; -- i-type immediate
@@ -189,10 +189,10 @@ begin
                 ALUOp_o <= alu_xor;
                 regDest_o <= '0'; -- rdest_i_type
                 branchEn <= '0';
-                jumpEn_o <= '0';
+                jumpEn <= '0';
                 memToReg_o <= '0';
                 regWrite_o <= '1';
-                jalEn <= '0';
+                jalEn_o <= '0';
             
             when opcode_slli =>
                 immSrc_o <= '0'; -- i-type immediate
@@ -201,10 +201,10 @@ begin
                 ALUOp_o <= alu_sll;
                 regDest_o <= '0'; -- rdest_i_type
                 branchEn <= '0';
-                jumpEn_o <= '0';
+                jumpEn <= '0';
                 memToReg_o <= '0';
                 regWrite_o <= '1';
-                jalEn <= '0';
+                jalEn_o <= '0';
 
             when opcode_nop =>
                 -- do nothing and go to the next instruction
@@ -218,10 +218,10 @@ begin
                 ALUOp_o <= alu_srl;
                 regDest_o <= '0'; -- rdest_i_type
                 branchEn <= '0';
-                jumpEn_o <= '0';
+                jumpEn <= '0';
                 memToReg_o <= '0';
                 regWrite_o <= '1';
-                jalEn <= '0';
+                jalEn_o <= '0';
 
             when opcode_snei =>
                 immSrc_o <= '0'; -- i-type immediate
@@ -230,10 +230,10 @@ begin
                 ALUOp_o <= alu_sne;
                 regDest_o <= '0'; -- rdest_i_type
                 branchEn <= '0';
-                jumpEn_o <= '0';
+                jumpEn <= '0';
                 memToReg_o <= '0';
                 regWrite_o <= '1';
-                jalEn <= '0';
+                jalEn_o <= '0';
             
             when opcode_slei =>
                 immSrc_o <= '0'; -- i-type immediate
@@ -242,10 +242,10 @@ begin
                 ALUOp_o <= alu_sle;
                 regDest_o <= '0'; -- rdest_i_type
                 branchEn <= '0';
-                jumpEn_o <= '0';
+                jumpEn <= '0';
                 memToReg_o <= '0';
                 regWrite_o <= '1';
-                jalEn <= '0';
+                jalEn_o <= '0';
             
             when opcode_sgei =>
                 immSrc_o <= '0'; -- i-type immediate
@@ -254,10 +254,10 @@ begin
                 ALUOp_o <= alu_sge;
                 regDest_o <= '0'; -- rdest_i_type
                 branchEn <= '0';
-                jumpEn_o <= '0';
+                jumpEn <= '0';
                 memToReg_o <= '0';
                 regWrite_o <= '1';
-                jalEn <= '0';
+                jalEn_o <= '0';
             
             when opcode_lw =>
                 immSrc_o <= '0'; -- i-type immediate
@@ -266,12 +266,12 @@ begin
                 ALUOp_o <= alu_add;
                 regDest_o <= '0'; -- rdest_i_type
                 branchEn <= '0';
-                jumpEn_o <= '0';
+                jumpEn <= '0';
                 memRead_o <= '1';
                 memWrite_o <= '0';
                 memToReg_o <= '1';
                 regWrite_o <= '1';
-                jalEn <= '0';    
+                jalEn_o <= '0';    
                        
             when opcode_sw =>
                 immSrc_o <= '0'; -- i-type immediate
@@ -280,11 +280,24 @@ begin
                 ALUOp_o <= alu_add;
                 regDest_o <= '0'; -- rdest_i_type
                 branchEn <= '0';
-                jumpEn_o <= '0';
+                jumpEn <= '0';
                 memRead_o <= '0';
                 memWrite_o <= '1';
                 regWrite_o <= '0';
-
+            
+            when others =>
+                immSrc_o <= '0';
+                ALUSrc1_o <= '0';
+                ALUSrc2_o <= '0';
+                ALUOp_o <= alu_add;
+                regDest_o <= '0';
+                branchEn <= '0';
+                jumpEn <= '0';
+                memRead_o <= '0';
+                memWrite_o <= '0';
+                memToReg_o <= '0';
+                regWrite_o <= '0';
+                jalEn_o <= '0';
         end case;
 
         PCSrc_o <= (branchEn and (zero_i xor (not branchOnZero))) or jumpEn;
