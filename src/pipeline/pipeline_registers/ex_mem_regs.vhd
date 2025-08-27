@@ -13,14 +13,16 @@ entity ex_mem_reg is
         npc_i:     in  std_logic_vector(nbit-1 downto 0);
         aluout_i:  in  std_logic_vector(nbit-1 downto 0);
         rdata2_i:  in  std_logic_vector(nbit-1 downto 0);
-        wbdata_i:   in  std_logic_vector(nbit-1 downto 0);
+        wbdata_i:  in  std_logic_vector(nbit-1 downto 0);
         rdest_i:   in  std_logic_vector(4 downto 0);
+        zero_i:    in  std_logic;
         pc_o:      out std_logic_vector(nbit-1 downto 0);
         npc_o:     out std_logic_vector(nbit-1 downto 0);
         aluout_o:  out std_logic_vector(nbit-1 downto 0);
         rdata2_o:  out std_logic_vector(nbit-1 downto 0);
-        wbdata_o:   out std_logic_vector(nbit-1 downto 0);
-        rdest_o:   out std_logic_vector(4 downto 0)
+        wbdata_o:  out std_logic_vector(nbit-1 downto 0);
+        rdest_o:   out std_logic_vector(4 downto 0);
+        zero_o:    out std_logic
     );
 end ex_mem_reg;
 
@@ -35,6 +37,7 @@ begin
             rdata2_o <= (others => '0');
             wbdata_o <= (others => '0');
             rdest_o <= (others => '0');
+            zero_o <= '0';
         elsif rising_edge(clk_i) then
             pc_o <= pc_i;
             npc_o <= npc_i;
@@ -42,6 +45,7 @@ begin
             rdata2_o <= rdata2_i;
             wbdata_o <= wbdata_i;
             rdest_o <= rdest_i;
+            zero_o <= zero_i;
         end if;
     end process;
 end behav;
