@@ -39,18 +39,18 @@ begin
     begin
         ctrl <= get_control_signals(opcode, func);
 
-        immSrc_o    <= ctrl.immSrc;
-        ALUSrc1_o   <= ctrl.ALUSrc1;
-        ALUSrc2_o   <= ctrl.ALUSrc2;
-        ALUOp_o     <= ctrl.ALUOp;
-        regDest_o   <= ctrl.regDest;
-        memRead_o   <= ctrl.memRead;
-        memWrite_o  <= ctrl.memWrite;
-        memToReg_o  <= ctrl.memToReg;
-        regWrite_o  <= ctrl.regWrite;
-        jalEn_o     <= ctrl.jalEn;
+        immSrc_o    <= ctrl.id_ctrl_t.immSrc;
+        ALUSrc1_o   <= ctrl.ex_ctrl_t.ALUSrc1;
+        ALUSrc2_o   <= ctrl.ex_ctrl_t.ALUSrc2;
+        ALUOp_o     <= ctrl.ex_ctrl_t.ALUOp;
+        regDest_o   <= ctrl.ex_ctrl_t.regDest;
+        memRead_o   <= ctrl.mem_ctrl_t.memRead;
+        memWrite_o  <= ctrl.mem_ctrl_t.memWrite;
+        memToReg_o  <= ctrl.mem_ctrl_t.memToReg;
+        regWrite_o  <= ctrl.wb_ctrl_t.regWrite;
+        jalEn_o     <= ctrl.wb_ctrl_t.jalEn;
 
-        PCSrc_o <= (ctrl.branchEn and (zero_i xor (not ctrl.branchOnZero))) or ctrl.jumpEn;
+        PCSrc_o <= (ctrl.ex_ctrl_t.branchEn and (zero_i xor (not ctrl.ex_ctrl_t.branchOnZero))) or ctrl.ex_ctrl_t.jumpEn;
 
     end process;
 end architecture;
