@@ -7,22 +7,22 @@ use work.ctrl_signals_pkg.all;
 
 entity control_unit is
     generic(
-        nbit: integer := 32
+        nbit : integer := 32
     );
     port (
-        instr_i: in std_logic_vector(nbit-1 downto 0);
-        zero_i: in std_logic;
-        immSrc_o: out std_logic;
-        ALUSrc1_o: out std_logic;
-        ALUSrc2_o: out std_logic;
-        ALUOp_o: out alu_op_t;
-        regDest_o: out std_logic;
-        PCSrc_o: out std_logic;
-        memRead_o: out std_logic;
-        memWrite_o: out std_logic;
-        memToReg_o: out std_logic;
-        regWrite_o: out std_logic;
-        jalEn_o: out std_logic
+        instr_i     : in std_logic_vector(nbit-1 downto 0);
+        zero_i      : in std_logic;
+        immSrc_o    : out std_logic;
+        ALUSrc1_o   : out std_logic;
+        ALUSrc2_o   : out std_logic;
+        ALUOp_o     : out alu_op_t;
+        regDest_o   : out std_logic;
+        PCSrc_o     : out std_logic;
+        memRead_o   : out std_logic;
+        memWrite_o  : out std_logic;
+        memToReg_o  : out std_logic;
+        regWrite_o  : out std_logic;
+        jalEn_o     : out std_logic
     );
 end entity;
 
@@ -39,18 +39,18 @@ begin
     begin
         ctrl <= get_control_signals(opcode, func);
 
-        immSrc_o    <= ctrl.id_ctrl_t.immSrc;
-        ALUSrc1_o   <= ctrl.ex_ctrl_t.ALUSrc1;
-        ALUSrc2_o   <= ctrl.ex_ctrl_t.ALUSrc2;
-        ALUOp_o     <= ctrl.ex_ctrl_t.ALUOp;
-        regDest_o   <= ctrl.ex_ctrl_t.regDest;
-        memRead_o   <= ctrl.mem_ctrl_t.memRead;
-        memWrite_o  <= ctrl.mem_ctrl_t.memWrite;
-        memToReg_o  <= ctrl.mem_ctrl_t.memToReg;
-        regWrite_o  <= ctrl.wb_ctrl_t.regWrite;
-        jalEn_o     <= ctrl.wb_ctrl_t.jalEn;
+        immSrc_o    <= ctrl.id_ctrl.immSrc;
+        ALUSrc1_o   <= ctrl.ex_ctrl.ALUSrc1;
+        ALUSrc2_o   <= ctrl.ex_ctrl.ALUSrc2;
+        ALUOp_o     <= ctrl.ex_ctrl.ALUOp;
+        regDest_o   <= ctrl.ex_ctrl.regDest;
+        memRead_o   <= ctrl.mem_ctrl.memRead;
+        memWrite_o  <= ctrl.mem_ctrl.memWrite;
+        memToReg_o  <= ctrl.mem_ctrl.memToReg;
+        regWrite_o  <= ctrl.wb_ctrl.regWrite;
+        jalEn_o     <= ctrl.wb_ctrl.jalEn;
 
-        PCSrc_o <= (ctrl.ex_ctrl_t.branchEn and (zero_i xor (not ctrl.ex_ctrl_t.branchOnZero))) or ctrl.ex_ctrl_t.jumpEn;
+        PCSrc_o <= (ctrl.ex_ctrl.branchEn and (zero_i xor (not ctrl.ex_ctrl.branchOnZero))) or ctrl.ex_ctrl.jumpEn;
 
     end process;
 end architecture;

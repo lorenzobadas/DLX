@@ -4,14 +4,14 @@ use ieee.numeric_std.all;
 
 entity instr_fetch is
     generic (
-        nbit: integer := 32
+        nbit : integer := 32
     ); 
     port (
-        clk_i:      in  std_logic;
-        reset_i:    in  std_logic;
-        pc_i:       in  std_logic_vector(nbit-1 downto 0);
-        npc_o:      out std_logic_vector(nbit-1 downto 0);
-        instr_o:       out std_logic_vector(nbit-1 downto 0)
+        clk_i   : in  std_logic;
+        reset_i : in  std_logic;
+        pc_i    : in  std_logic_vector(nbit-1 downto 0);
+        npc_o   : out std_logic_vector(nbit-1 downto 0);
+        instr_o : out std_logic_vector(nbit-1 downto 0)
     );
 end entity;
 
@@ -21,10 +21,10 @@ architecture struct of instr_fetch is
             nbit: integer := 32
         ); 
         port (
-            clk_i:      in  std_logic;
-            reset_i:    in  std_logic;
-            in_i:       in  std_logic_vector(nbit-1 downto 0);
-            out_o:      out std_logic_vector(nbit-1 downto 0)
+            clk_i   :   in  std_logic;
+            reset_i :   in  std_logic;
+            in_i    :   in  std_logic_vector(nbit-1 downto 0);
+            out_o   :   out std_logic_vector(nbit-1 downto 0)
         );
     end component;
 

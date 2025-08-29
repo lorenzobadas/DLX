@@ -15,6 +15,7 @@ entity data_memory is
         reset_i : in std_logic;
         en_i    : in std_logic;
         we_i    : in std_logic;
+        re_i    : in std_logic;
         addr_i  : in std_logic_vector(ram_add-1 downto 0);  
         din_i   : in std_logic_vector(ram_width-1 downto 0);
         dout_o  : out std_logic_vector(ram_width-1 downto 0)
@@ -72,7 +73,7 @@ begin
         if(en_i = '1') then
             if(we_i = '1') then
                 ram_s(to_integer(unsigned(addr_i))) <= din_i;
-            else
+            elsif(re_i = '1') then
                 qr <= ram_s(to_integer(unsigned(addr_i)));
             end if;
         end if;

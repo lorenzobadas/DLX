@@ -4,15 +4,18 @@ use ieee.numeric_std.all;
 
 entity write_back is
     generic (
-        nbit: integer := 32
+        nbit : integer := 32
     );
     port (
-        aluout_i:   in  std_logic_vector(nbit-1 downto 0);
-        lmd_i:      in  std_logic_vector(nbit-1 downto 0);
-        sel_i:      in  std_logic;
-        rdest_i:    in  std_logic_vector(4 downto 0);
-        wbdata_o:    out std_logic_vector(nbit-1 downto 0);
-        rdest_o:    out std_logic_vector(4 downto 0)
+        aluout_i    : in  std_logic_vector(nbit-1 downto 0);
+        lmd_i       : in  std_logic_vector(nbit-1 downto 0);
+        rdest_i     : in  std_logic_vector(4 downto 0);
+        wbdata_o    : out std_logic_vector(nbit-1 downto 0);
+        wbaddr_o    : out std_logic_vector(4 downto 0);
+        -- Control signals
+        memToReg_i  : in std_logic;
+        jalEn_i     : in std_logic;
+        regWrite_o  : out std_logic;
     );
 end entity;
 
@@ -30,14 +33,26 @@ architecture struct of write_back is
     end component;
 begin
     rdest_o <= rdest_i;
-    mux: mux2to1
+    mux_mem2reg: mux2to1
         generic map (
             nbit => nbit
         )
         port map (
             in0_i => aluout_i,
             in1_i => lmd_i,
-            sel_i => sel_i,
+            sel_i => memToReg_i,
             out_o => wbdata_o
         );
+
+    mux_jalEn: mux2to1
+        generic map (
+            nbit => 5
+        )
+        port map (
+            in0_i => std_logic_vector(to_unsigned(31, 5)),
+            in1_i => rdest_i,
+            sel_i => jalEn_i,
+            out_o => wbaddr_o
+        );
+    
 end architecture;
