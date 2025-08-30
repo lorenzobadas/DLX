@@ -1,7 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use ieee.alu_instr_pkg.all;
+use work.alu_instr_pkg.all;
 
 entity if_id_regs is
     generic(
@@ -10,10 +10,8 @@ entity if_id_regs is
     port (
         clk_i    : in  std_logic;
         reset_i  : in  std_logic;
-        pc_i     : in  std_logic_vector(nbit-1 downto 0);
         npc_i    : in  std_logic_vector(nbit-1 downto 0);
         instr_i  : in  std_logic_vector(nbit-1 downto 0);
-        pc_o     : out std_logic_vector(nbit-1 downto 0);
         npc_o    : out std_logic_vector(nbit-1 downto 0);
         instr_o  : out std_logic_vector(nbit-1 downto 0);
         -- Control signals
@@ -47,7 +45,6 @@ begin
     process(clk_i, reset_i)
     begin
         if reset_i = '1' then
-            pc_o <= (others => '0');
             npc_o <= (others => '0');
             instr_o <= (others => '0');
             immSrc_o <= '0';
@@ -62,7 +59,6 @@ begin
             regWrite_o <= '0';
             jalEn_o <= '0';
         elsif rising_edge(clk_i) then
-            pc_o <= pc_i;
             npc_o <= npc_i;
             instr_o <= instr_i;
             immSrc_o <= immSrc_i;

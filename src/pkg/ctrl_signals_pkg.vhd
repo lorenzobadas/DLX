@@ -13,7 +13,7 @@ package ctrl_signals_pkg is
         ALUSrc1 : std_logic;
         ALUSrc2 : std_logic;
         ALUOp   : alu_op_t;
-        regDest   : std_logic;
+        regDest : std_logic;
     end record;
 
     type mem_ctrl_t is record
@@ -93,27 +93,27 @@ package body ctrl_signals_pkg is
                     when others     => ctrl.ex_ctrl.ALUOp := alu_add;
                 end case;
             when opcode_j =>
-                ctrl.if_ctrl.immSrc  := '1'; -- j-type immediate
+                ctrl.id_ctrl.immSrc  := '1'; -- j-type immediate
                 ctrl.ex_ctrl.ALUSrc2 := '1'; -- imm (offset)
                 ctrl.ex_ctrl.ALUOp   := alu_add; -- npc + offset
-                ctrl.ex_ctrl.jumpEn  := '1';
+                ctrl.mem_ctrl.jumpEn  := '1';
             when opcode_jal =>
-                ctrl.if_ctrl.immSrc  := '1'; -- j-type immediate
+                ctrl.id_ctrl.immSrc  := '1'; -- j-type immediate
                 ctrl.ex_ctrl.ALUSrc2 := '1'; -- imm (offset)
                 ctrl.ex_ctrl.ALUOp   := alu_add; -- npc + offset
-                ctrl.ex_ctrl.jumpEn  := '1';
+                ctrl.mem_ctrl.jumpEn  := '1';
                 ctrl.wb_ctrl.jalEn   := '1'; -- write to r31
                 ctrl.wb_ctrl.regWrite:= '1';
             when opcode_beqz =>
                 ctrl.ex_ctrl.ALUSrc2 := '1'; -- imm (offset)
                 ctrl.ex_ctrl.ALUOp   := alu_add; -- npc + offset
-                ctrl.ex_ctrl.branchEn:= '1';
-                ctrl.ex_ctrl.branchOnZero := '1';
+                ctrl.mem_ctrl.branchEn:= '1';
+                ctrl.mem_ctrl.branchOnZero := '1';
             when opcode_bnez =>
                 ctrl.ex_ctrl.ALUSrc2 := '1'; -- imm (offset)
                 ctrl.ex_ctrl.ALUOp   := alu_add; -- npc + offset
-                ctrl.ex_ctrl.branchEn:= '1';
-                ctrl.ex_ctrl.branchOnZero := '0';
+                ctrl.mem_ctrl.branchEn:= '1';
+                ctrl.mem_ctrl.branchOnZero := '0';
             when opcode_addi =>
                 ctrl.ex_ctrl.ALUSrc1 := '1'; -- rdata1
                 ctrl.ex_ctrl.ALUSrc2 := '1'; -- imm
@@ -128,7 +128,7 @@ package body ctrl_signals_pkg is
                 ctrl.ex_ctrl.ALUSrc1 := '1'; -- rdata1
                 ctrl.ex_ctrl.ALUSrc2 := '1'; -- imm
                 ctrl.ex_ctrl.ALUOp   := alu_and; -- rdata1 & imm
-                ctrl.wb_ctrl_t.regWrite:= '1';
+                ctrl.wb_ctrl.regWrite:= '1';
             when opcode_ori =>
                 ctrl.ex_ctrl.ALUSrc1 := '1'; -- rdata1
                 ctrl.ex_ctrl.ALUSrc2 := '1'; -- imm
@@ -172,7 +172,7 @@ package body ctrl_signals_pkg is
                 ctrl.ex_ctrl.ALUSrc2 := '1'; -- imm
                 ctrl.ex_ctrl.ALUOp   := alu_add;
                 ctrl.mem_ctrl.memRead := '1';
-                ctrl.mem_ctrl.memToReg:= '1';
+                ctrl.wb_ctrl.memToReg:= '1';
                 ctrl.wb_ctrl.regWrite:= '1';
             when opcode_sw =>
                 ctrl.ex_ctrl.ALUSrc1 := '1'; -- rdata1

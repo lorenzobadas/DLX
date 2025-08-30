@@ -80,7 +80,7 @@ begin
         )
         port map (
             a => next_pc,
-            b => (3 => '1', others => '0'), -- add 4
+            b => (std_logic_vector(to_unsigned(4, nbit))),
             cin => '0',
             sub => '0',
             s => npc_o,

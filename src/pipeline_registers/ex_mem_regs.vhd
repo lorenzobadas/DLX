@@ -2,20 +2,18 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity ex_mem_reg is
+entity ex_mem_regs is
     generic(
         nbit : integer := 32
     );
     port (
         clk_i   : in  std_logic;
         reset_i : in  std_logic;
-        pc_i    : in  std_logic_vector(nbit-1 downto 0);
         npc_i   : in  std_logic_vector(nbit-1 downto 0);
         aluout_i: in  std_logic_vector(nbit-1 downto 0);
         rdata2_i: in  std_logic_vector(nbit-1 downto 0);
         rdest_i : in  std_logic_vector(4 downto 0);
         zero_i  : in  std_logic;
-        pc_o    : out std_logic_vector(nbit-1 downto 0);
         npc_o   : out std_logic_vector(nbit-1 downto 0);
         aluout_o: out std_logic_vector(nbit-1 downto 0);
         rdata2_o: out std_logic_vector(nbit-1 downto 0);
@@ -35,14 +33,13 @@ entity ex_mem_reg is
         regWrite_o  : out std_logic;
         jalEn_o     : out std_logic
     );
-end ex_mem_reg;
+end ex_mem_regs;
 
-architecture behav of ex_mem_reg is
+architecture behav of ex_mem_regs is
 begin
     process(clk_i, reset_i)
     begin
         if reset_i = '1' then
-            pc_o <= (others => '0');
             npc_o <= (others => '0');
             aluout_o <= (others => '0');
             rdata2_o <= (others => '0');
@@ -55,7 +52,6 @@ begin
             regWrite_o <= '0';
             jalEn_o <= '0';
         elsif rising_edge(clk_i) then
-            pc_o <= pc_i;
             npc_o <= npc_i;
             aluout_o <= aluout_i;
             rdata2_o <= rdata2_i;

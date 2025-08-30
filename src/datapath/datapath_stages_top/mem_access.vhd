@@ -9,9 +9,11 @@ entity mem_access is
     port (
         clk_i   : in  std_logic;
         reset_i : in  std_logic;
+        npc_i   : in  std_logic_vector(nbit-1 downto 0);
         aluout_i: in  std_logic_vector(nbit-1 downto 0);
         rdata2_i: in  std_logic_vector(nbit-1 downto 0);
         rdest_i : in  std_logic_vector(4 downto 0);
+        pc_o    : out std_logic_vector(nbit-1 downto 0);
         lmd_o   : out std_logic_vector(nbit-1 downto 0);
         rdest_o : out std_logic_vector(4 downto 0);
         -- Control signals
@@ -68,7 +70,7 @@ begin
         port map (
             clk_i   => clk_i,
             reset_i => reset_i,
-            en_i    => mem,
+            en_i    => memRead_i,
             we_i    => memWrite_i,
             re_i    => memRead_i,
             addr_i  => aluout_i(4 downto 0),

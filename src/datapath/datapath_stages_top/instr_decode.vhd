@@ -1,6 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use work.utils_pkg.all;
 
 entity instr_decode is
     generic (
@@ -9,7 +10,6 @@ entity instr_decode is
     port (
         clk_i           : in  std_logic;
         reset_i         : in  std_logic;
-        pc_i            : in  std_logic_vector(nbit-1 downto 0);
         npc_i           : in  std_logic_vector(nbit-1 downto 0);
         instr_i         : in  std_logic_vector(nbit-1 downto 0);
         waddr_i         : in  std_logic_vector(4 downto 0);
@@ -17,7 +17,6 @@ entity instr_decode is
         rdata1_o        : out std_logic_vector(nbit-1 downto 0);
         rdata2_o        : out std_logic_vector(nbit-1 downto 0);
         imm_o           : out std_logic_vector(nbit-1 downto 0);
-        pc_o            : out std_logic_vector(nbit-1 downto 0);
         npc_o           : out std_logic_vector(nbit-1 downto 0);
         rdest_i_type_o  : out std_logic_vector(4 downto 0);
         rdest_r_type_o  : out std_logic_vector(4 downto 0);
@@ -59,15 +58,14 @@ architecture struct of instr_decode is
 
     signal imm_i_type, imm_j_type: std_logic_vector(nbit-1 downto 0);
 begin
-    pc_o <= pc_i;
     npc_o <= npc_i;
-    imm_i_type <= (31 downto 16 => instr_i(15), instr_i(15 downto 0));
-    imm_j_type <= (31 downto 26 => instr_i(25), instr_i(25 downto 0));
+    imm_i_type <= (31 downto 16 => instr_i(15)) & instr_i(15 downto 0);
+    imm_j_type <= (31 downto 26 => instr_i(25)) & instr_i(25 downto 0);
     rdest_i_type_o <= instr_i(20 downto 16);
     rdest_r_type_o <= instr_i(15 downto 11);
     reg_file: register_file
         generic map (
-            nreg => nreg,
+            nreg => 32,
             nbit => nbit
         )
         port map (

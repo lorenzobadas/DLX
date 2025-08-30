@@ -15,7 +15,7 @@ entity write_back is
         -- Control signals
         memToReg_i  : in std_logic;
         jalEn_i     : in std_logic;
-        regWrite_o  : out std_logic;
+        regWrite_o  : out std_logic
     );
 end entity;
 
@@ -32,7 +32,7 @@ architecture struct of write_back is
         );
     end component;
 begin
-    rdest_o <= rdest_i;
+    wbaddr_o <= rdest_i;
     mux_mem2reg: mux2to1
         generic map (
             nbit => nbit
