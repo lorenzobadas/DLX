@@ -1,6 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use work.mem_pkg.all;
 
 entity mem_access is
     generic (
@@ -13,35 +14,18 @@ entity mem_access is
         aluout_i: in  std_logic_vector(nbit-1 downto 0);
         rdata2_i: in  std_logic_vector(nbit-1 downto 0);
         rdest_i : in  std_logic_vector(4 downto 0);
+        lmd_i   : in std_logic_vector(dmem_width-1 downto 0);
         pc_o    : out std_logic_vector(nbit-1 downto 0);
-        lmd_o   : out std_logic_vector(nbit-1 downto 0);
+        dmem_addr_o : out std_logic_vector(dmem_addr-1 downto 0);
+        dmem_din_o  : out std_logic_vector(dmem_width-1 downto 0);
         rdest_o : out std_logic_vector(4 downto 0);
         -- Control signals
         PCSrc_i     : in std_logic;
-        memRead_i   : in std_logic;
         memWrite_i  : in std_logic
     );
 end entity;
 
 architecture struct of mem_access is
-    component data_memory is
-        generic(
-            ram_width : integer := 32;
-            ram_depth : integer := 32;
-            ram_add   : integer := 5;
-            init_file : string := "data_memory.mem"
-        );
-        port(
-            clk_i   : in std_logic;
-            reset_i : in std_logic;
-            en_i    : in std_logic;
-            we_i    : in std_logic;
-            re_i    : in std_logic;
-            addr_i  : in std_logic_vector(ram_add-1 downto 0);  
-            din_i   : in std_logic_vector(ram_width-1 downto 0);
-            dout_o  : out std_logic_vector(ram_width-1 downto 0)
-        );
-    end component;
 
     component mux2to1 is
         generic(
@@ -58,25 +42,9 @@ architecture struct of mem_access is
     signal mem_data_out : std_logic_vector(nbit-1 downto 0);
 
 begin
-    lmd_o <= mem_data_out;
+    dmem_addr_o <= aluout_i;
+    dmem_din_o <= rdata2_i;
     rdest_o <= rdest_i;
-    data_mem: data_memory
-        generic map (
-            ram_width => nbit,
-            ram_depth => 32,
-            ram_add   => 32,
-            init_file => "data_memory.mem"
-        )
-        port map (
-            clk_i   => clk_i,
-            reset_i => reset_i,
-            en_i    => memRead_i,
-            we_i    => memWrite_i,
-            re_i    => memRead_i,
-            addr_i  => aluout_i(4 downto 0),
-            din_i   => rdata2_i,
-            dout_o  => mem_data_out
-        );
 
     mux: mux2to1
         generic map (

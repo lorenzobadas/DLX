@@ -2,21 +2,22 @@ library ieee;
 use ieee.std_logic_1164.all;
 use std.textio.all;
 use ieee.numeric_std.all;
+use work.mem_pkg.all;
 
 entity instr_memory is
     generic(
-        ram_width : integer := 32;
-        ram_depth : integer := 32;
-        ram_add   : integer := 5;
+        ram_width : integer := imem_width,
+        ram_depth : integer := imem_depth,
+        ram_add   : integer := imem_addr,
         init_file : string := "instr_memory.mem"
     );
     port(
         clk_i  : in std_logic;
         reset_i: in std_logic;
         en_i   : in std_logic;
-        addr_i : in std_logic_vector(ram_add-1 downto 0);  
+        addr_i : in std_logic_vector(imem_addr-1 downto 0);  
         rd_o   : out std_logic;
-        dout_o : out std_logic_vector(ram_width-1 downto 0)
+        dout_o : out std_logic_vector(imem_width-1 downto 0)
     );
 end instr_memory;
 
