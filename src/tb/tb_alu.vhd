@@ -1,9 +1,9 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use ieee.math_real.UNIFORM;
+use ieee.math_real.uniform;
 use work.utils_pkg.all;
-use work.o3_pkg.all;
+use work.alu_instr_pkg.all;
 
 entity tb_alu is
 end tb_alu;

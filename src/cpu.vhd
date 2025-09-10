@@ -4,8 +4,9 @@ use ieee.numeric_std.all;
 use work.instructions_pkg.all;
 use work.utils_pkg.all;
 use work.alu_instr_pkg.all;
+use work.mem_pkg.all;
 
-entity CPU is
+entity cpu is
     generic (
         nbit : integer := 32
     );
@@ -14,19 +15,18 @@ entity CPU is
         rst_i   : in std_logic;
         -- instruction memory
         imem_en_o    : out std_logic;
-        imem_addr_o  : out std_logic_vector(7 downto 0);
-        imem_rd_i    : in std_logic;
-        imem_dout_i  : in std_logic_vector(nbit-1 downto 0);
+        imem_addr_o  : out std_logic_vector(imem_addr-1 downto 0);
+        imem_dout_i  : in std_logic_vector(imem_width-1 downto 0);
         -- data memory
         dmem_en_o    : out std_logic;
         dmem_we_o    : out std_logic;
-        dmem_addr_o  : out std_logic_vector(nbit-1 downto 0);
-        dmem_din_o   : out std_logic_vector(nbit-1 downto 0);
-        dmem_dout_i  : in std_logic_vector(nbit-1 downto 0)
+        dmem_addr_o  : out std_logic_vector(dmem_addr-1 downto 0);
+        dmem_din_o   : out std_logic_vector(dmem_width-1 downto 0);
+        dmem_dout_i  : in std_logic_vector(dmem_width-1 downto 0)
     );
 end entity;
 
-architecture struct of CPU is
+architecture struct of cpu is
     ---------------------------------------------------------------------COMPONENTS
     component control_unit is
         generic(
@@ -41,7 +41,6 @@ architecture struct of CPU is
             ALUOp_o     : out alu_op_t;
             regDest_o   : out std_logic;
             PCSrc_o     : out std_logic;
-            memRead_o   : out std_logic;
             memWrite_o  : out std_logic;
             memToReg_o  : out std_logic;
             regWrite_o  : out std_logic;
@@ -49,7 +48,7 @@ architecture struct of CPU is
         );
     end component;
 
-    component instr_fetch is 
+    component instr_fetch is
         generic (
             nbit : integer := 32
         ); 
@@ -57,8 +56,9 @@ architecture struct of CPU is
             clk_i   : in  std_logic;
             reset_i : in  std_logic;
             pc_i    : in  std_logic_vector(nbit-1 downto 0);
-            npc_o   : out std_logic_vector(nbit-1 downto 0);
-            instr_o : out std_logic_vector(nbit-1 downto 0)
+            instr_i : out std_logic_vector(imem_width-1 downto 0);
+            instr_addr_o : out std_logic_vector(imem_addr-1 downto 0);
+            npc_o   : out std_logic_vector(nbit-1 downto 0)
         );
     end component;
 
@@ -80,7 +80,6 @@ architecture struct of CPU is
             ALUOp_i    : in  alu_op_t;
             regDest_i  : in  std_logic;
             PCSrc_i    : in  std_logic;
-            memRead_i  : in  std_logic;
             memWrite_i : in  std_logic;
             memToReg_i : in  std_logic;
             regWrite_i : in  std_logic;
@@ -91,7 +90,6 @@ architecture struct of CPU is
             ALUOp_o    : out alu_op_t;
             regDest_o  : out std_logic;
             PCSrc_o    : out std_logic;
-            memRead_o  : out std_logic;
             memWrite_o : out std_logic;
             memToReg_o : out std_logic;
             regWrite_o : out std_logic;
@@ -147,7 +145,6 @@ architecture struct of CPU is
             ALUOp_i         : in  alu_op_t;
             regDest_i       : in  std_logic;
             PCSrc_i         : in  std_logic;
-            memRead_i       : in  std_logic;
             memWrite_i      : in  std_logic;
             memToReg_i      : in  std_logic;
             regWrite_i      : in  std_logic;
@@ -157,7 +154,6 @@ architecture struct of CPU is
             ALUOp_o         : out alu_op_t;
             regDest_o       : out std_logic;
             PCSrc_o         : out std_logic;
-            memRead_o       : out std_logic;
             memWrite_o      : out std_logic;
             memToReg_o      : out std_logic;
             regWrite_o      : out std_logic;
@@ -210,13 +206,11 @@ architecture struct of CPU is
             zero_o  : out std_logic;
             -- Control signals
             PCSrc_i     : in std_logic;
-            memRead_i   : in std_logic;
             memWrite_i  : in std_logic;
             memToReg_i  : in std_logic;
             regWrite_i  : in std_logic;
             jalEn_i     : in std_logic;
             PCSrc_o     : out std_logic;
-            memRead_o   : out std_logic;
             memWrite_o  : out std_logic;
             memToReg_o  : out std_logic;
             regWrite_o  : out std_logic;
@@ -235,12 +229,13 @@ architecture struct of CPU is
             aluout_i: in  std_logic_vector(nbit-1 downto 0);
             rdata2_i: in  std_logic_vector(nbit-1 downto 0);
             rdest_i : in  std_logic_vector(4 downto 0);
+            dout_i   : in std_logic_vector(dmem_width-1 downto 0);
             pc_o    : out std_logic_vector(nbit-1 downto 0);
-            lmd_o   : out std_logic_vector(nbit-1 downto 0);
+            dmem_addr_o : out std_logic_vector(dmem_addr-1 downto 0);
+            dmem_din_o  : out std_logic_vector(dmem_width-1 downto 0);
             rdest_o : out std_logic_vector(4 downto 0);
             -- Control signals
             PCSrc_i     : in std_logic;
-            memRead_i   : in std_logic;
             memWrite_i  : in std_logic
         );
     end component;
@@ -253,10 +248,10 @@ architecture struct of CPU is
             clk_i       : in  std_logic;
             reset_i     : in  std_logic;
             aluout_i    : in  std_logic_vector(nbit-1 downto 0);
-            lmd_i       : in  std_logic_vector(nbit-1 downto 0);
+            dout_i       : in  std_logic_vector(nbit-1 downto 0);
             rdest_i     : in  std_logic_vector(4 downto 0);
             aluout_o    : out std_logic_vector(nbit-1 downto 0);
-            lmd_o       : out std_logic_vector(nbit-1 downto 0);
+            dout_o       : out std_logic_vector(nbit-1 downto 0);
             rdest_o     : out std_logic_vector(4 downto 0);
             -- Control signals
             memToReg_i  : in std_logic;
@@ -274,7 +269,7 @@ architecture struct of CPU is
         );
         port (
             aluout_i    : in  std_logic_vector(nbit-1 downto 0);
-            lmd_i       : in  std_logic_vector(nbit-1 downto 0);
+            dout_i       : in  std_logic_vector(nbit-1 downto 0);
             rdest_i     : in  std_logic_vector(4 downto 0);
             wbdata_o    : out std_logic_vector(nbit-1 downto 0);
             wbaddr_o    : out std_logic_vector(4 downto 0);
@@ -288,49 +283,52 @@ architecture struct of CPU is
     ---------------------------------------------------------------------SIGNALS
     ---------------- Datapath signals ----------------
     -- IF stage signals
-    signal if_pc, if_npc   : std_logic_vector(nbit-1 downto 0);
-    signal if_instr        : std_logic_vector(nbit-1 downto 0);
+    signal if_pc       : std_logic_vector(nbit-1 downto 0);
+    signal if_npc      : std_logic_vector(nbit-1 downto 0);
+    signal if_instr    : std_logic_vector(nbit-1 downto 0);
     -- ID stage signals
-    signal id_npc_in, id_npc_out   : std_logic_vector(nbit-1 downto 0);
-    signal id_instr        : std_logic_vector(nbit-1 downto 0);
-    signal id_rdata1, id_rdata2 : std_logic_vector(nbit-1 downto 0);
-    signal id_imm          : std_logic_vector(nbit-1 downto 0);
-    signal id_rdest_i, id_rdest_r : std_logic_vector(4 downto 0);
+    signal id_npc_in, id_npc_out    : std_logic_vector(nbit-1 downto 0);
+    signal id_instr                 : std_logic_vector(nbit-1 downto 0);
+    signal id_rdata1                : std_logic_vector(nbit-1 downto 0);
+    signal id_rdata2                : std_logic_vector(nbit-1 downto 0);
+    signal id_imm                   : std_logic_vector(nbit-1 downto 0);
+    signal id_rdest_i_type, id_rdest_r_type   : std_logic_vector(4 downto 0);
     -- EX stage signals
-    signal ex_npc_in, ex_npc_out: std_logic_vector(nbit-1 downto 0);
-    signal ex_rdata1, ex_rdata2, ex_rdata2_out : std_logic_vector(nbit-1 downto 0);
-    signal ex_imm          : std_logic_vector(nbit-1 downto 0);
-    signal ex_aluout       : std_logic_vector(nbit-1 downto 0);
-    signal ex_zero         : std_logic;
-    signal ex_rdest        : std_logic_vector(4 downto 0);
-    signal ex_rdest_i, ex_rdest_r : std_logic_vector(4 downto 0);
+    signal ex_npc_in, ex_npc_out    : std_logic_vector(nbit-1 downto 0);
+    signal ex_rdata1                : std_logic_vector(nbit-1 downto 0);
+    signal ex_rdata2, ex_rdata2_out : std_logic_vector(nbit-1 downto 0);
+    signal ex_imm                   : std_logic_vector(nbit-1 downto 0);
+    signal ex_aluout                : std_logic_vector(nbit-1 downto 0);
+    signal ex_zero                  : std_logic;
+    signal ex_rdest                 : std_logic_vector(4 downto 0);
+    signal ex_rdest_i_type, ex_rdest_r_type   : std_logic_vector(4 downto 0);
     -- MEM stage signals
     signal mem_pc          : std_logic_vector(nbit-1 downto 0) := (others => '0');
     signal mem_npc         : std_logic_vector(nbit-1 downto 0);
     signal mem_zero        : std_logic;
     signal mem_aluout      : std_logic_vector(nbit-1 downto 0);
     signal mem_rdata2      : std_logic_vector(nbit-1 downto 0);
-    signal mem_lmd         : std_logic_vector(nbit-1 downto 0);
-    signal mem_rdest_in, mem_rdest_out : std_logic_vector(4 downto 0);
+    signal mem_dout         : std_logic_vector(nbit-1 downto 0);
+    signal mem_rdest_i_typen, mem_rdest_out : std_logic_vector(4 downto 0);
     -- WB stage signals
-    signal wb_data         : std_logic_vector(nbit-1 downto 0);
-    signal wb_addr         : std_logic_vector(4 downto 0);
-    signal wb_aluout      : std_logic_vector(nbit-1 downto 0);
-    signal wb_lmd         : std_logic_vector(nbit-1 downto 0);
-    signal wb_rdest       : std_logic_vector(4 downto 0);
-    
+    signal wb_data          : std_logic_vector(nbit-1 downto 0);
+    signal wb_addr          : std_logic_vector(4 downto 0);
+    signal wb_aluout        : std_logic_vector(nbit-1 downto 0);
+    signal wb_dout           : std_logic_vector(nbit-1 downto 0);
+    signal wb_rdest         : std_logic_vector(4 downto 0);
+
     ---------------- Control signals ----------------
-    signal ctrl_immSrc     : std_logic;
-    signal ctrl_ALUSrc1    : std_logic;
-    signal ctrl_ALUSrc2    : std_logic;
-    signal ctrl_ALUOp      : alu_op_t;
-    signal ctrl_regDest    : std_logic;
-    signal ctrl_PCSrc      : std_logic;
-    signal ctrl_memRead    : std_logic;
-    signal ctrl_memWrite   : std_logic;
-    signal ctrl_memToReg   : std_logic;
-    signal ctrl_regWrite   : std_logic;
-    signal ctrl_jalEn      : std_logic;
+    -- from IF stage
+    signal if_immSrc     : std_logic;
+    signal if_ALUSrc1    : std_logic;
+    signal if_ALUSrc2    : std_logic;
+    signal if_ALUOp      : alu_op_t;
+    signal if_regDest    : std_logic;
+    signal if_PCSrc      : std_logic;
+    signal if_memWrite   : std_logic;
+    signal if_memToReg   : std_logic;
+    signal if_regWrite   : std_logic;
+    signal if_jalEn      : std_logic;
     -- from IF/ID stage
     signal id_immSrc    : std_logic;
     signal id_ALUSrc1   : std_logic;
@@ -338,7 +336,6 @@ architecture struct of CPU is
     signal id_ALUOp     : alu_op_t;
     signal id_regDest   : std_logic;
     signal id_PCSrc     : std_logic;
-    signal id_memRead   : std_logic;
     signal id_memWrite  : std_logic;
     signal id_memToReg  : std_logic;
     signal id_regWrite  : std_logic;
@@ -349,14 +346,12 @@ architecture struct of CPU is
     signal ex_ALUOp     : alu_op_t;
     signal ex_regDest   : std_logic;
     signal ex_PCSrc     : std_logic;
-    signal ex_memRead   : std_logic;
     signal ex_memWrite  : std_logic;
     signal ex_memToReg  : std_logic;
     signal ex_regWrite  : std_logic;
     signal ex_jalEn     : std_logic;
     -- from EX/MEM stage
     signal mem_PCSrc    : std_logic;
-    signal mem_memRead  : std_logic;
     signal mem_memWrite : std_logic;
     signal mem_memToReg : std_logic;
     signal mem_regWrite : std_logic;
@@ -374,17 +369,16 @@ begin
         port map (
             instr_i    => id_instr,
             zero_i     => ex_zero,
-            immSrc_o   => ctrl_immSrc,
-            ALUSrc1_o  => ctrl_ALUSrc1,
-            ALUSrc2_o  => ctrl_ALUSrc2,
-            ALUOp_o    => ctrl_ALUOp,
-            regDest_o  => ctrl_regDest,
-            PCSrc_o    => ctrl_PCSrc,
-            memRead_o  => ctrl_memRead,
-            memWrite_o => ctrl_memWrite,
-            memToReg_o => ctrl_memToReg,
-            regWrite_o => ctrl_regWrite,
-            jalEn_o    => ctrl_jalEn
+            immSrc_o   => if_immSrc,
+            ALUSrc1_o  => if_ALUSrc1,
+            ALUSrc2_o  => if_ALUSrc2,
+            ALUOp_o    => if_ALUOp,
+            regDest_o  => if_regDest,
+            PCSrc_o    => if_PCSrc,
+            memWrite_o => if_memWrite,
+            memToReg_o => if_memToReg,
+            regWrite_o => if_regWrite,
+            jalEn_o    => if_jalEn
         );
 
     -- Fetch Stage
@@ -393,9 +387,10 @@ begin
         port map (
             clk_i   => clk_i,
             reset_i => rst_i,
-            pc_i    => mem_pc,
-            npc_o   => if_npc,
-            instr_o => if_instr
+            pc_i => if_pc,
+            instr_i => if_instr,
+            instr_addr_o => if_instr_addr,
+            npc_o => if_npc
         );
 
     -- IF/ID Pipeline Register
@@ -409,24 +404,22 @@ begin
             npc_o     => id_npc_in,
             instr_o   => id_instr,
             -- Control signals
-            immSrc_i   => ctrl_immSrc,
-            ALUSrc1_i  => ctrl_ALUSrc1,
-            ALUSrc2_i  => ctrl_ALUSrc2,
-            ALUOp_i    => ctrl_ALUOp,
-            regDest_i  => ctrl_regDest,
-            PCSrc_i    => ctrl_PCSrc,
-            memRead_i  => ctrl_memRead,
-            memWrite_i => ctrl_memWrite,
-            memToReg_i => ctrl_memToReg,
-            regWrite_i => ctrl_regWrite,
-            jalEn_i    => ctrl_jalEn,
+            immSrc_i   => if_immSrc,
+            ALUSrc1_i  => if_ALUSrc1,
+            ALUSrc2_i  => if_ALUSrc2,
+            ALUOp_i    => if_ALUOp,
+            regDest_i  => if_regDest,
+            PCSrc_i    => if_PCSrc,
+            memWrite_i => if_memWrite,
+            memToReg_i => if_memToReg,
+            regWrite_i => if_regWrite,
+            jalEn_i    => if_jalEn,
             immSrc_o   => id_immSrc,
             ALUSrc1_o  => id_ALUSrc1,
             ALUSrc2_o  => id_ALUSrc2,
             ALUOp_o    => id_ALUOp,
             regDest_o  => id_regDest,
             PCSrc_o    => id_PCSrc,
-            memRead_o  => id_memRead,
             memWrite_o => id_memWrite,
             memToReg_o => id_memToReg,
             regWrite_o => id_regWrite,
@@ -447,11 +440,11 @@ begin
             rdata2_o       => id_rdata2,
             imm_o          => id_imm,
             npc_o          => id_npc_out,
-            rdest_i_type_o => id_rdest_i,
-            rdest_r_type_o => id_rdest_r,
+            rdest_i_type_o => id_rdest_i_type,
+            rdest_r_type_o => id_rdest_r_type,
             -- Control signals
             immSrc_i       => id_immSrc,
-            regWrite_i     => wb_regWrite    -- From WB stage
+            regWrite_i     => wb_regWrite
         );
 
     -- ID/EX Pipeline Register
@@ -464,21 +457,20 @@ begin
             rdata1_i       => id_rdata1,
             rdata2_i       => id_rdata2,
             imm_i          => id_imm,
-            rdest_i_type_i => id_rdest_i,
-            rdest_r_type_i => id_rdest_r,
+            rdest_i_type_i => id_rdest_i_type,
+            rdest_r_type_i => id_rdest_r_type,
             npc_o          => ex_npc_in,
             rdata1_o       => ex_rdata1,
             rdata2_o       => ex_rdata2,
             imm_o          => ex_imm,
-            rdest_i_type_o => ex_rdest_i,
-            rdest_r_type_o => ex_rdest_r,
+            rdest_i_type_o => ex_rdest_i_type,
+            rdest_r_type_o => ex_rdest_r_type,
             -- Control signals
             ALUSrc1_i      => id_ALUSrc1,
             ALUSrc2_i      => id_ALUSrc2,
             ALUOp_i        => id_ALUOp,
             regDest_i      => id_regDest,
             PCSrc_i        => id_PCSrc,
-            memRead_i      => id_memRead,
             memWrite_i     => id_memWrite,
             memToReg_i     => id_memToReg,
             regWrite_i     => id_regWrite,
@@ -488,7 +480,6 @@ begin
             ALUOp_o        => ex_ALUOp,
             regDest_o      => ex_regDest,
             PCSrc_o        => ex_PCSrc,
-            memRead_o      => ex_memRead,
             memWrite_o     => ex_memWrite,
             memToReg_o     => ex_memToReg,
             regWrite_o     => ex_regWrite,
@@ -505,8 +496,8 @@ begin
             rdata1_i       => ex_rdata1,
             rdata2_i       => ex_rdata2,
             imm_i          => ex_imm,
-            rdest_i_type_i => ex_rdest_i,
-            rdest_r_type_i => ex_rdest_r,
+            rdest_i_type_i => ex_rdest_i_type,
+            rdest_r_type_i => ex_rdest_r_type,
             zero_o         => ex_zero,
             rdata2_o       => ex_rdata2_out,
             npc_o          => ex_npc_out,
@@ -519,6 +510,7 @@ begin
             regDest_i      => ex_regDest
         );
 
+    -- EX/MEM Pipeline Register
     ex_mem_regs_inst: ex_mem_regs
         generic map (nbit => nbit)
         port map (
@@ -532,17 +524,15 @@ begin
             npc_o         => mem_npc,
             aluout_o      => mem_aluout,
             rdata2_o      => mem_rdata2,
-            rdest_o       => mem_rdest_in,
+            rdest_o       => mem_rdest_i_typen,
             zero_o        => mem_zero,
             -- Control signals
             PCSrc_i       => ex_PCSrc,
-            memRead_i     => ex_memRead,
             memWrite_i    => ex_memWrite,
             memToReg_i    => ex_memToReg,
             regWrite_i    => ex_regWrite,
             jalEn_i       => ex_jalEn,
             PCSrc_o       => mem_PCSrc,
-            memRead_o     => mem_memRead,
             memWrite_o    => mem_memWrite,
             memToReg_o    => mem_memToReg,
             regWrite_o    => mem_regWrite,
@@ -553,19 +543,20 @@ begin
     mem_access_inst: mem_access
         generic map (nbit => nbit)
         port map (
-            clk_i         => clk_i,
-            reset_i       => rst_i,
-            npc_i         => mem_npc,
-            aluout_i      => mem_aluout,
-            rdata2_i      => mem_rdata2,
-            rdest_i       => mem_rdest_in,
-            pc_o          => mem_pc,
-            lmd_o         => mem_lmd,
-            rdest_o       => mem_rdest_out,
+            clk_i       => clk_i,
+            reset_i     => rst_i,
+            npc_i       => mem_npc,
+            aluout_i    => mem_aluout,
+            rdata2_i    => mem_rdata2,
+            rdest_i     => mem_rdest,
+            dout_i       => mem_dout,
+            pc_o        => mem_pc,
+            dmem_addr_o => mem_dmem_addr,
+            dmem_din_o  => mem_dmem_din,
+            rdest_o     => mem_rdest,
             -- Control signals
-            PCSrc_i       => mem_PCSrc,
-            memRead_i     => mem_memRead,
-            memWrite_i    => mem_memWrite
+            PCSrc_i     => mem_PCSrc,
+            memWrite_i  => mem_memWrite
         );
 
     -- MEM/WB Pipeline Register
@@ -575,10 +566,10 @@ begin
             clk_i         => clk_i,
             reset_i       => rst_i,
             aluout_i      => mem_aluout,
-            lmd_i         => mem_lmd,
+            dout_i         => mem_dout,
             rdest_i       => mem_rdest_out,
             aluout_o      => wb_aluout,
-            lmd_o         => wb_lmd,
+            dout_o         => wb_dout,
             rdest_o       => wb_rdest,
             -- Control signals
             memToReg_i    => mem_memToReg,
@@ -594,7 +585,7 @@ begin
         generic map (nbit => nbit)
         port map (
             aluout_i      => wb_aluout,
-            lmd_i         => wb_lmd,
+            dout_i         => wb_dout,
             rdest_i       => wb_rdest,
             wbdata_o      => wb_data,
             wbaddr_o      => wb_addr,
@@ -604,4 +595,13 @@ begin
             regWrite_o    => wb_regWrite
         );
 
+    imem_en_o <= '1';
+    imem_addr_o <= if_instr_addr;
+    if_instr <= imem_dout_i;
+    dmem_en_o <= '1';
+    dmem_we_o <= mem_memWrite;
+    dmem_addr_o <= mem_aluout(dmem_addr-1 downto 0);
+    dmem_din_o <= mem_rdata2;
+    mem_dout <= dmem_dout_i;
+    
 end architecture;

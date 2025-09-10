@@ -21,7 +21,6 @@ entity if_id_regs is
         ALUOp_i    : in  alu_op_t;
         regDest_i  : in  std_logic;
         PCSrc_i    : in  std_logic;
-        memRead_i  : in  std_logic;
         memWrite_i : in  std_logic;
         memToReg_i : in  std_logic;
         regWrite_i : in  std_logic;
@@ -32,7 +31,6 @@ entity if_id_regs is
         ALUOp_o    : out alu_op_t;
         regDest_o  : out std_logic;
         PCSrc_o    : out std_logic;
-        memRead_o  : out std_logic;
         memWrite_o : out std_logic;
         memToReg_o : out std_logic;
         regWrite_o : out std_logic;
@@ -53,7 +51,6 @@ begin
             ALUOp_o <= alu_add;
             regDest_o <= '0';
             PCSrc_o <= '0';
-            memRead_o <= '0';
             memWrite_o <= '0';
             memToReg_o <= '0';
             regWrite_o <= '0';
@@ -67,7 +64,6 @@ begin
             ALUOp_o <= ALUOp_i;
             regDest_o <= regDest_i;
             PCSrc_o <= PCSrc_i;
-            memRead_o <= memRead_i;
             memWrite_o <= memWrite_i;
             memToReg_o <= memToReg_i;
             regWrite_o <= regWrite_i;

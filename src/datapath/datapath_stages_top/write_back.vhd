@@ -8,7 +8,7 @@ entity write_back is
     );
     port (
         aluout_i    : in  std_logic_vector(nbit-1 downto 0);
-        lmd_i       : in  std_logic_vector(nbit-1 downto 0);
+        dout_i       : in  std_logic_vector(nbit-1 downto 0);
         rdest_i     : in  std_logic_vector(4 downto 0);
         wbdata_o    : out std_logic_vector(nbit-1 downto 0);
         wbaddr_o    : out std_logic_vector(4 downto 0);
@@ -39,7 +39,7 @@ begin
         )
         port map (
             in0_i => aluout_i,
-            in1_i => lmd_i,
+            in1_i => dout_i,
             sel_i => memToReg_i,
             out_o => wbdata_o
         );
