@@ -1,16 +1,14 @@
-PKG_FILES := $(shell find ../src -name '*pkg.vhd' -type f)
+PKG_FILES := $(shell find ../src/pkg/ -name '*pkg.vhd' -type f)
 T2_SRC    := $(shell find ../src/t2_shifter -type f)
 T2_TB_SRC := $(shell find ../src/tb -name '*t2_shifter*.vhd' -type f)
 P4_SRC    := $(shell find ../src/p4_adder -type f)
 P4_TB_SRC := $(shell find ../src/tb -name '*p4_adder*.vhd' -type f)
-BOOTHMUL_SRC    := $(shell find ../src/multiplier -type f)
-BOOTHMUL_TB_SRC := $(shell find ../src/tb -name '*boothmul*.vhd' -type f)
 ALU_SRC    := $(shell find ../src/alu -type f)
 ALU_TB_SRC := $(shell find ../src/tb -name '*alu*.vhd' -type f)
 CPU_SRC    := $(shell find ../src/ -type f)
 CPU_TB_SRC := $(shell find ../src/tb -name '*cpu*.vhd' -type f)
 ASM_SRC	:= $(shell find ../asm -type f)
-ASM_FILENAME := $$(basename $(ASM_SRC) .asm) 
+ASM_FILENAME := $(basename $(notdir $(ASM_SRC)))
 
 t2-shifter-tb: clean
 	cp $(PKG_FILES) $(T2_SRC) $(T2_TB_SRC) .
@@ -27,14 +25,6 @@ p4-adder-tb: clean
 
 	vsim \
 		-do ../scripts/tb_p4_adder.do
-
-boothmul-tb: clean
-	cp $(PKG_FILES) $(P4_SRC) $(BOOTHMUL_SRC) $(BOOTHMUL_TB_SRC) .
-
-	vcom $$(basename -a $(PKG_FILES) $(P4_SRC) $(BOOTHMUL_SRC) $(BOOTHMUL_TB_SRC)) -autoorder -autoorderquiet
-
-	vsim \
-		-do ../scripts/tb_boothmul.do
 
 alu-tb: clean
 	cp $(PKG_FILES) $(P4_SRC) $(T2_SRC) $(ALU_SRC) $(ALU_TB_SRC) .
