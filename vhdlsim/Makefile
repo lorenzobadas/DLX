@@ -34,19 +34,20 @@ alu-tb: clean
 	vsim \
 		-do ../scripts/tb_alu.do
 
-cpu-tb: clean gen-bin
+instr_memory.mem: clean
+	perl ../scripts/dlxasm.pl -o $(ASM_FILENAME).bin -list $(ASM_FILENAME).list $(ASM_SRC)
+	rm $(ASM_FILENAME).bin.hdr $(ASM_FILENAME).list
+	cat $(ASM_FILENAME).bin | hexdump -v -e '/1 "%02X" /1 "%02X" /1 "%02X" /1 "%02X\n"' > $(ASM_FILENAME)\_dump.txt
+	mv $(ASM_FILENAME)\_dump.txt ./instr_memory.mem
+
+cpu-tb: instr_memory.mem
+	echo $(IMEM_SRC)
 	cp $(PKG_FILES) $(CPU_SRC) $(CPU_TB_SRC) .
 
 	vcom $$(basename -a $(PKG_FILES) $(CPU_SRC) $(CPU_TB_SRC)) -autoorder -autoorderquiet
 
 	vsim \
 		-do ../scripts/tb_cpu.do
-
-gen-bin: clean
-	perl ../scripts/dlxasm.pl -o $(ASM_FILENAME).bin -list $(ASM_FILENAME).list $(ASM_SRC)
-	rm $(ASM_FILENAME).bin.hdr $(ASM_FILENAME).list
-	cat $(ASM_FILENAME).bin | hexdump -v -e '/1 "%02X" /1 "%02X" /1 "%02X" /1 "%02X\n"' > $(ASM_FILENAME)\_dump.txt
-	mv $(ASM_FILENAME)\_dump.txt ./instr_memory.mem
 
 clean:
 	rm -f ./*.vhd
