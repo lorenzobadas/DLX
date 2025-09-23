@@ -27,7 +27,9 @@ entity id_ex_regs is
         ALUSrc2_i       : in  std_logic;
         ALUOp_i         : in  alu_op_t;
         regDest_i       : in  std_logic;
-        PCSrc_i         : in  std_logic;
+        branchEn_i     : in  std_logic;
+        branchOnZero_i : in  std_logic;
+        jumpEn_i       : in  std_logic;
         memWrite_i      : in  std_logic;
         memToReg_i      : in  std_logic;
         regWrite_i      : in  std_logic;
@@ -36,7 +38,9 @@ entity id_ex_regs is
         ALUSrc2_o       : out std_logic;
         ALUOp_o         : out alu_op_t;
         regDest_o       : out std_logic;
-        PCSrc_o         : out std_logic;
+        branchEn_o     : out std_logic;
+        branchOnZero_o : out std_logic;
+        jumpEn_o       : out std_logic;
         memWrite_o      : out std_logic;
         memToReg_o      : out std_logic;
         regWrite_o      : out std_logic;
@@ -59,7 +63,9 @@ begin
             ALUSrc2_o <= '0';
             ALUOp_o <= alu_add;
             regDest_o <= '0';
-            PCSrc_o <= '0';
+            branchEn_o <= '0';
+            branchOnZero_o <= '0';
+            jumpEn_o <= '0';
             memWrite_o <= '0';
             memToReg_o <= '0';
             regWrite_o <= '0';
@@ -75,7 +81,9 @@ begin
             ALUSrc2_o <= ALUSrc2_i;
             ALUOp_o <= ALUOp_i;
             regDest_o <= regDest_i;
-            PCSrc_o <= PCSrc_i;
+            branchEn_o <= branchEn_i;
+            branchOnZero_o <= branchOnZero_i;
+            jumpEn_o <= jumpEn_i;
             memWrite_o <= memWrite_i;
             memToReg_o <= memToReg_i;
             regWrite_o <= regWrite_i;

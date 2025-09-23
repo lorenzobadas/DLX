@@ -15,12 +15,12 @@ entity cpu is
         rst_i   : in std_logic;
         -- instruction memory
         imem_en_o    : out std_logic;
-        imem_addr_o  : out std_logic_vector(imem_addr-1 downto 0);
+        imem_addr_o  : out std_logic_vector(imem_addr_size-1 downto 0);
         imem_dout_i  : in std_logic_vector(imem_width-1 downto 0);
         -- data memory
         dmem_en_o    : out std_logic;
         dmem_we_o    : out std_logic;
-        dmem_addr_o  : out std_logic_vector(dmem_addr-1 downto 0);
+        dmem_addr_o  : out std_logic_vector(dmem_addr_size-1 downto 0);
         dmem_din_o   : out std_logic_vector(dmem_width-1 downto 0);
         dmem_dout_i  : in std_logic_vector(dmem_width-1 downto 0)
     );
@@ -33,18 +33,20 @@ architecture struct of cpu is
             nbit : integer := 32
         );
         port (
-            instr_i     : in std_logic_vector(nbit-1 downto 0);
-            zero_i      : in std_logic;
-            immSrc_o    : out std_logic;
-            ALUSrc1_o   : out std_logic;
-            ALUSrc2_o   : out std_logic;
-            ALUOp_o     : out alu_op_t;
-            regDest_o   : out std_logic;
-            PCSrc_o     : out std_logic;
-            memWrite_o  : out std_logic;
-            memToReg_o  : out std_logic;
-            regWrite_o  : out std_logic;
-            jalEn_o     : out std_logic
+            instr_i         : in std_logic_vector(nbit-1 downto 0);
+            zero_i          : in std_logic;
+            immSrc_o        : out std_logic;
+            ALUSrc1_o       : out std_logic;
+            ALUSrc2_o       : out std_logic;
+            ALUOp_o         : out alu_op_t;
+            regDest_o       : out std_logic;
+            branchEn_o      : out std_logic;
+            branchOnZero_o  : out std_logic;
+            jumpEn_o        : out std_logic;
+            memWrite_o      : out std_logic;
+            memToReg_o      : out std_logic;
+            regWrite_o      : out std_logic;
+            jalEn_o         : out std_logic
         );
     end component;
 
@@ -55,9 +57,9 @@ architecture struct of cpu is
         port (
             clk_i   : in  std_logic;
             reset_i : in  std_logic;
-            pc_i    : in  std_logic_vector(nbit-1 downto 0);
-            instr_i : out std_logic_vector(imem_width-1 downto 0);
-            instr_addr_o : out std_logic_vector(imem_addr-1 downto 0);
+            PCSrc_i : in  std_logic;
+            aluout_i: in  std_logic_vector(nbit-1 downto 0);
+            instr_addr_o : out std_logic_vector(imem_addr_size-1 downto 0);
             npc_o   : out std_logic_vector(nbit-1 downto 0)
         );
     end component;
@@ -79,7 +81,9 @@ architecture struct of cpu is
             ALUSrc2_i  : in  std_logic;
             ALUOp_i    : in  alu_op_t;
             regDest_i  : in  std_logic;
-            PCSrc_i    : in  std_logic;
+            branchEn_i : in  std_logic;
+            branchOnZero_i : in std_logic;
+            jumpEn_i   : in  std_logic;
             memWrite_i : in  std_logic;
             memToReg_i : in  std_logic;
             regWrite_i : in  std_logic;
@@ -89,7 +93,9 @@ architecture struct of cpu is
             ALUSrc2_o  : out std_logic;
             ALUOp_o    : out alu_op_t;
             regDest_o  : out std_logic;
-            PCSrc_o    : out std_logic;
+            branchEn_o : out std_logic;
+            branchOnZero_o : out std_logic;
+            jumpEn_o   : out std_logic;
             memWrite_o : out std_logic;
             memToReg_o : out std_logic;
             regWrite_o : out std_logic;
@@ -144,7 +150,9 @@ architecture struct of cpu is
             ALUSrc2_i       : in  std_logic;
             ALUOp_i         : in  alu_op_t;
             regDest_i       : in  std_logic;
-            PCSrc_i         : in  std_logic;
+            branchEn_i      : in  std_logic;
+            branchOnZero_i  : in  std_logic;
+            jumpEn_i        : in  std_logic;
             memWrite_i      : in  std_logic;
             memToReg_i      : in  std_logic;
             regWrite_i      : in  std_logic;
@@ -153,7 +161,9 @@ architecture struct of cpu is
             ALUSrc2_o       : out std_logic;
             ALUOp_o         : out alu_op_t;
             regDest_o       : out std_logic;
-            PCSrc_o         : out std_logic;
+            branchEn_o      : out std_logic;
+            branchOnZero_o  : out std_logic;
+            jumpEn_o        : out std_logic;
             memWrite_o      : out std_logic;
             memToReg_o      : out std_logic;
             regWrite_o      : out std_logic;
@@ -175,8 +185,6 @@ architecture struct of cpu is
             rdest_i_type_i  : in  std_logic_vector(4 downto 0);
             rdest_r_type_i  : in  std_logic_vector(4 downto 0);
             zero_o          : out std_logic;
-            rdata2_o        : out std_logic_vector(nbit-1 downto 0);
-            npc_o           : out std_logic_vector(nbit-1 downto 0);
             aluout_o        : out std_logic_vector(nbit-1 downto 0);
             rdest_o         : out std_logic_vector(4 downto 0);
             -- Control signals
@@ -194,23 +202,25 @@ architecture struct of cpu is
         port (
             clk_i   : in  std_logic;
             reset_i : in  std_logic;
-            npc_i   : in  std_logic_vector(nbit-1 downto 0);
             aluout_i: in  std_logic_vector(nbit-1 downto 0);
             rdata2_i: in  std_logic_vector(nbit-1 downto 0);
             rdest_i : in  std_logic_vector(4 downto 0);
             zero_i  : in  std_logic;
-            npc_o   : out std_logic_vector(nbit-1 downto 0);
             aluout_o: out std_logic_vector(nbit-1 downto 0);
             rdata2_o: out std_logic_vector(nbit-1 downto 0);
             rdest_o : out std_logic_vector(4 downto 0);
             zero_o  : out std_logic;
             -- Control signals
-            PCSrc_i     : in std_logic;
+            branchEn_i  : in std_logic;
+            branchOnZero_i : in std_logic;
+            jumpEn_i    : in std_logic;
             memWrite_i  : in std_logic;
             memToReg_i  : in std_logic;
             regWrite_i  : in std_logic;
             jalEn_i     : in std_logic;
-            PCSrc_o     : out std_logic;
+            branchEn_o  : out std_logic;
+            branchOnZero_o : out std_logic;
+            jumpEn_o    : out std_logic;
             memWrite_o  : out std_logic;
             memToReg_o  : out std_logic;
             regWrite_o  : out std_logic;
@@ -225,17 +235,20 @@ architecture struct of cpu is
         port (
             clk_i   : in  std_logic;
             reset_i : in  std_logic;
-            npc_i   : in  std_logic_vector(nbit-1 downto 0);
             aluout_i: in  std_logic_vector(nbit-1 downto 0);
             rdata2_i: in  std_logic_vector(nbit-1 downto 0);
             rdest_i : in  std_logic_vector(4 downto 0);
-            dout_i   : in std_logic_vector(dmem_width-1 downto 0);
+            dout_i  : in std_logic_vector(dmem_width-1 downto 0);
+            zero_i  : in std_logic;
             pc_o    : out std_logic_vector(nbit-1 downto 0);
-            dmem_addr_o : out std_logic_vector(dmem_addr-1 downto 0);
+            PCSrc_o : out std_logic;
+            dmem_addr_o : out std_logic_vector(dmem_addr_size-1 downto 0);
             dmem_din_o  : out std_logic_vector(dmem_width-1 downto 0);
             rdest_o : out std_logic_vector(4 downto 0);
             -- Control signals
-            PCSrc_i     : in std_logic;
+            branchEn_i  : in std_logic;
+            branchOnZero_i : in std_logic;
+            jumpEn_i    : in std_logic;
             memWrite_i  : in std_logic
         );
     end component;
@@ -275,17 +288,16 @@ architecture struct of cpu is
             wbaddr_o    : out std_logic_vector(4 downto 0);
             -- Control signals
             memToReg_i  : in std_logic;
-            jalEn_i     : in std_logic;
-            regWrite_o  : out std_logic
+            jalEn_i     : in std_logic
         );
     end component;
 
     ---------------------------------------------------------------------SIGNALS
     ---------------- Datapath signals ----------------
     -- IF stage signals
-    signal if_pc       : std_logic_vector(nbit-1 downto 0);
     signal if_npc      : std_logic_vector(nbit-1 downto 0);
     signal if_instr    : std_logic_vector(nbit-1 downto 0);
+    signal if_instr_addr    : std_logic_vector(imem_addr_size-1 downto 0);
     -- ID stage signals
     signal id_npc_in, id_npc_out    : std_logic_vector(nbit-1 downto 0);
     signal id_instr                 : std_logic_vector(nbit-1 downto 0);
@@ -294,9 +306,9 @@ architecture struct of cpu is
     signal id_imm                   : std_logic_vector(nbit-1 downto 0);
     signal id_rdest_i_type, id_rdest_r_type   : std_logic_vector(4 downto 0);
     -- EX stage signals
-    signal ex_npc_in, ex_npc_out    : std_logic_vector(nbit-1 downto 0);
+    signal ex_npc                   : std_logic_vector(nbit-1 downto 0);
     signal ex_rdata1                : std_logic_vector(nbit-1 downto 0);
-    signal ex_rdata2, ex_rdata2_out : std_logic_vector(nbit-1 downto 0);
+    signal ex_rdata2                : std_logic_vector(nbit-1 downto 0);
     signal ex_imm                   : std_logic_vector(nbit-1 downto 0);
     signal ex_aluout                : std_logic_vector(nbit-1 downto 0);
     signal ex_zero                  : std_logic;
@@ -304,12 +316,13 @@ architecture struct of cpu is
     signal ex_rdest_i_type, ex_rdest_r_type   : std_logic_vector(4 downto 0);
     -- MEM stage signals
     signal mem_pc          : std_logic_vector(nbit-1 downto 0) := (others => '0');
-    signal mem_npc         : std_logic_vector(nbit-1 downto 0);
     signal mem_zero        : std_logic;
     signal mem_aluout      : std_logic_vector(nbit-1 downto 0);
     signal mem_rdata2      : std_logic_vector(nbit-1 downto 0);
     signal mem_dout         : std_logic_vector(nbit-1 downto 0);
-    signal mem_rdest_i_typen, mem_rdest_out : std_logic_vector(4 downto 0);
+    signal mem_rdest_in, mem_rdest_out : std_logic_vector(4 downto 0);
+    signal mem_dmem_addr   : std_logic_vector(dmem_addr_size-1 downto 0);
+    signal mem_dmem_din    : std_logic_vector(dmem_width-1 downto 0);
     -- WB stage signals
     signal wb_data          : std_logic_vector(nbit-1 downto 0);
     signal wb_addr          : std_logic_vector(4 downto 0);
@@ -324,7 +337,9 @@ architecture struct of cpu is
     signal if_ALUSrc2    : std_logic;
     signal if_ALUOp      : alu_op_t;
     signal if_regDest    : std_logic;
-    signal if_PCSrc      : std_logic;
+    signal if_branchEn   : std_logic;
+    signal if_branchOnZero: std_logic;
+    signal if_jumpEn     : std_logic;
     signal if_memWrite   : std_logic;
     signal if_memToReg   : std_logic;
     signal if_regWrite   : std_logic;
@@ -335,7 +350,9 @@ architecture struct of cpu is
     signal id_ALUSrc2   : std_logic;
     signal id_ALUOp     : alu_op_t;
     signal id_regDest   : std_logic;
-    signal id_PCSrc     : std_logic;
+    signal id_branchEn  : std_logic;
+    signal id_branchOnZero: std_logic;
+    signal id_jumpEn    : std_logic;
     signal id_memWrite  : std_logic;
     signal id_memToReg  : std_logic;
     signal id_regWrite  : std_logic;
@@ -345,17 +362,22 @@ architecture struct of cpu is
     signal ex_ALUSrc2   : std_logic;
     signal ex_ALUOp     : alu_op_t;
     signal ex_regDest   : std_logic;
-    signal ex_PCSrc     : std_logic;
+    signal ex_branchEn  : std_logic;
+    signal ex_branchOnZero: std_logic;
+    signal ex_jumpEn    : std_logic;
     signal ex_memWrite  : std_logic;
     signal ex_memToReg  : std_logic;
     signal ex_regWrite  : std_logic;
     signal ex_jalEn     : std_logic;
     -- from EX/MEM stage
-    signal mem_PCSrc    : std_logic;
-    signal mem_memWrite : std_logic;
-    signal mem_memToReg : std_logic;
-    signal mem_regWrite : std_logic;
-    signal mem_jalEn    : std_logic;
+    signal mem_branchEn  : std_logic;
+    signal mem_branchOnZero: std_logic;
+    signal mem_jumpEn    : std_logic;
+    signal mem_PCSrc     : std_logic;
+    signal mem_memWrite  : std_logic;
+    signal mem_memToReg  : std_logic;
+    signal mem_regWrite  : std_logic;
+    signal mem_jalEn     : std_logic;
     -- from MEM/WB stage
     signal wb_memToReg  : std_logic;
     signal wb_regWrite  : std_logic;
@@ -374,7 +396,9 @@ begin
             ALUSrc2_o  => if_ALUSrc2,
             ALUOp_o    => if_ALUOp,
             regDest_o  => if_regDest,
-            PCSrc_o    => if_PCSrc,
+            branchEn_o => if_branchEn,
+            branchOnZero_o => if_branchOnZero,
+            jumpEn_o   => if_jumpEn,
             memWrite_o => if_memWrite,
             memToReg_o => if_memToReg,
             regWrite_o => if_regWrite,
@@ -387,8 +411,8 @@ begin
         port map (
             clk_i   => clk_i,
             reset_i => rst_i,
-            pc_i => if_pc,
-            instr_i => if_instr,
+            PCSrc_i => mem_PCSrc,
+            aluout_i => mem_aluout,
             instr_addr_o => if_instr_addr,
             npc_o => if_npc
         );
@@ -400,7 +424,7 @@ begin
             clk_i     => clk_i,
             reset_i   => rst_i,
             npc_i     => if_npc,
-            instr_i   => if_instr,
+            instr_i   => imem_dout_i,
             npc_o     => id_npc_in,
             instr_o   => id_instr,
             -- Control signals
@@ -409,7 +433,9 @@ begin
             ALUSrc2_i  => if_ALUSrc2,
             ALUOp_i    => if_ALUOp,
             regDest_i  => if_regDest,
-            PCSrc_i    => if_PCSrc,
+            branchEn_i => if_branchEn,
+            branchOnZero_i => if_branchOnZero,
+            jumpEn_i   => if_jumpEn,
             memWrite_i => if_memWrite,
             memToReg_i => if_memToReg,
             regWrite_i => if_regWrite,
@@ -419,7 +445,9 @@ begin
             ALUSrc2_o  => id_ALUSrc2,
             ALUOp_o    => id_ALUOp,
             regDest_o  => id_regDest,
-            PCSrc_o    => id_PCSrc,
+            branchEn_o => id_branchEn,
+            branchOnZero_o => id_branchOnZero,
+            jumpEn_o   => id_jumpEn,
             memWrite_o => id_memWrite,
             memToReg_o => id_memToReg,
             regWrite_o => id_regWrite,
@@ -459,7 +487,7 @@ begin
             imm_i          => id_imm,
             rdest_i_type_i => id_rdest_i_type,
             rdest_r_type_i => id_rdest_r_type,
-            npc_o          => ex_npc_in,
+            npc_o          => ex_npc,
             rdata1_o       => ex_rdata1,
             rdata2_o       => ex_rdata2,
             imm_o          => ex_imm,
@@ -470,7 +498,9 @@ begin
             ALUSrc2_i      => id_ALUSrc2,
             ALUOp_i        => id_ALUOp,
             regDest_i      => id_regDest,
-            PCSrc_i        => id_PCSrc,
+            branchEn_i     => id_branchEn,
+            branchOnZero_i  => id_branchOnZero,
+            jumpEn_i       => id_jumpEn,
             memWrite_i     => id_memWrite,
             memToReg_i     => id_memToReg,
             regWrite_i     => id_regWrite,
@@ -479,7 +509,9 @@ begin
             ALUSrc2_o      => ex_ALUSrc2,
             ALUOp_o        => ex_ALUOp,
             regDest_o      => ex_regDest,
-            PCSrc_o        => ex_PCSrc,
+            branchEn_o    => ex_branchEn,
+            branchOnZero_o => ex_branchOnZero,
+            jumpEn_o      => ex_jumpEn,
             memWrite_o     => ex_memWrite,
             memToReg_o     => ex_memToReg,
             regWrite_o     => ex_regWrite,
@@ -492,15 +524,13 @@ begin
         port map (
             clk_i          => clk_i,
             reset_i        => rst_i,
-            npc_i          => ex_npc_in,
+            npc_i          => ex_npc,
             rdata1_i       => ex_rdata1,
             rdata2_i       => ex_rdata2,
             imm_i          => ex_imm,
             rdest_i_type_i => ex_rdest_i_type,
             rdest_r_type_i => ex_rdest_r_type,
             zero_o         => ex_zero,
-            rdata2_o       => ex_rdata2_out,
-            npc_o          => ex_npc_out,
             aluout_o       => ex_aluout,
             rdest_o        => ex_rdest,
             -- Control signals
@@ -516,23 +546,25 @@ begin
         port map (
             clk_i         => clk_i,
             reset_i       => rst_i,
-            npc_i         => ex_npc_out,
             aluout_i      => ex_aluout,
-            rdata2_i      => ex_rdata2_out,
+            rdata2_i      => ex_rdata2,
             rdest_i       => ex_rdest,
             zero_i        => ex_zero,
-            npc_o         => mem_npc,
             aluout_o      => mem_aluout,
             rdata2_o      => mem_rdata2,
-            rdest_o       => mem_rdest_i_typen,
+            rdest_o       => mem_rdest_in,
             zero_o        => mem_zero,
             -- Control signals
-            PCSrc_i       => ex_PCSrc,
+            branchEn_i    => ex_branchEn,
+            branchOnZero_i => ex_branchOnZero,
+            jumpEn_i      => ex_jumpEn,
             memWrite_i    => ex_memWrite,
             memToReg_i    => ex_memToReg,
             regWrite_i    => ex_regWrite,
             jalEn_i       => ex_jalEn,
-            PCSrc_o       => mem_PCSrc,
+            branchEn_o    => mem_branchEn,
+            branchOnZero_o => mem_branchOnZero,
+            jumpEn_o      => mem_jumpEn,
             memWrite_o    => mem_memWrite,
             memToReg_o    => mem_memToReg,
             regWrite_o    => mem_regWrite,
@@ -545,18 +577,21 @@ begin
         port map (
             clk_i       => clk_i,
             reset_i     => rst_i,
-            npc_i       => mem_npc,
             aluout_i    => mem_aluout,
             rdata2_i    => mem_rdata2,
-            rdest_i     => mem_rdest,
-            dout_i       => mem_dout,
+            rdest_i     => mem_rdest_in,
+            dout_i      => mem_dout,
+            zero_i      => mem_zero,
             pc_o        => mem_pc,
+            PCSrc_o     => mem_PCSrc,
             dmem_addr_o => mem_dmem_addr,
             dmem_din_o  => mem_dmem_din,
-            rdest_o     => mem_rdest,
+            rdest_o     => mem_rdest_out,
             -- Control signals
-            PCSrc_i     => mem_PCSrc,
-            memWrite_i  => mem_memWrite
+            branchEn_i   => mem_branchEn,
+            branchOnZero_i => mem_branchOnZero,
+            jumpEn_i     => mem_jumpEn,
+            memWrite_i   => mem_memWrite
         );
 
     -- MEM/WB Pipeline Register
@@ -566,10 +601,10 @@ begin
             clk_i         => clk_i,
             reset_i       => rst_i,
             aluout_i      => mem_aluout,
-            dout_i         => mem_dout,
+            dout_i        => mem_dout,
             rdest_i       => mem_rdest_out,
             aluout_o      => wb_aluout,
-            dout_o         => wb_dout,
+            dout_o        => wb_dout,
             rdest_o       => wb_rdest,
             -- Control signals
             memToReg_i    => mem_memToReg,
@@ -591,16 +626,17 @@ begin
             wbaddr_o      => wb_addr,
             -- Control signals
             memToReg_i    => wb_memToReg,
-            jalEn_i       => wb_jalEn,
-            regWrite_o    => wb_regWrite
+            jalEn_i       => wb_jalEn
         );
 
+    -- Instruction Memory
     imem_en_o <= '1';
     imem_addr_o <= if_instr_addr;
     if_instr <= imem_dout_i;
+    -- Data Memory
     dmem_en_o <= '1';
     dmem_we_o <= mem_memWrite;
-    dmem_addr_o <= mem_aluout(dmem_addr-1 downto 0);
+    dmem_addr_o <= mem_dmem_addr;
     dmem_din_o <= mem_rdata2;
     mem_dout <= dmem_dout_i;
     

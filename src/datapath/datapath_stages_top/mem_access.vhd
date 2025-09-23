@@ -10,51 +10,29 @@ entity mem_access is
     port (
         clk_i   : in  std_logic;
         reset_i : in  std_logic;
-        npc_i   : in  std_logic_vector(nbit-1 downto 0);
         aluout_i: in  std_logic_vector(nbit-1 downto 0);
         rdata2_i: in  std_logic_vector(nbit-1 downto 0);
         rdest_i : in  std_logic_vector(4 downto 0);
-        dout_i   : in std_logic_vector(dmem_width-1 downto 0);
+        dout_i  : in std_logic_vector(dmem_width-1 downto 0);
+        zero_i  : in std_logic;
         pc_o    : out std_logic_vector(nbit-1 downto 0);
-        dmem_addr_o : out std_logic_vector(dmem_addr-1 downto 0);
+        PCSrc_o : out std_logic;
+        dmem_addr_o : out std_logic_vector(dmem_addr_size-1 downto 0);
         dmem_din_o  : out std_logic_vector(dmem_width-1 downto 0);
         rdest_o : out std_logic_vector(4 downto 0);
         -- Control signals
-        PCSrc_i     : in std_logic;
+        branchEn_i  : in std_logic;
+        branchOnZero_i : in std_logic;
+        jumpEn_i    : in std_logic;
         memWrite_i  : in std_logic
     );
 end entity;
 
 architecture struct of mem_access is
-
-    component mux2to1 is
-        generic(
-            nbit: integer := 32
-        );
-        port(
-            in0_i:  in  std_logic_vector(nbit-1 downto 0);
-            in1_i:  in  std_logic_vector(nbit-1 downto 0);
-            sel_i:  in  std_logic;
-            out_o:  out std_logic_vector(nbit-1 downto 0)
-        );
-    end component;
-
     signal mem_data_out : std_logic_vector(nbit-1 downto 0);
-
 begin
-    dmem_addr_o <= aluout_i;
+    dmem_addr_o <= aluout_i(dmem_addr_size-1 downto 0);
     dmem_din_o <= rdata2_i;
     rdest_o <= rdest_i;
-
-    mux: mux2to1
-        generic map (
-            nbit => nbit
-        )
-        port map (
-            in0_i => npc_i,
-            in1_i => aluout_i,
-            sel_i => PCSrc_i,
-            out_o => pc_o
-        );
-
+    PCSrc_o <= (branchEn_i and (zero_i xor (not branchOnZero_i))) or jumpEn_i;
 end architecture;

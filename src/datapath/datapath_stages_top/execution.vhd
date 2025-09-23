@@ -17,8 +17,6 @@ entity execution is
         rdest_i_type_i  : in  std_logic_vector(4 downto 0);
         rdest_r_type_i  : in  std_logic_vector(4 downto 0);
         zero_o          : out std_logic;
-        rdata2_o        : out std_logic_vector(nbit-1 downto 0);
-        npc_o           : out std_logic_vector(nbit-1 downto 0);
         aluout_o        : out std_logic_vector(nbit-1 downto 0);
         rdest_o         : out std_logic_vector(4 downto 0);
         -- Control signals
@@ -66,7 +64,6 @@ architecture struct of execution is
 
     signal mux1_out, mux2_out: std_logic_vector(nbit-1 downto 0);
 begin
-    npc_o <= npc_i;
     alu_inst: alu
         generic map (
             nbit => nbit
@@ -111,7 +108,7 @@ begin
 
     mux_rdest: mux2to1
         generic map (
-            nbit => nbit
+            nbit => 5
         )
         port map (
             in0_i => rdest_i_type_i,

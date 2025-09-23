@@ -14,8 +14,7 @@ entity write_back is
         wbaddr_o    : out std_logic_vector(4 downto 0);
         -- Control signals
         memToReg_i  : in std_logic;
-        jalEn_i     : in std_logic;
-        regWrite_o  : out std_logic
+        jalEn_i     : in std_logic
     );
 end entity;
 

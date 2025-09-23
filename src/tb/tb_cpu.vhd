@@ -23,15 +23,15 @@ architecture test of tb_cpu is
 
     -- Instruction memory signals
     signal imem_en    : std_logic;
-    signal imem_addr  : std_logic_vector(7 downto 0);
-    signal imem_dout  : std_logic_vector(nbit-1 downto 0);
+    signal imem_addr  : std_logic_vector(imem_addr_size-1 downto 0);
+    signal imem_dout  : std_logic_vector(imem_width-1 downto 0);
 
     -- Data memory signals
     signal dmem_en    : std_logic;
     signal dmem_we    : std_logic;
-    signal dmem_addr  : std_logic_vector(4 downto 0);
-    signal dmem_din   : std_logic_vector(nbit-1 downto 0);
-    signal dmem_dout  : std_logic_vector(nbit-1 downto 0);
+    signal dmem_addr  : std_logic_vector(dmem_addr_size-1 downto 0);
+    signal dmem_din   : std_logic_vector(dmem_width-1 downto 0);
+    signal dmem_dout  : std_logic_vector(dmem_width-1 downto 0);
 
     -- End simulation signal
     signal simulation_done : boolean := false;
@@ -46,22 +46,22 @@ architecture test of tb_cpu is
             rst_i       : in  std_logic;
             -- instruction memory
             imem_en_o   : out std_logic;
-            imem_addr_o : out std_logic_vector(7 downto 0);
-            imem_dout_i : in  std_logic_vector(nbit-1 downto 0);
+            imem_addr_o : out std_logic_vector(imem_addr_size-1 downto 0);
+            imem_dout_i : in  std_logic_vector(imem_width-1 downto 0);
             -- data memory
             dmem_en_o   : out std_logic;
             dmem_we_o   : out std_logic;
-            dmem_addr_o : out std_logic_vector(5-1 downto 0);
-            dmem_din_o  : out std_logic_vector(nbit-1 downto 0);
-            dmem_dout_i : in  std_logic_vector(nbit-1 downto 0)
+            dmem_addr_o : out std_logic_vector(dmem_addr_size-1 downto 0);
+            dmem_din_o  : out std_logic_vector(dmem_width-1 downto 0);
+            dmem_dout_i : in  std_logic_vector(dmem_width-1 downto 0)
         );
     end component;
 
     component instr_memory is
         generic(
-            ram_width : integer := 32;
-            ram_depth : integer := 32;
-            ram_add   : integer := 5;
+            ram_width : integer := imem_width;
+            ram_depth : integer := imem_depth;
+            ram_add   : integer := imem_addr_size;
             init_file : string := "instr_memory.mem"
         );
         port(
@@ -75,9 +75,9 @@ architecture test of tb_cpu is
 
     component data_memory is
         generic(
-            ram_width : integer := 32;
-            ram_depth : integer := 32;
-            ram_add   : integer := 5;
+            ram_width : integer := dmem_width;
+            ram_depth : integer := dmem_depth;
+            ram_add   : integer := dmem_addr_size;
             init_file : string := "data_memory.mem"
         );
         port(
@@ -109,9 +109,9 @@ begin
 
     imem_inst: instr_memory
         generic map (
-            ram_width => ram_width,
-            ram_depth => ram_depth,
-            ram_add   => ram_add,
+            ram_width => imem_width,
+            ram_depth => imem_depth,
+            ram_add   => imem_addr_size,
             init_file => "instr_memory.mem"
         )
         port map (
@@ -124,9 +124,9 @@ begin
 
     dmem_inst: data_memory
         generic map (
-            ram_width => ram_width,
-            ram_depth => ram_depth,
-            ram_add   => ram_add,
+            ram_width => dmem_width,
+            ram_depth => dmem_depth,
+            ram_add   => dmem_addr_size,
             init_file => "data_memory.mem"
         )
         port map (
@@ -153,6 +153,9 @@ begin
 
     test_proc: process
     begin
+        rst <= '1';
+        wait for CLK_PERIOD * 2;
+        rst <= '0';
         wait for CLK_PERIOD * 1000;
         simulation_done <= true;
     end process;

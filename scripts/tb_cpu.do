@@ -1,3 +1,6 @@
 vsim work.tb_cpu -t 10ps -voptargs="+acc"
 
-run 500 ns
+add wave /tb_cpu/*
+add wave /tb_cpu/cpu_inst/decode_inst/reg_file/regs
+add wave /tb_cpu/cpu_inst/mem_access_inst/*
+run 100ns
