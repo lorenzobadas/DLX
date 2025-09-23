@@ -8,7 +8,7 @@ add wave -divider "Instruction Memory"
 add wave /tb_cpu/imem_inst/ram_s
 
 add wave -divider "Data Memory"
-add wave /tb_cpu/dmem_inst/ram_s
+add wave -radix decimal /tb_cpu/dmem_inst/ram_s
 
 
 add wave -divider "Instruction Fetch"
@@ -36,4 +36,4 @@ add wave /tb_cpu/cpu_inst/mem_wb_regs_inst/*
 add wave -height 30 -divider "CONTROL"
 add wave /tb_cpu/cpu_inst/control_unit_inst/*
 
-run 1020 ns
+run 100000 ns

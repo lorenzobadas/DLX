@@ -166,7 +166,7 @@ begin
         rst <= '1';
         wait for CLK_PERIOD * 2;
         rst <= '0';
-        wait for CLK_PERIOD * 1000;
+        wait for CLK_PERIOD * 10000;
         simulation_done <= true;
     end process;
 
