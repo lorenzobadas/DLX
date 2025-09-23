@@ -13,9 +13,7 @@ entity mem_access is
         aluout_i: in  std_logic_vector(nbit-1 downto 0);
         rdata2_i: in  std_logic_vector(nbit-1 downto 0);
         rdest_i : in  std_logic_vector(4 downto 0);
-        dout_i  : in std_logic_vector(dmem_width-1 downto 0);
         zero_i  : in std_logic;
-        pc_o    : out std_logic_vector(nbit-1 downto 0);
         PCSrc_o : out std_logic;
         dmem_addr_o : out std_logic_vector(dmem_addr_size-1 downto 0);
         dmem_din_o  : out std_logic_vector(dmem_width-1 downto 0);
@@ -29,7 +27,6 @@ entity mem_access is
 end entity;
 
 architecture struct of mem_access is
-    signal mem_data_out : std_logic_vector(nbit-1 downto 0);
 begin
     dmem_addr_o <= aluout_i(dmem_addr_size-1 downto 0);
     dmem_din_o <= rdata2_i;

@@ -238,9 +238,7 @@ architecture struct of cpu is
             aluout_i: in  std_logic_vector(nbit-1 downto 0);
             rdata2_i: in  std_logic_vector(nbit-1 downto 0);
             rdest_i : in  std_logic_vector(4 downto 0);
-            dout_i  : in std_logic_vector(dmem_width-1 downto 0);
             zero_i  : in std_logic;
-            pc_o    : out std_logic_vector(nbit-1 downto 0);
             PCSrc_o : out std_logic;
             dmem_addr_o : out std_logic_vector(dmem_addr_size-1 downto 0);
             dmem_din_o  : out std_logic_vector(dmem_width-1 downto 0);
@@ -580,9 +578,7 @@ begin
             aluout_i    => mem_aluout,
             rdata2_i    => mem_rdata2,
             rdest_i     => mem_rdest_in,
-            dout_i      => mem_dout,
             zero_i      => mem_zero,
-            pc_o        => mem_pc,
             PCSrc_o     => mem_PCSrc,
             dmem_addr_o => mem_dmem_addr,
             dmem_din_o  => mem_dmem_din,

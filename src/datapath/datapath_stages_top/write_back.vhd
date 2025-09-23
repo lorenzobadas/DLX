@@ -31,7 +31,6 @@ architecture struct of write_back is
         );
     end component;
 begin
-    wbaddr_o <= rdest_i;
     mux_mem2reg: mux2to1
         generic map (
             nbit => nbit
@@ -48,8 +47,8 @@ begin
             nbit => 5
         )
         port map (
-            in0_i => std_logic_vector(to_unsigned(31, 5)),
-            in1_i => rdest_i,
+            in0_i => rdest_i,
+            in1_i => std_logic_vector(to_unsigned(31, 5)),
             sel_i => jalEn_i,
             out_o => wbaddr_o
         );
