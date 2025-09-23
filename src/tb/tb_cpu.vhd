@@ -31,6 +31,8 @@ architecture test of tb_cpu is
     signal dmem_we    : std_logic;
     signal dmem_addr  : std_logic_vector(dmem_addr_size-1 downto 0);
     signal dmem_din   : std_logic_vector(dmem_width-1 downto 0);
+    signal dmem_data_format : std_logic_vector(1 downto 0);
+    signal dmem_data_sign   : std_logic;
     signal dmem_dout  : std_logic_vector(dmem_width-1 downto 0);
 
     -- End simulation signal
@@ -53,6 +55,8 @@ architecture test of tb_cpu is
             dmem_we_o   : out std_logic;
             dmem_addr_o : out std_logic_vector(dmem_addr_size-1 downto 0);
             dmem_din_o  : out std_logic_vector(dmem_width-1 downto 0);
+            dmem_data_format_o : out std_logic_vector(1 downto 0);
+            dmem_data_sign_o   : out std_logic;
             dmem_dout_i : in  std_logic_vector(dmem_width-1 downto 0)
         );
     end component;
@@ -81,13 +85,15 @@ architecture test of tb_cpu is
             init_file : string := "data_memory.mem"
         );
         port(
-            clk_i   : in std_logic;
-            reset_i : in std_logic;
-            en_i    : in std_logic;
-            we_i    : in std_logic;
-            addr_i  : in std_logic_vector(ram_add-1 downto 0);  
-            din_i   : in std_logic_vector(ram_width-1 downto 0);
-            dout_o  : out std_logic_vector(ram_width-1 downto 0)
+            clk_i         : in std_logic;
+            reset_i       : in std_logic;
+            en_i          : in std_logic;
+            we_i          : in std_logic;
+            addr_i        : in std_logic_vector(dmem_addr_size-1 downto 0);  
+            din_i         : in std_logic_vector(dmem_width-1 downto 0);
+            data_format_i : in std_logic_vector(1 downto 0); -- 00: byte, 01: halfword, 10: word
+            data_sign_i   : in std_logic; -- 0: unsigned, 1: signed
+            dout_o        : out std_logic_vector(dmem_width-1 downto 0)
         );
     end component;
 
@@ -104,6 +110,8 @@ begin
             dmem_we_o   => dmem_we,
             dmem_addr_o => dmem_addr,
             dmem_din_o  => dmem_din,
+            dmem_data_format_o => dmem_data_format,
+            dmem_data_sign_o   => dmem_data_sign,
             dmem_dout_i => dmem_dout
         );
 
@@ -136,6 +144,8 @@ begin
             we_i    => dmem_we,
             addr_i  => dmem_addr,
             din_i   => dmem_din,
+            data_format_i => dmem_data_format,
+            data_sign_i   => dmem_data_sign,
             dout_o  => dmem_dout
         );
 

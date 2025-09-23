@@ -22,6 +22,8 @@ entity cpu is
         dmem_we_o    : out std_logic;
         dmem_addr_o  : out std_logic_vector(dmem_addr_size-1 downto 0);
         dmem_din_o   : out std_logic_vector(dmem_width-1 downto 0);
+        dmem_data_format_o : out std_logic_vector(1 downto 0);
+        dmem_data_sign_o   : out std_logic;
         dmem_dout_i  : in std_logic_vector(dmem_width-1 downto 0)
     );
 end entity;
@@ -43,6 +45,8 @@ architecture struct of cpu is
             branchOnZero_o  : out std_logic;
             jumpEn_o        : out std_logic;
             memWrite_o      : out std_logic;
+            memDataFormat_o : out std_logic_vector(1 downto 0);
+            memDataSign_o   : out std_logic;
             memToReg_o      : out std_logic;
             regWrite_o      : out std_logic;
             jalEn_o         : out std_logic
@@ -84,6 +88,8 @@ architecture struct of cpu is
             branchOnZero_i : in std_logic;
             jumpEn_i   : in  std_logic;
             memWrite_i : in  std_logic;
+            memDataFormat_i : in  std_logic_vector(1 downto 0);
+            memDataSign_i : in  std_logic;
             memToReg_i : in  std_logic;
             regWrite_i : in  std_logic;
             jalEn_i    : in  std_logic;
@@ -96,6 +102,8 @@ architecture struct of cpu is
             branchOnZero_o : out std_logic;
             jumpEn_o   : out std_logic;
             memWrite_o : out std_logic;
+            memDataFormat_o : out std_logic_vector(1 downto 0);
+            memDataSign_o : out std_logic;
             memToReg_o : out std_logic;
             regWrite_o : out std_logic;
             jalEn_o    : out std_logic
@@ -153,6 +161,8 @@ architecture struct of cpu is
             branchOnZero_i  : in  std_logic;
             jumpEn_i        : in  std_logic;
             memWrite_i      : in  std_logic;
+            memDataFormat_i : in  std_logic_vector(1 downto 0);
+            memDataSign_i   : in  std_logic;
             memToReg_i      : in  std_logic;
             regWrite_i      : in  std_logic;
             jalEn_i         : in  std_logic;
@@ -164,6 +174,8 @@ architecture struct of cpu is
             branchOnZero_o  : out std_logic;
             jumpEn_o        : out std_logic;
             memWrite_o      : out std_logic;
+            memDataFormat_o : out  std_logic_vector(1 downto 0);
+            memDataSign_o   : out std_logic;
             memToReg_o      : out std_logic;
             regWrite_o      : out std_logic;
             jalEn_o         : out std_logic
@@ -214,6 +226,8 @@ architecture struct of cpu is
             branchOnZero_i : in std_logic;
             jumpEn_i    : in std_logic;
             memWrite_i  : in std_logic;
+            memDataFormat_i : in std_logic_vector(1 downto 0);
+            memDataSign_i : in std_logic;
             memToReg_i  : in std_logic;
             regWrite_i  : in std_logic;
             jalEn_i     : in std_logic;
@@ -221,6 +235,8 @@ architecture struct of cpu is
             branchOnZero_o : out std_logic;
             jumpEn_o    : out std_logic;
             memWrite_o  : out std_logic;
+            memDataFormat_o : out std_logic_vector(1 downto 0);
+            memDataSign_o : out std_logic;
             memToReg_o  : out std_logic;
             regWrite_o  : out std_logic;
             jalEn_o     : out std_logic
@@ -338,6 +354,8 @@ architecture struct of cpu is
     signal if_branchOnZero: std_logic;
     signal if_jumpEn     : std_logic;
     signal if_memWrite   : std_logic;
+    signal if_memDataFormat: std_logic_vector(1 downto 0);
+    signal if_memDataSign  : std_logic;
     signal if_memToReg   : std_logic;
     signal if_regWrite   : std_logic;
     signal if_jalEn      : std_logic;
@@ -351,6 +369,8 @@ architecture struct of cpu is
     signal id_branchOnZero: std_logic;
     signal id_jumpEn    : std_logic;
     signal id_memWrite  : std_logic;
+    signal id_memDataFormat: std_logic_vector(1 downto 0);
+    signal id_memDataSign  : std_logic;
     signal id_memToReg  : std_logic;
     signal id_regWrite  : std_logic;
     signal id_jalEn     : std_logic;
@@ -363,6 +383,8 @@ architecture struct of cpu is
     signal ex_branchOnZero: std_logic;
     signal ex_jumpEn    : std_logic;
     signal ex_memWrite  : std_logic;
+    signal ex_memDataFormat: std_logic_vector(1 downto 0);
+    signal ex_memDataSign: std_logic;
     signal ex_memToReg  : std_logic;
     signal ex_regWrite  : std_logic;
     signal ex_jalEn     : std_logic;
@@ -372,6 +394,8 @@ architecture struct of cpu is
     signal mem_jumpEn    : std_logic;
     signal mem_PCSrc     : std_logic;
     signal mem_memWrite  : std_logic;
+    signal mem_memDataFormat: std_logic_vector(1 downto 0);
+    signal mem_memDataSign: std_logic;
     signal mem_memToReg  : std_logic;
     signal mem_regWrite  : std_logic;
     signal mem_jalEn     : std_logic;
@@ -396,6 +420,8 @@ begin
             branchOnZero_o => if_branchOnZero,
             jumpEn_o   => if_jumpEn,
             memWrite_o => if_memWrite,
+            memDataFormat_o => if_memDataFormat,
+            memDataSign_o   => if_memDataSign,
             memToReg_o => if_memToReg,
             regWrite_o => if_regWrite,
             jalEn_o    => if_jalEn
@@ -433,6 +459,8 @@ begin
             branchOnZero_i => if_branchOnZero,
             jumpEn_i   => if_jumpEn,
             memWrite_i => if_memWrite,
+            memDataFormat_i => if_memDataFormat,
+            memDataSign_i => if_memDataSign,
             memToReg_i => if_memToReg,
             regWrite_i => if_regWrite,
             jalEn_i    => if_jalEn,
@@ -445,6 +473,8 @@ begin
             branchOnZero_o => id_branchOnZero,
             jumpEn_o   => id_jumpEn,
             memWrite_o => id_memWrite,
+            memDataFormat_o => id_memDataFormat,
+            memDataSign_o => id_memDataSign,
             memToReg_o => id_memToReg,
             regWrite_o => id_regWrite,
             jalEn_o    => id_jalEn
@@ -498,6 +528,8 @@ begin
             branchOnZero_i  => id_branchOnZero,
             jumpEn_i       => id_jumpEn,
             memWrite_i     => id_memWrite,
+            memDataFormat_i => id_memDataFormat,
+            memDataSign_i => id_memDataSign,
             memToReg_i     => id_memToReg,
             regWrite_i     => id_regWrite,
             jalEn_i        => id_jalEn,
@@ -509,6 +541,8 @@ begin
             branchOnZero_o => ex_branchOnZero,
             jumpEn_o      => ex_jumpEn,
             memWrite_o     => ex_memWrite,
+            memDataFormat_o => ex_memDataFormat,
+            memDataSign_o  => ex_memDataSign,
             memToReg_o     => ex_memToReg,
             regWrite_o     => ex_regWrite,
             jalEn_o        => ex_jalEn
@@ -555,6 +589,8 @@ begin
             branchOnZero_i => ex_branchOnZero,
             jumpEn_i      => ex_jumpEn,
             memWrite_i    => ex_memWrite,
+            memDataFormat_i => ex_memDataFormat,
+            memDataSign_i => ex_memDataSign,
             memToReg_i    => ex_memToReg,
             regWrite_i    => ex_regWrite,
             jalEn_i       => ex_jalEn,
@@ -562,6 +598,8 @@ begin
             branchOnZero_o => mem_branchOnZero,
             jumpEn_o      => mem_jumpEn,
             memWrite_o    => mem_memWrite,
+            memDataFormat_o => mem_memDataFormat,
+            memDataSign_o => mem_memDataSign,
             memToReg_o    => mem_memToReg,
             regWrite_o    => mem_regWrite,
             jalEn_o       => mem_jalEn
@@ -632,6 +670,8 @@ begin
     dmem_we_o <= mem_memWrite;
     dmem_addr_o <= mem_dmem_addr;
     dmem_din_o <= mem_rdata2;
+    dmem_data_format_o <= mem_memDataFormat;
+    dmem_data_sign_o <= mem_memDataSign;
     mem_dout <= dmem_dout_i;
     
 end architecture;

@@ -21,6 +21,8 @@ package ctrl_signals_pkg is
         branchEn  : std_logic;
         jumpEn    : std_logic;
         memWrite  : std_logic;
+        memDataFormat : std_logic_vector(1 downto 0);
+        memDataSign   : std_logic;
     end record;
 
     type wb_ctrl_t is record
@@ -45,7 +47,9 @@ package ctrl_signals_pkg is
         mem_ctrl => (branchOnZero => '0',
                      branchEn  => '0',
                      jumpEn    => '0',
-                     memWrite  => '0'),
+                     memWrite  => '0',
+                     memDataFormat => "00",
+                     memDataSign   => '0'),
         wb_ctrl  => (memToReg => '0',
                      regWrite => '0',
                      jalEn    => '0')
@@ -172,17 +176,63 @@ package body ctrl_signals_pkg is
                 ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
                 ctrl.ex_ctrl.ALUOp   <= alu_sge; 
                 ctrl.wb_ctrl.regWrite<= '1';
+            when opcode_lb =>
+                ctrl.ex_ctrl.ALUSrc1 <= '1'; -- rdata1
+                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
+                ctrl.ex_ctrl.ALUOp   <= alu_add;
+                ctrl.mem_ctrl.memDataFormat <= "00"; -- byte
+                ctrl.mem_ctrl.memDataSign   <= '1';  -- signed
+                ctrl.wb_ctrl.memToReg<= '1';
+                ctrl.wb_ctrl.regWrite<= '1';
+            when opcode_lbu =>
+                ctrl.ex_ctrl.ALUSrc1 <= '1'; -- rdata1
+                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
+                ctrl.ex_ctrl.ALUOp   <= alu_add;
+                ctrl.mem_ctrl.memDataFormat <= "00"; -- byte
+                ctrl.mem_ctrl.memDataSign   <= '0';  -- unsigned
+                ctrl.wb_ctrl.memToReg<= '1';
+                ctrl.wb_ctrl.regWrite<= '1';
+            when opcode_lh =>
+                ctrl.ex_ctrl.ALUSrc1 <= '1'; -- rdata1
+                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
+                ctrl.ex_ctrl.ALUOp   <= alu_add;
+                ctrl.mem_ctrl.memDataFormat <= "01"; -- halfword
+                ctrl.mem_ctrl.memDataSign   <= '1';  -- signed
+                ctrl.wb_ctrl.memToReg<= '1';
+                ctrl.wb_ctrl.regWrite<= '1';
+            when opcode_lhu =>
+                ctrl.ex_ctrl.ALUSrc1 <= '1'; -- rdata1
+                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
+                ctrl.ex_ctrl.ALUOp   <= alu_add;
+                ctrl.mem_ctrl.memDataFormat <= "01"; -- halfword
+                ctrl.mem_ctrl.memDataSign   <= '0';  -- unsigned
+                ctrl.wb_ctrl.memToReg<= '1';
+                ctrl.wb_ctrl.regWrite<= '1';
             when opcode_lw =>
                 ctrl.ex_ctrl.ALUSrc1 <= '1'; -- rdata1
                 ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
                 ctrl.ex_ctrl.ALUOp   <= alu_add;
+                ctrl.mem_ctrl.memDataFormat <= "10"; -- word
                 ctrl.wb_ctrl.memToReg<= '1';
                 ctrl.wb_ctrl.regWrite<= '1';
+            when opcode_sb =>
+                ctrl.ex_ctrl.ALUSrc1 <= '1'; -- rdata1
+                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
+                ctrl.ex_ctrl.ALUOp   <= alu_add;
+                ctrl.mem_ctrl.memWrite<= '1';
+                ctrl.mem_ctrl.memDataFormat <= "00"; -- byte
+            when opcode_sh =>
+                ctrl.ex_ctrl.ALUSrc1 <= '1'; -- rdata1
+                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
+                ctrl.ex_ctrl.ALUOp   <= alu_add;
+                ctrl.mem_ctrl.memWrite<= '1';
+                ctrl.mem_ctrl.memDataFormat <= "01"; -- halfword
             when opcode_sw =>
                 ctrl.ex_ctrl.ALUSrc1 <= '1'; -- rdata1
                 ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
                 ctrl.ex_ctrl.ALUOp   <= alu_add;
                 ctrl.mem_ctrl.memWrite<= '1';
+                ctrl.mem_ctrl.memDataFormat <= "10"; -- word
 
             when others =>
                 ctrl <= CTRL_SIGNALS_RESET;

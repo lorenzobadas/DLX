@@ -36,4 +36,4 @@ add wave /tb_cpu/cpu_inst/mem_wb_regs_inst/*
 add wave -height 30 -divider "CONTROL"
 add wave /tb_cpu/cpu_inst/control_unit_inst/*
 
-run 100ns
+run 1020 ns

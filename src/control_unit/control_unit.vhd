@@ -20,6 +20,8 @@ entity control_unit is
         branchOnZero_o  : out std_logic;
         jumpEn_o        : out std_logic;
         memWrite_o      : out std_logic;
+        memDataFormat_o : out std_logic_vector(1 downto 0);
+        memDataSign_o   : out std_logic;
         memToReg_o      : out std_logic;
         regWrite_o      : out std_logic;
         jalEn_o         : out std_logic
@@ -51,6 +53,8 @@ begin
         branchOnZero_o <= ctrl.mem_ctrl.branchOnZero;
         jumpEn_o    <= ctrl.mem_ctrl.jumpEn;
         memWrite_o  <= ctrl.mem_ctrl.memWrite;
+        memDataFormat_o <= ctrl.mem_ctrl.memDataFormat;
+        memDataSign_o   <= ctrl.mem_ctrl.memDataSign;
         memToReg_o  <= ctrl.wb_ctrl.memToReg;
         regWrite_o  <= ctrl.wb_ctrl.regWrite;
         jalEn_o     <= ctrl.wb_ctrl.jalEn;

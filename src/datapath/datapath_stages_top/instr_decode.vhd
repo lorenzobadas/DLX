@@ -57,12 +57,15 @@ architecture struct of instr_decode is
     end component;
 
     signal imm_i_type, imm_j_type: std_logic_vector(nbit-1 downto 0);
+    signal raddr1, raddr2: std_logic_vector(4 downto 0);
 begin
     npc_o <= npc_i;
     imm_i_type <= (31 downto 16 => instr_i(15)) & instr_i(15 downto 0);
     imm_j_type <= (31 downto 26 => instr_i(25)) & instr_i(25 downto 0);
     rdest_i_type_o <= instr_i(20 downto 16);
     rdest_r_type_o <= instr_i(15 downto 11);
+    raddr1 <= instr_i(25 downto 21);
+    raddr2 <= instr_i(20 downto 16);
     reg_file: register_file
         generic map (
             nreg => 32,
@@ -73,8 +76,8 @@ begin
             we_i => regWrite_i,
             waddr_i => waddr_i,
             wbdata_i => wbdata_i,
-            raddr1_i => instr_i(25 downto 21),
-            raddr2_i => instr_i(20 downto 16),
+            raddr1_i => raddr1,
+            raddr2_i => raddr2,
             rdata1_o => rdata1_o,
             rdata2_o => rdata2_o
         );

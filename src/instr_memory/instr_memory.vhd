@@ -57,5 +57,5 @@ begin
             file_close(dataFP);
         end if;
     end process;
-    dout_o <= ram_s(to_integer(unsigned(addr_i))); 
+    dout_o <= ram_s(to_integer(unsigned(addr_i(imem_addr_size-1 downto 2)))); 
 end architecture;
