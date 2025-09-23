@@ -7,8 +7,10 @@ ALU_SRC    := $(shell find ../src/alu -type f)
 ALU_TB_SRC := $(shell find ../src/tb -name '*alu*.vhd' -type f)
 CPU_SRC    := $(shell find ../src/ -type f)
 CPU_TB_SRC := $(shell find ../src/tb -name '*cpu*.vhd' -type f)
-ASM_SRC	:= $(shell find ../asm -type f)
-ASM_FILENAME := $(basename $(notdir $(ASM_SRC)))
+
+# Default assembly file if none specified
+ASM_FILE ?= $(shell find ../asm -type f -name 'add*.asm' | head -1)
+ASM_FILENAME := $(basename $(notdir $(ASM_FILE)))
 
 t2-shifter-tb: clean
 	cp $(PKG_FILES) $(T2_SRC) $(T2_TB_SRC) .
@@ -35,8 +37,8 @@ alu-tb: clean
 		-do ../scripts/tb_alu.do
 
 instr_memory.mem: clean
-	perl ../scripts/dlxasm.pl -o $(ASM_FILENAME).bin -list $(ASM_FILENAME).list $(ASM_SRC)
-	rm $(ASM_FILENAME).bin.hdr $(ASM_FILENAME).list
+	perl ../scripts/dlxasm.pl -o $(ASM_FILENAME).bin -list $(ASM_FILENAME).list $(ASM_FILE)
+	rm -f $(ASM_FILENAME).bin.hdr $(ASM_FILENAME).list
 	cat $(ASM_FILENAME).bin | hexdump -v -e '/1 "%02X" /1 "%02X" /1 "%02X" /1 "%02X\n"' > $(ASM_FILENAME)\_dump.txt
 	mv $(ASM_FILENAME)\_dump.txt ./instr_memory.mem
 

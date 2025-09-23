@@ -1,3 +1,4 @@
+loop:
 addi r1, r0, 4
 addi r2, r0, 8
 addi r3, r0, 12
@@ -91,6 +92,7 @@ lb r28, 0(r28)
 lb r29, 0(r29)
 lb r30, 0(r30)
 lb r31, 0(r31)
+j loop
 nop
 nop
 nop
