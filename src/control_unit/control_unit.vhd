@@ -11,7 +11,6 @@ entity control_unit is
     );
     port (
         instr_i         : in std_logic_vector(nbit-1 downto 0);
-        zero_i          : in std_logic;
         immSrc_o        : out std_logic;
         ALUSrc1_o       : out std_logic;
         ALUSrc2_o       : out std_logic;
@@ -33,13 +32,16 @@ architecture behav of control_unit is
     signal ctrl: ctrl_signals_t;
     
 begin
-    opcode <= instr_i(5 downto 0);
-    func <= instr_i(31 downto 21);
+    opcode <= instr_i(31 downto 26);
+    func <= instr_i(10 downto 0);
 
-    process(opcode, func, zero_i)
-    begin
+    process(opcode, func)
+    begin   
         get_control_signals(opcode, func, ctrl);
+    end process;
 
+    process(ctrl)
+    begin
         immSrc_o    <= ctrl.id_ctrl.immSrc;
         ALUSrc1_o   <= ctrl.ex_ctrl.ALUSrc1;
         ALUSrc2_o   <= ctrl.ex_ctrl.ALUSrc2;

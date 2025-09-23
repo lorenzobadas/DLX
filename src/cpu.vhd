@@ -34,7 +34,6 @@ architecture struct of cpu is
         );
         port (
             instr_i         : in std_logic_vector(nbit-1 downto 0);
-            zero_i          : in std_logic;
             immSrc_o        : out std_logic;
             ALUSrc1_o       : out std_logic;
             ALUSrc2_o       : out std_logic;
@@ -387,8 +386,7 @@ begin
     control_unit_inst: control_unit 
         generic map (nbit => nbit)
         port map (
-            instr_i    => id_instr,
-            zero_i     => ex_zero,
+            instr_i    => if_instr,
             immSrc_o   => if_immSrc,
             ALUSrc1_o  => if_ALUSrc1,
             ALUSrc2_o  => if_ALUSrc2,

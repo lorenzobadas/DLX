@@ -23,10 +23,7 @@ entity instr_memory is
 end instr_memory;
 
 architecture behav of instr_memory is
-
     type ram_type is array (0 to ram_depth-1) of std_logic_vector(ram_width-1 downto 0);
-
-    signal qr : std_logic_vector(ram_width-1 downto 0) ;
     signal ram_s : ram_type;
 
 begin
@@ -41,7 +38,6 @@ begin
             for i in 0 to ram_depth-1 loop
                 ram_s(i) <= (others => '0');
             end loop;
-            qr <= (others => '0');
             -- Load memory from init file
             -- Open file
             file_open(dataFP, init_file, READ_MODE);
@@ -59,11 +55,7 @@ begin
             end loop;
             -- Close file
             file_close(dataFP);
-        elsif (rising_edge(clk_i)) then
-            if(en_i = '1') then
-                qr <= ram_s(to_integer(unsigned(addr_i)));
-            end if;
         end if;
     end process;
-    dout_o <= qr; 
+    dout_o <= ram_s(to_integer(unsigned(addr_i))); 
 end architecture;
