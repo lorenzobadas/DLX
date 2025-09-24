@@ -10,39 +10,12 @@ entity if_id_regs is
     port (
         clk_i    : in  std_logic;
         reset_i  : in  std_logic;
+        enable_i : in  std_logic;
+        flush_i  : in  std_logic;
         npc_i    : in  std_logic_vector(nbit-1 downto 0);
         instr_i  : in  std_logic_vector(nbit-1 downto 0);
         npc_o    : out std_logic_vector(nbit-1 downto 0);
-        instr_o  : out std_logic_vector(nbit-1 downto 0);
-        -- Control signals
-        immSrc_i   : in  std_logic;
-        ALUSrc1_i  : in  std_logic;
-        ALUSrc2_i  : in  std_logic;
-        ALUOp_i    : in  alu_op_t;
-        regDest_i  : in  std_logic;
-        branchEn_i : in  std_logic;
-        branchOnZero_i : in  std_logic;
-        jumpEn_i   : in  std_logic;
-        memWrite_i : in  std_logic;
-        memDataFormat_i : in  std_logic_vector(1 downto 0);
-        memDataSign_i : in  std_logic;
-        memToReg_i : in  std_logic;
-        regWrite_i : in  std_logic;
-        jalEn_i    : in  std_logic;
-        immSrc_o   : out std_logic;
-        ALUSrc1_o  : out std_logic;
-        ALUSrc2_o  : out std_logic;
-        ALUOp_o    : out alu_op_t;
-        regDest_o  : out std_logic;
-        branchEn_o : out std_logic;
-        branchOnZero_o : out std_logic;
-        jumpEn_o   : out std_logic;
-        memWrite_o : out std_logic;
-        memDataFormat_o : out std_logic_vector(1 downto 0);
-        memDataSign_o : out std_logic;
-        memToReg_o : out std_logic;
-        regWrite_o : out std_logic;
-        jalEn_o    : out std_logic
+        instr_o  : out std_logic_vector(nbit-1 downto 0)
     );
 end if_id_regs;
 
@@ -53,37 +26,14 @@ begin
         if reset_i = '1' then
             npc_o <= (others => '0');
             instr_o <= (others => '0');
-            immSrc_o <= '0';
-            ALUSrc1_o <= '0';
-            ALUSrc2_o <= '0';
-            ALUOp_o <= alu_add;
-            regDest_o <= '0';
-            branchEn_o <= '0';
-            branchOnZero_o <= '0';
-            jumpEn_o <= '0';
-            memWrite_o <= '0';
-            memDataFormat_o <= (others => '0');
-            memDataSign_o <= '0';
-            memToReg_o <= '0';
-            regWrite_o <= '0';
-            jalEn_o <= '0';
         elsif rising_edge(clk_i) then
-            npc_o <= npc_i;
-            instr_o <= instr_i;
-            immSrc_o <= immSrc_i;
-            ALUSrc1_o <= ALUSrc1_i;
-            ALUSrc2_o <= ALUSrc2_i;
-            ALUOp_o <= ALUOp_i;
-            regDest_o <= regDest_i;
-            branchEn_o <= branchEn_i;
-            branchOnZero_o <= branchOnZero_i;
-            jumpEn_o <= jumpEn_i;
-            memWrite_o <= memWrite_i;
-            memDataFormat_o <= memDataFormat_i;
-            memDataSign_o <= memDataSign_i;
-            memToReg_o <= memToReg_i;
-            regWrite_o <= regWrite_i;
-            jalEn_o <= jalEn_i;
+            if flush_i = '1' then
+                npc_o <= (others => '0');
+                instr_o <= (others => '0');
+            elsif enable_i = '1' then
+                npc_o <= npc_i;
+                instr_o <= instr_i;
+            end if;
         end if;
     end process;
 end behav;

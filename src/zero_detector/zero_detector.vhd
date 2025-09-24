@@ -7,7 +7,7 @@ entity zero_detector is
         nbit : integer := 32
     );
     port (
-        a_i : in  std_logic_vector(nbit-1 downto 0);
+        a_i    : in  std_logic_vector(nbit-1 downto 0);
         zero_o : out std_logic
     );
 end entity;

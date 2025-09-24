@@ -8,22 +8,29 @@ entity execution is
         nbit : integer := 32
     );
     port (
-        clk_i           : in  std_logic;
-        reset_i         : in  std_logic;
-        npc_i           : in  std_logic_vector(nbit-1 downto 0);
-        rdata1_i        : in  std_logic_vector(nbit-1 downto 0);
-        rdata2_i        : in  std_logic_vector(nbit-1 downto 0);
-        imm_i           : in  std_logic_vector(nbit-1 downto 0);
-        rdest_i_type_i  : in  std_logic_vector(4 downto 0);
-        rdest_r_type_i  : in  std_logic_vector(4 downto 0);
-        zero_o          : out std_logic;
-        aluout_o        : out std_logic_vector(nbit-1 downto 0);
-        rdest_o         : out std_logic_vector(4 downto 0);
+        clk_i            : in  std_logic;
+        reset_i          : in  std_logic;
+        npc_i            : in  std_logic_vector(nbit-1 downto 0);
+        rdata1_i         : in  std_logic_vector(nbit-1 downto 0);
+        rdata2_i         : in  std_logic_vector(nbit-1 downto 0);
+        imm_i            : in  std_logic_vector(nbit-1 downto 0);
+        rdest_i_type_i   : in  std_logic_vector(4 downto 0);
+        rdest_r_type_i   : in  std_logic_vector(4 downto 0);
+        mem_fwd_rdata1_i : in std_logic_vector(nbit-1 downto 0);
+        mem_fwd_rdata2_i : in std_logic_vector(nbit-1 downto 0);
+        wb_fwd_rdata1_i  : in std_logic_vector(nbit-1 downto 0);
+        wb_fwd_rdata2_i  : in std_logic_vector(nbit-1 downto 0);
+        zero_o           : out std_logic;
+        aluout_o         : out std_logic_vector(nbit-1 downto 0);
+        rdest_o          : out std_logic_vector(4 downto 0);
         -- Control signals
         ALUSrc1_i       : in  std_logic;
         ALUSrc2_i       : in  std_logic;
         ALUOp_i         : in  alu_op_t;
-        regDest_i       : in  std_logic
+        regDest_i       : in  std_logic;
+        -- Forwarding signals
+        forwardA_i      : in  std_logic_vector(1 downto 0);
+        forwardB_i      : in  std_logic_vector(1 downto 0)
     );
 end entity;
 
@@ -61,8 +68,22 @@ architecture struct of execution is
             out_o:  out std_logic_vector(nbit-1 downto 0)
         );
     end component;
+    
+    component mux3to1 is
+        generic(
+            nbit: integer := 32
+        );
+        port(
+            in0_i:  in  std_logic_vector(nbit-1 downto 0);
+            in1_i:  in  std_logic_vector(nbit-1 downto 0);
+            in2_i:  in  std_logic_vector(nbit-1 downto 0);
+            sel_i:  in  std_logic_vector(1 downto 0);
+            out_o:  out std_logic_vector(nbit-1 downto 0)
+        );
+    end component;
 
-    signal mux1_out, mux2_out: std_logic_vector(nbit-1 downto 0);
+    signal mux1_out : std_logic_vector(nbit-1 downto 0);
+    signal mux2_out : std_logic_vector(nbit-1 downto 0);
 begin
     alu_inst: alu
         generic map (
@@ -84,25 +105,27 @@ begin
             zero_o => zero_o
         );
 
-    mux_rdata1: mux2to1
+    mux_rdata1: mux3to1
         generic map (
             nbit => nbit
         )
         port map (
-            in0_i => npc_i,
-            in1_i => rdata1_i,
-            sel_i => ALUSrc1_i,
+            in0_i => rdata1_i,
+            in1_i => wb_fwd_rdata1_i,
+            in2_i => mem_fwd_rdata1_i,
+            sel_i => forwardA_i,
             out_o => mux1_out
         );
 
-    mux_rdata2: mux2to1
+    mux_rdata2: mux3to1
         generic map (
             nbit => nbit
         )
         port map (
             in0_i => rdata2_i,
-            in1_i => imm_i,
-            sel_i => ALUSrc2_i,
+            in1_i => wb_fwd_rdata2_i,
+            in2_i => mem_fwd_rdata2_i,
+            sel_i => forwardB_i,
             out_o => mux2_out
         );
 

@@ -20,9 +20,16 @@ entity instr_decode is
         npc_o           : out std_logic_vector(nbit-1 downto 0);
         rdest_i_type_o  : out std_logic_vector(4 downto 0);
         rdest_r_type_o  : out std_logic_vector(4 downto 0);
+        rsrc1_o         : out std_logic_vector(4 downto 0);
+        rsrc2_o         : out std_logic_vector(4 downto 0);
+        PCSrc_o         : out std_logic;
         -- Control signals
-        immSrc_i    : in std_logic;
-        regWrite_i  : in std_logic
+        immSrc_i       : in std_logic;
+        regWrite_i     : in std_logic;
+        branchEn_i     : in std_logic;
+        branchOnZero_i : in std_logic;
+        jumpEn_i       : in std_logic;
+        jalEn_i        : in std_logic
     );
 end entity;
 
@@ -56,16 +63,32 @@ architecture struct of instr_decode is
         );
     end component;
 
+    component zero_detector is
+        generic (
+            nbit : integer := 32
+        );
+        port (
+            a_i    : in  std_logic_vector(nbit-1 downto 0);
+            zero_o : out std_logic
+        );
+    end component;
+
     signal imm_i_type, imm_j_type: std_logic_vector(nbit-1 downto 0);
+    signal rdest_i_type: std_logic_vector(4 downto 0);
     signal raddr1, raddr2: std_logic_vector(4 downto 0);
+    signal rs1_zero: std_logic;
+    signal rdata1: std_logic_vector(nbit-1 downto 0);
 begin
     npc_o <= npc_i;
     imm_i_type <= (31 downto 16 => instr_i(15)) & instr_i(15 downto 0);
     imm_j_type <= (31 downto 26 => instr_i(25)) & instr_i(25 downto 0);
-    rdest_i_type_o <= instr_i(20 downto 16);
+    rdest_i_type <= instr_i(20 downto 16);
     rdest_r_type_o <= instr_i(15 downto 11);
     raddr1 <= instr_i(25 downto 21);
     raddr2 <= instr_i(20 downto 16);
+    rsrc1_o <= raddr1;
+    rsrc2_o <= raddr2;
+    rdata1_o <= rdata1;
     reg_file: register_file
         generic map (
             nreg => 32,
@@ -78,9 +101,21 @@ begin
             wbdata_i => wbdata_i,
             raddr1_i => raddr1,
             raddr2_i => raddr2,
-            rdata1_o => rdata1_o,
+            rdata1_o => rdata1,
             rdata2_o => rdata2_o
         );
+
+    zero_detector_inst: zero_detector
+        generic map (
+            nbit => nbit
+        )
+        port map (
+            a_i    => rdata1,
+            zero_o => rs1_zero
+        );
+
+    PCSrc_o <= (branchEn_i and (rs1_zero xor (not branchOnZero_i))) or jumpEn_i;
+
     imm_mux: mux2to1
         generic map (
             nbit => nbit
@@ -90,5 +125,16 @@ begin
             in1_i => imm_j_type,
             sel_i => immSrc_i,
             out_o => imm_o
+        );
+
+    mux_jalEn: mux2to1
+        generic map (
+            nbit => 5
+        )
+        port map (
+            in0_i => rdest_i_type,
+            in1_i => std_logic_vector(to_unsigned(31, 5)),
+            sel_i => jalEn_i,
+            out_o => rdest_i_type_o
         );
 end architecture;

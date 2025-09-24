@@ -18,10 +18,8 @@ entity mem_wb_regs is
         -- Control signals
         memToReg_i  : in std_logic;
         regWrite_i  : in std_logic;
-        jalEn_i     : in std_logic;
         memToReg_o  : out std_logic;
-        regWrite_o  : out std_logic;
-        jalEn_o     : out std_logic
+        regWrite_o  : out std_logic
     );
 end mem_wb_regs;
 
@@ -35,14 +33,12 @@ begin
             rdest_o <= (others => '0');
             memToReg_o <= '0';
             regWrite_o <= '0';
-            jalEn_o <= '0';
         elsif rising_edge(clk_i) then
             aluout_o <= aluout_i;
             dout_o <= dout_i;
             rdest_o <= rdest_i;
             memToReg_o <= memToReg_i;
             regWrite_o <= regWrite_i;
-            jalEn_o <= jalEn_i;
         end if;
     end process;
 end behav;

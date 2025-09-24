@@ -10,6 +10,7 @@ entity instr_fetch is
     port (
         clk_i   : in  std_logic;
         reset_i : in  std_logic;
+        pc_enable_i : in  std_logic;
         PCSrc_i : in  std_logic;
         aluout_i: in  std_logic_vector(nbit-1 downto 0);
         instr_addr_o : out std_logic_vector(imem_addr_size-1 downto 0);
@@ -37,6 +38,7 @@ architecture struct of instr_fetch is
         port (
             clk_i   :   in  std_logic;
             reset_i :   in  std_logic;
+            enable_i:   in  std_logic;
             in_i    :   in  std_logic_vector(nbit-1 downto 0);
             out_o   :   out std_logic_vector(nbit-1 downto 0)
         );
@@ -78,6 +80,7 @@ begin
         port map (
             clk_i => clk_i,
             reset_i => reset_i,
+            enable_i => pc_enable_i,
             in_i => next_pc_s,
             out_o => pc_s
         );

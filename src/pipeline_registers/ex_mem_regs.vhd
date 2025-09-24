@@ -18,24 +18,16 @@ entity ex_mem_regs is
         rdest_o : out std_logic_vector(4 downto 0);
         zero_o  : out std_logic;
         -- Control signals
-        branchEn_i     : in std_logic;
-        branchOnZero_i : in std_logic;
-        jumpEn_i      : in std_logic;
         memWrite_i    : in std_logic;
         memDataFormat_i : in std_logic_vector(1 downto 0);
         memDataSign_i : in std_logic;
         memToReg_i    : in std_logic;
         regWrite_i    : in std_logic;
-        jalEn_i       : in std_logic;
-        branchEn_o    : out std_logic;
-        branchOnZero_o : out std_logic;
-        jumpEn_o      : out std_logic;
         memWrite_o    : out std_logic;
         memDataFormat_o : out std_logic_vector(1 downto 0);
         memDataSign_o : out std_logic;
         memToReg_o    : out std_logic;
-        regWrite_o    : out std_logic;
-        jalEn_o       : out std_logic
+        regWrite_o    : out std_logic
     );
 end ex_mem_regs;
 
@@ -48,29 +40,21 @@ begin
             rdata2_o <= (others => '0');
             rdest_o <= (others => '0');
             zero_o <= '0';
-            branchEn_o <= '0';
-            branchOnZero_o <= '0';
-            jumpEn_o <= '0';
             memWrite_o <= '0';
             memDataFormat_o <= (others => '0');
             memDataSign_o <= '0';
             memToReg_o <= '0';
             regWrite_o <= '0';
-            jalEn_o <= '0';
         elsif rising_edge(clk_i) then
             aluout_o <= aluout_i;
             rdata2_o <= rdata2_i;
             rdest_o <= rdest_i;
             zero_o <= zero_i;
-            branchEn_o <= branchEn_i;
-            branchOnZero_o <= branchOnZero_i;
-            jumpEn_o <= jumpEn_i;
             memWrite_o <= memWrite_i;
             memDataFormat_o <= memDataFormat_i;
             memDataSign_o <= memDataSign_i;
             memToReg_o <= memToReg_i;
             regWrite_o <= regWrite_i;
-            jalEn_o <= jalEn_i;
         end if;
     end process;
 end behav;
