@@ -10,7 +10,6 @@ package ctrl_signals_pkg is
     end record;
 
     type ex_ctrl_t is record
-        ALUSrc1 : std_logic;
         ALUSrc2 : std_logic;
         ALUOp   : alu_op_t;
         regDest : std_logic;
@@ -40,8 +39,7 @@ package ctrl_signals_pkg is
 
     constant CTRL_SIGNALS_RESET : ctrl_signals_t := (
         id_ctrl  => (immSrc => '0'),
-        ex_ctrl  => (ALUSrc1 => '0',
-                     ALUSrc2 => '0',
+        ex_ctrl  => (ALUSrc2 => '0',
                      ALUOp   => alu_add,
                      regDest => '0'),
         mem_ctrl => (branchOnZero => '0',
@@ -76,7 +74,6 @@ package body ctrl_signals_pkg is
 
         case opcode is
             when "000000" => -- R-type
-                ctrl.ex_ctrl.ALUSrc1 <= '1'; -- rdata1
                 ctrl.ex_ctrl.ALUSrc2 <= '0'; -- rdata2
                 ctrl.ex_ctrl.regDest <= '1';
                 ctrl.wb_ctrl.regWrite <= '1';
@@ -124,32 +121,26 @@ package body ctrl_signals_pkg is
                 ctrl.mem_ctrl.branchEn <= '1';
                 ctrl.mem_ctrl.branchOnZero <= '0';
             when opcode_addi =>
-                ctrl.ex_ctrl.ALUSrc1 <= '1'; -- rdata1
                 ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
                 ctrl.ex_ctrl.ALUOp   <= alu_add; -- rdata1 + imm
                 ctrl.wb_ctrl.regWrite<= '1'; 
             when opcode_subi =>
-                ctrl.ex_ctrl.ALUSrc1 <= '1'; -- rdata1
                 ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm 
                 ctrl.ex_ctrl.ALUOp   <= alu_sub; -- rdata1 - imm
                 ctrl.wb_ctrl.regWrite<= '1';
             when opcode_andi =>
-                ctrl.ex_ctrl.ALUSrc1 <= '1'; -- rdata1
                 ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
                 ctrl.ex_ctrl.ALUOp   <= alu_and; -- rdata1 & imm
                 ctrl.wb_ctrl.regWrite<= '1';
             when opcode_ori =>
-                ctrl.ex_ctrl.ALUSrc1 <= '1'; -- rdata1
                 ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
                 ctrl.ex_ctrl.ALUOp   <= alu_or; -- rdata1 | imm
                 ctrl.wb_ctrl.regWrite<= '1';
             when opcode_xori =>
-                ctrl.ex_ctrl.ALUSrc1 <= '1'; -- rdata1
                 ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
                 ctrl.ex_ctrl.ALUOp   <= alu_xor; -- rdata1 ^ imm
                 ctrl.wb_ctrl.regWrite<= '1';
             when opcode_slli =>
-                ctrl.ex_ctrl.ALUSrc1 <= '1'; -- rdata1
                 ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
                 ctrl.ex_ctrl.ALUOp   <= alu_sll; -- rdata1 << imm
                 ctrl.wb_ctrl.regWrite<= '1';
@@ -157,27 +148,22 @@ package body ctrl_signals_pkg is
                 -- do nothing and go to the next instruction
                 null;
             when opcode_srli =>
-                ctrl.ex_ctrl.ALUSrc1 <= '1'; -- rdata1
                 ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
                 ctrl.ex_ctrl.ALUOp   <= alu_srl; -- rdata1 >> imm
                 ctrl.wb_ctrl.regWrite<= '1';
             when opcode_snei =>
-                ctrl.ex_ctrl.ALUSrc1 <= '1'; -- rdata1
                 ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
                 ctrl.ex_ctrl.ALUOp   <= alu_sne; 
                 ctrl.wb_ctrl.regWrite<= '1';
             when opcode_slei =>
-                ctrl.ex_ctrl.ALUSrc1 <= '1'; -- rdata1
                 ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
                 ctrl.ex_ctrl.ALUOp   <= alu_sle; 
                 ctrl.wb_ctrl.regWrite<= '1';
             when opcode_sgei =>
-                ctrl.ex_ctrl.ALUSrc1 <= '1'; -- rdata1
                 ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
                 ctrl.ex_ctrl.ALUOp   <= alu_sge; 
                 ctrl.wb_ctrl.regWrite<= '1';
             when opcode_lb =>
-                ctrl.ex_ctrl.ALUSrc1 <= '1'; -- rdata1
                 ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
                 ctrl.ex_ctrl.ALUOp   <= alu_add;
                 ctrl.mem_ctrl.memDataFormat <= "00"; -- byte
@@ -185,7 +171,6 @@ package body ctrl_signals_pkg is
                 ctrl.wb_ctrl.memToReg<= '1';
                 ctrl.wb_ctrl.regWrite<= '1';
             when opcode_lbu =>
-                ctrl.ex_ctrl.ALUSrc1 <= '1'; -- rdata1
                 ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
                 ctrl.ex_ctrl.ALUOp   <= alu_add;
                 ctrl.mem_ctrl.memDataFormat <= "00"; -- byte
@@ -193,7 +178,6 @@ package body ctrl_signals_pkg is
                 ctrl.wb_ctrl.memToReg<= '1';
                 ctrl.wb_ctrl.regWrite<= '1';
             when opcode_lh =>
-                ctrl.ex_ctrl.ALUSrc1 <= '1'; -- rdata1
                 ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
                 ctrl.ex_ctrl.ALUOp   <= alu_add;
                 ctrl.mem_ctrl.memDataFormat <= "01"; -- halfword
@@ -201,7 +185,6 @@ package body ctrl_signals_pkg is
                 ctrl.wb_ctrl.memToReg<= '1';
                 ctrl.wb_ctrl.regWrite<= '1';
             when opcode_lhu =>
-                ctrl.ex_ctrl.ALUSrc1 <= '1'; -- rdata1
                 ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
                 ctrl.ex_ctrl.ALUOp   <= alu_add;
                 ctrl.mem_ctrl.memDataFormat <= "01"; -- halfword
@@ -209,26 +192,22 @@ package body ctrl_signals_pkg is
                 ctrl.wb_ctrl.memToReg<= '1';
                 ctrl.wb_ctrl.regWrite<= '1';
             when opcode_lw =>
-                ctrl.ex_ctrl.ALUSrc1 <= '1'; -- rdata1
                 ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
                 ctrl.ex_ctrl.ALUOp   <= alu_add;
                 ctrl.mem_ctrl.memDataFormat <= "10"; -- word
                 ctrl.wb_ctrl.memToReg<= '1';
                 ctrl.wb_ctrl.regWrite<= '1';
             when opcode_sb =>
-                ctrl.ex_ctrl.ALUSrc1 <= '1'; -- rdata1
                 ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
                 ctrl.ex_ctrl.ALUOp   <= alu_add;
                 ctrl.mem_ctrl.memWrite<= '1';
                 ctrl.mem_ctrl.memDataFormat <= "00"; -- byte
             when opcode_sh =>
-                ctrl.ex_ctrl.ALUSrc1 <= '1'; -- rdata1
                 ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
                 ctrl.ex_ctrl.ALUOp   <= alu_add;
                 ctrl.mem_ctrl.memWrite<= '1';
                 ctrl.mem_ctrl.memDataFormat <= "01"; -- halfword
             when opcode_sw =>
-                ctrl.ex_ctrl.ALUSrc1 <= '1'; -- rdata1
                 ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
                 ctrl.ex_ctrl.ALUOp   <= alu_add;
                 ctrl.mem_ctrl.memWrite<= '1';

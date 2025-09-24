@@ -10,7 +10,6 @@ entity execution is
     port (
         clk_i            : in  std_logic;
         reset_i          : in  std_logic;
-        npc_i            : in  std_logic_vector(nbit-1 downto 0);
         rdata1_i         : in  std_logic_vector(nbit-1 downto 0);
         rdata2_i         : in  std_logic_vector(nbit-1 downto 0);
         imm_i            : in  std_logic_vector(nbit-1 downto 0);
@@ -24,7 +23,6 @@ entity execution is
         aluout_o         : out std_logic_vector(nbit-1 downto 0);
         rdest_o          : out std_logic_vector(4 downto 0);
         -- Control signals
-        ALUSrc1_i       : in  std_logic;
         ALUSrc2_i       : in  std_logic;
         ALUOp_i         : in  alu_op_t;
         regDest_i       : in  std_logic;
@@ -84,6 +82,7 @@ architecture struct of execution is
 
     signal mux1_out : std_logic_vector(nbit-1 downto 0);
     signal mux2_out : std_logic_vector(nbit-1 downto 0);
+    signal id_data2 : std_logic_vector(nbit-1 downto 0);
 begin
     alu_inst: alu
         generic map (
@@ -117,12 +116,25 @@ begin
             out_o => mux1_out
         );
 
-    mux_rdata2: mux3to1
+
+    mux_rdata2_imm: mux2to1
         generic map (
             nbit => nbit
         )
         port map (
             in0_i => rdata2_i,
+            in1_i => imm_i,
+            sel_i => ALUSrc2_i,
+            out_o => id_data2
+        );
+
+
+    mux_rdata2: mux3to1
+        generic map (
+            nbit => nbit
+        )
+        port map (
+            in0_i => id_data2,
             in1_i => wb_fwd_rdata2_i,
             in2_i => mem_fwd_rdata2_i,
             sel_i => forwardB_i,

@@ -12,7 +12,7 @@ entity instr_fetch is
         reset_i : in  std_logic;
         pc_enable_i : in  std_logic;
         PCSrc_i : in  std_logic;
-        aluout_i: in  std_logic_vector(nbit-1 downto 0);
+        branch_pc_i: in  std_logic_vector(nbit-1 downto 0);
         instr_addr_o : out std_logic_vector(imem_addr_size-1 downto 0);
         npc_o   : out std_logic_vector(nbit-1 downto 0)
     );
@@ -68,7 +68,7 @@ begin
         )
         port map (
             in0_i => npc_s,
-            in1_i => aluout_i,
+            in1_i => branch_pc_i,
             sel_i => PCSrc_i,
             out_o => next_pc_s
         );

@@ -22,7 +22,7 @@ end entity hazard_unit;
 
 architecture beh of hazard_unit is
 begin
-    process(ex_memToReg_i, ex_rdest_i, id_rs1_i, id_rs2_i, id_regDest_i)
+    process(ex_memToReg_i, ex_rdest_i, id_rs1_i, id_rs2_i, id_regDest_i, id_PCSrc_i)
     begin
         -- Default values: no stall
         pc_write_o <= '1';

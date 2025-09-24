@@ -12,7 +12,6 @@ entity control_unit is
     port (
         instr_i         : in std_logic_vector(nbit-1 downto 0);
         immSrc_o        : out std_logic;
-        ALUSrc1_o       : out std_logic;
         ALUSrc2_o       : out std_logic;
         ALUOp_o         : out alu_op_t;
         regDest_o       : out std_logic;
@@ -45,7 +44,6 @@ begin
     process(ctrl)
     begin
         immSrc_o    <= ctrl.id_ctrl.immSrc;
-        ALUSrc1_o   <= ctrl.ex_ctrl.ALUSrc1;
         ALUSrc2_o   <= ctrl.ex_ctrl.ALUSrc2;
         ALUOp_o     <= ctrl.ex_ctrl.ALUOp;
         regDest_o   <= ctrl.ex_ctrl.regDest;

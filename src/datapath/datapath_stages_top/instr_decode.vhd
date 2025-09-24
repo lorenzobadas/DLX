@@ -17,11 +17,11 @@ entity instr_decode is
         rdata1_o        : out std_logic_vector(nbit-1 downto 0);
         rdata2_o        : out std_logic_vector(nbit-1 downto 0);
         imm_o           : out std_logic_vector(nbit-1 downto 0);
-        npc_o           : out std_logic_vector(nbit-1 downto 0);
         rdest_i_type_o  : out std_logic_vector(4 downto 0);
         rdest_r_type_o  : out std_logic_vector(4 downto 0);
         rsrc1_o         : out std_logic_vector(4 downto 0);
         rsrc2_o         : out std_logic_vector(4 downto 0);
+        branch_pc_o     : out std_logic_vector(nbit-1 downto 0);
         PCSrc_o         : out std_logic;
         -- Control signals
         immSrc_i       : in std_logic;
@@ -73,13 +73,28 @@ architecture struct of instr_decode is
         );
     end component;
 
+    component p4_adder is
+        generic (
+            nbit: integer := 32;
+            subtractor: integer := 0
+        );
+        port (
+            a   : in  std_logic_vector(nbit-1 downto 0);
+            b   : in  std_logic_vector(nbit-1 downto 0);
+            cin : in  std_logic;
+            sub : in  std_logic;
+            s   : out std_logic_vector(nbit-1 downto 0);
+            cout: out std_logic
+        );
+    end component;
+
     signal imm_i_type, imm_j_type: std_logic_vector(nbit-1 downto 0);
+    signal imm: std_logic_vector(nbit-1 downto 0);
     signal rdest_i_type: std_logic_vector(4 downto 0);
     signal raddr1, raddr2: std_logic_vector(4 downto 0);
     signal rs1_zero: std_logic;
     signal rdata1: std_logic_vector(nbit-1 downto 0);
 begin
-    npc_o <= npc_i;
     imm_i_type <= (31 downto 16 => instr_i(15)) & instr_i(15 downto 0);
     imm_j_type <= (31 downto 26 => instr_i(25)) & instr_i(25 downto 0);
     rdest_i_type <= instr_i(20 downto 16);
@@ -114,6 +129,20 @@ begin
             zero_o => rs1_zero
         );
 
+    branch_adder: p4_adder
+        generic map (
+            nbit => nbit,
+            subtractor => 1
+        )
+        port map (
+            a   => npc_i,
+            b   => imm,
+            cin => '0',
+            sub => '0',
+            s   => branch_pc_o,
+            cout => open
+        );
+
     PCSrc_o <= (branchEn_i and (rs1_zero xor (not branchOnZero_i))) or jumpEn_i;
 
     imm_mux: mux2to1
@@ -124,8 +153,10 @@ begin
             in0_i => imm_i_type,
             in1_i => imm_j_type,
             sel_i => immSrc_i,
-            out_o => imm_o
+            out_o => imm
         );
+
+    imm_o <= imm;
 
     mux_jalEn: mux2to1
         generic map (
