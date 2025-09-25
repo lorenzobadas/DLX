@@ -14,6 +14,7 @@ entity instr_decode is
         instr_i         : in  std_logic_vector(nbit-1 downto 0);
         waddr_i         : in  std_logic_vector(4 downto 0);
         wbdata_i        : in  std_logic_vector(nbit-1 downto 0);
+        mem_fwd_rdata1_i : in  std_logic_vector(nbit-1 downto 0);
         rdata1_o        : out std_logic_vector(nbit-1 downto 0);
         rdata2_o        : out std_logic_vector(nbit-1 downto 0);
         imm_o           : out std_logic_vector(nbit-1 downto 0);
@@ -29,7 +30,8 @@ entity instr_decode is
         branchEn_i     : in std_logic;
         branchOnZero_i : in std_logic;
         jumpEn_i       : in std_logic;
-        jalEn_i        : in std_logic
+        jalEn_i        : in std_logic;
+        forwardC_i     : in std_logic
     );
 end entity;
 
@@ -98,6 +100,7 @@ architecture struct of instr_decode is
     signal bypass1 : std_logic;
     signal bypass2 : std_logic;
     signal rdata1_bypassed : std_logic_vector(nbit-1 downto 0);
+    signal rdata1_final    : std_logic_vector(nbit-1 downto 0);
     signal rdata2_bypassed : std_logic_vector(nbit-1 downto 0);
 begin
     imm_i_type <= (31 downto 16 => instr_i(15)) & instr_i(15 downto 0);
@@ -123,15 +126,6 @@ begin
             raddr2_i => raddr2,
             rdata1_o => rdata1,
             rdata2_o => rdata2
-        );
-
-    zero_detector_inst: zero_detector
-        generic map (
-            nbit => nbit
-        )
-        port map (
-            a_i    => rdata1_bypassed,
-            zero_o => rs1_zero
         );
 
     branch_adder: p4_adder
@@ -210,6 +204,26 @@ begin
         sel_i => bypass2,
         out_o => rdata2_bypassed
     );
+
+    mux_branch_fwd: mux2to1
+        generic map (
+            nbit => nbit
+        )
+        port map (
+            in0_i => rdata1_bypassed,
+            in1_i => mem_fwd_rdata1_i,
+            sel_i => forwardC_i,
+            out_o => rdata1_final
+        );
+
+    zero_detector_inst: zero_detector
+        generic map (
+            nbit => nbit
+        )
+        port map (
+            a_i    => rdata1_final,
+            zero_o => rs1_zero
+        );
 
     rdata1_o <= rdata1_bypassed;
     rdata2_o <= rdata2_bypassed;

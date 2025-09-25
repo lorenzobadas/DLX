@@ -94,6 +94,7 @@ architecture struct of cpu is
             instr_i         : in  std_logic_vector(nbit-1 downto 0);
             waddr_i         : in  std_logic_vector(4 downto 0);
             wbdata_i        : in  std_logic_vector(nbit-1 downto 0);
+            mem_fwd_rdata1_i : in std_logic_vector(nbit-1 downto 0);
             rdata1_o        : out std_logic_vector(nbit-1 downto 0);
             rdata2_o        : out std_logic_vector(nbit-1 downto 0);
             imm_o           : out std_logic_vector(nbit-1 downto 0);
@@ -109,7 +110,8 @@ architecture struct of cpu is
             branchEn_i     : in std_logic;
             branchOnZero_i : in std_logic;
             jumpEn_i       : in std_logic;
-            jalEn_i        : in std_logic
+            jalEn_i        : in std_logic;
+            forwardC_i     : in std_logic
         );
     end component;
 
@@ -117,11 +119,13 @@ architecture struct of cpu is
         port (
             -- Inputs
             ex_memToReg_i : in  std_logic; -- Instruction is a load
+            ex_regWrite_i : in  std_logic; -- Instruction writes to a register
             ex_rdest_i    : in  std_logic_vector(4 downto 0);
             id_rs1_i      : in  std_logic_vector(4 downto 0);
             id_rs2_i      : in  std_logic_vector(4 downto 0);
             id_regDest_i  : in  std_logic; -- Instruction is R-type (uses rs2 as source)
-            id_PCSrc_i   : in  std_logic; -- Branch taken
+            id_PCSrc_i    : in  std_logic; -- Branch taken
+            id_branchEn_i : in  std_logic; -- Instruction is a branch
             -- Outputs
             pc_write_o    : out std_logic;
             if_id_write_o : out std_logic;
@@ -206,12 +210,16 @@ architecture struct of cpu is
         port (
             ex_mem_regwrite_i : in  std_logic;
             mem_wb_regwrite_i : in  std_logic;
+            if_id_branchEn_i  : in  std_logic;
             ex_mem_rd_i       : in  std_logic_vector(4 downto 0);
             mem_wb_rd_i       : in  std_logic_vector(4 downto 0);
             id_ex_rs1_i       : in  std_logic_vector(4 downto 0);
             id_ex_rs2_i       : in  std_logic_vector(4 downto 0);
+            if_id_rs1_i       : in  std_logic_vector(4 downto 0);
+
             forwardA_o        : out std_logic_vector(1 downto 0);
-            forwardB_o        : out std_logic_vector(1 downto 0)
+            forwardB_o        : out std_logic_vector(1 downto 0);
+            forwardC_o        : out std_logic
         );
     end component;
 
@@ -321,7 +329,9 @@ architecture struct of cpu is
     signal ex_rdest                 : std_logic_vector(4 downto 0);
     signal ex_rdest_i_type, ex_rdest_r_type   : std_logic_vector(4 downto 0);
     signal ex_rsrc1, ex_rsrc2       : std_logic_vector(4 downto 0);
-    signal forwardA, forwardB       : std_logic_vector(1 downto 0);
+    signal forwardA                 : std_logic_vector(1 downto 0);
+    signal forwardB                 : std_logic_vector(1 downto 0);
+    signal forwardC                 : std_logic;
     -- MEM stage signals
     signal mem_pc          : std_logic_vector(nbit-1 downto 0) := (others => '0');
     signal mem_zero        : std_logic;
@@ -436,6 +446,7 @@ begin
             instr_i        => id_instr,
             waddr_i        => wb_rdest,
             wbdata_i       => wb_data,
+            mem_fwd_rdata1_i => mem_aluout,
             rdata1_o       => id_rdata1,
             rdata2_o       => id_rdata2,
             imm_o          => id_imm,
@@ -451,18 +462,21 @@ begin
             branchEn_i     => id_branchEn,
             branchOnZero_i => id_branchOnZero,
             jumpEn_i       => id_jumpEn,
-            jalEn_i        => id_jalEn
+            jalEn_i        => id_jalEn,
+            forwardC_i     => forwardC
         );
 
     -- Hazard Unit
     hazard_unit_inst: hazard_unit
         port map (
             ex_memToReg_i => ex_memToReg,
+            ex_regWrite_i => ex_regWrite,
             ex_rdest_i    => ex_rdest,
             id_rs1_i      => id_rsrc1,
             id_rs2_i      => id_rsrc2,
             id_regDest_i  => id_regDest,
             id_PCSrc_i    => id_PCSrc,
+            id_branchEn_i => id_branchEn,
             pc_write_o    => pc_enable,
             if_id_write_o => if_id_write,
             if_id_flush_o => if_id_flush,
@@ -542,12 +556,15 @@ begin
         port map (
             ex_mem_regwrite_i => mem_regWrite,
             mem_wb_regwrite_i => wb_regWrite,
+            if_id_branchEn_i  => id_branchEn,
             ex_mem_rd_i       => mem_rdest,
             mem_wb_rd_i       => wb_rdest,
             id_ex_rs1_i       => ex_rsrc1,
             id_ex_rs2_i       => ex_rsrc2,
+            if_id_rs1_i       => id_rsrc1,
             forwardA_o        => forwardA,
-            forwardB_o        => forwardB
+            forwardB_o        => forwardB,
+            forwardC_o        => forwardC
         );
 
     -- EX/MEM Pipeline Register
