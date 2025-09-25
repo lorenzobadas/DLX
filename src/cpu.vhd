@@ -188,6 +188,7 @@ architecture struct of cpu is
             mem_fwd_rdata2_i : in std_logic_vector(nbit-1 downto 0);
             wb_fwd_rdata1_i  : in std_logic_vector(nbit-1 downto 0);
             wb_fwd_rdata2_i  : in std_logic_vector(nbit-1 downto 0);
+            rdata2_o         : out std_logic_vector(nbit-1 downto 0);
             zero_o           : out std_logic;
             aluout_o         : out std_logic_vector(nbit-1 downto 0);
             rdest_o          : out std_logic_vector(4 downto 0);
@@ -313,6 +314,7 @@ architecture struct of cpu is
     -- EX stage signals
     signal ex_rdata1                : std_logic_vector(nbit-1 downto 0);
     signal ex_rdata2                : std_logic_vector(nbit-1 downto 0);
+    signal ex_rdata2_final          : std_logic_vector(nbit-1 downto 0);
     signal ex_imm                   : std_logic_vector(nbit-1 downto 0);
     signal ex_aluout                : std_logic_vector(nbit-1 downto 0);
     signal ex_zero                  : std_logic;
@@ -522,6 +524,7 @@ begin
             mem_fwd_rdata2_i  => mem_aluout,
             wb_fwd_rdata1_i => wb_data,
             wb_fwd_rdata2_i => wb_data,
+            rdata2_o       => ex_rdata2_final,
             zero_o         => ex_zero,
             aluout_o       => ex_aluout,
             rdest_o        => ex_rdest,
@@ -554,7 +557,7 @@ begin
             clk_i         => clk_i,
             reset_i       => rst_i,
             aluout_i      => ex_aluout,
-            rdata2_i      => ex_rdata2,
+            rdata2_i      => ex_rdata2_final,
             rdest_i       => ex_rdest,
             zero_i        => ex_zero,
             aluout_o      => mem_aluout,

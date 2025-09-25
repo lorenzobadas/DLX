@@ -19,6 +19,7 @@ entity execution is
         mem_fwd_rdata2_i : in std_logic_vector(nbit-1 downto 0);
         wb_fwd_rdata1_i  : in std_logic_vector(nbit-1 downto 0);
         wb_fwd_rdata2_i  : in std_logic_vector(nbit-1 downto 0);
+        rdata2_o         : out std_logic_vector(nbit-1 downto 0);
         zero_o           : out std_logic;
         aluout_o         : out std_logic_vector(nbit-1 downto 0);
         rdest_o          : out std_logic_vector(4 downto 0);
@@ -80,9 +81,9 @@ architecture struct of execution is
         );
     end component;
 
-    signal mux1_out : std_logic_vector(nbit-1 downto 0);
-    signal mux2_out : std_logic_vector(nbit-1 downto 0);
-    signal id_data2 : std_logic_vector(nbit-1 downto 0);
+    signal alu_in1 : std_logic_vector(nbit-1 downto 0);
+    signal alu_in2 : std_logic_vector(nbit-1 downto 0);
+    signal fwd_data2 : std_logic_vector(nbit-1 downto 0);
 begin
     alu_inst: alu
         generic map (
@@ -90,8 +91,8 @@ begin
         )
         port map (
             alu_op_i => ALUOp_i,
-            a_i => mux1_out,
-            b_i => mux2_out,
+            a_i => alu_in1,
+            b_i => alu_in2,
             alu_out_o => aluout_o
         );
 
@@ -113,33 +114,33 @@ begin
             in1_i => wb_fwd_rdata1_i,
             in2_i => mem_fwd_rdata1_i,
             sel_i => forwardA_i,
-            out_o => mux1_out
+            out_o => alu_in1
         );
-
-
-    mux_rdata2_imm: mux2to1
-        generic map (
-            nbit => nbit
-        )
-        port map (
-            in0_i => rdata2_i,
-            in1_i => imm_i,
-            sel_i => ALUSrc2_i,
-            out_o => id_data2
-        );
-
 
     mux_rdata2: mux3to1
         generic map (
             nbit => nbit
         )
         port map (
-            in0_i => id_data2,
+            in0_i => rdata2_i,
             in1_i => wb_fwd_rdata2_i,
             in2_i => mem_fwd_rdata2_i,
             sel_i => forwardB_i,
-            out_o => mux2_out
+            out_o => fwd_data2
         );
+
+    mux_rdata2_imm: mux2to1
+        generic map (
+            nbit => nbit
+        )
+        port map (
+            in0_i => fwd_data2,
+            in1_i => imm_i,
+            sel_i => ALUSrc2_i,
+            out_o => alu_in2
+        );
+
+    rdata2_o <= fwd_data2;
 
     mux_rdest: mux2to1
         generic map (

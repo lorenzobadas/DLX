@@ -17,7 +17,7 @@ add wave -divider "IF-ID"
 add wave /tb_cpu/cpu_inst/if_id_regs_inst/*
 add wave -divider "Instruction Decode"
 add wave /tb_cpu/cpu_inst/decode_inst/*
-add wave /tb_cpu/cpu_inst/decode_inst/reg_file/regs
+add wave -radix decimal /tb_cpu/cpu_inst/decode_inst/reg_file/regs
 add wave -divider "ID-EX"
 add wave /tb_cpu/cpu_inst/id_ex_regs_inst/*
 add wave -divider "Execution"

@@ -94,6 +94,11 @@ architecture struct of instr_decode is
     signal raddr1, raddr2: std_logic_vector(4 downto 0);
     signal rs1_zero: std_logic;
     signal rdata1: std_logic_vector(nbit-1 downto 0);
+    signal rdata2: std_logic_vector(nbit-1 downto 0);
+    signal bypass1 : std_logic;
+    signal bypass2 : std_logic;
+    signal rdata1_bypassed : std_logic_vector(nbit-1 downto 0);
+    signal rdata2_bypassed : std_logic_vector(nbit-1 downto 0);
 begin
     imm_i_type <= (31 downto 16 => instr_i(15)) & instr_i(15 downto 0);
     imm_j_type <= (31 downto 26 => instr_i(25)) & instr_i(25 downto 0);
@@ -103,7 +108,7 @@ begin
     raddr2 <= instr_i(20 downto 16);
     rsrc1_o <= raddr1;
     rsrc2_o <= raddr2;
-    rdata1_o <= rdata1;
+    
     reg_file: register_file
         generic map (
             nreg => 32,
@@ -117,7 +122,7 @@ begin
             raddr1_i => raddr1,
             raddr2_i => raddr2,
             rdata1_o => rdata1,
-            rdata2_o => rdata2_o
+            rdata2_o => rdata2
         );
 
     zero_detector_inst: zero_detector
@@ -125,7 +130,7 @@ begin
             nbit => nbit
         )
         port map (
-            a_i    => rdata1,
+            a_i    => rdata1_bypassed,
             zero_o => rs1_zero
         );
 
@@ -168,4 +173,45 @@ begin
             sel_i => jalEn_i,
             out_o => rdest_i_type_o
         );
+
+    bypass_proc: process(raddr1, raddr2, waddr_i, regWrite_i)
+    begin
+        bypass1 <= '0';
+        bypass2 <= '0';
+        if (regWrite_i = '1' and waddr_i /= "00000") then
+            if (raddr1 = waddr_i) then
+                bypass1 <= '1';
+            end if;
+
+            if (raddr2 = waddr_i) then
+                bypass2 <= '1';
+            end if;
+        end if;
+    end process;
+
+    mux_bypass1: mux2to1
+     generic map(
+        nbit => nbit
+    )
+     port map(
+        in0_i => rdata1,
+        in1_i => wbdata_i,
+        sel_i => bypass1,
+        out_o => rdata1_bypassed
+    );
+
+    mux_bypass2: mux2to1
+     generic map(
+        nbit => nbit
+    )
+     port map(
+        in0_i => rdata2,
+        in1_i => wbdata_i,
+        sel_i => bypass2,
+        out_o => rdata2_bypassed
+    );
+
+    rdata1_o <= rdata1_bypassed;
+    rdata2_o <= rdata2_bypassed;
+
 end architecture;
