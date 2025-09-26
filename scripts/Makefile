@@ -1,5 +1,5 @@
 .SUFFIXES:
-.PHONY: t2-shifter-tb p4-adder-tb alu-tb cpu-tb clean
+.PHONY: t2-shifter-tb p4-adder-tb alu-tb cpu-tb clean clean_sim clean_syn clean_pnr clean_all
 
 GIT_ROOT   := $(shell git rev-parse --show-toplevel)
 
@@ -108,12 +108,25 @@ $(SIM_DIR):
 ################ Synthesis Targets #################
 ####################################################
 
+synthesis: $(SYN_DIR)/cpu.v
 
+$(SYN_DIR)/cpu.v: | $(SYN_DIR)
+
+	cp .synopsys_dc.setup $(SYN_DIR)
+
+	cd $(SYN_DIR) && \
+	dc_shell-xg-t \
+		-x "set rootdir {$(GIT_ROOT)}; set outdir {$(SYN_DIR)/results}; source $(SCRIPTS_DIR)/synthesis.tcl" \
+		| tee $(SYN_DIR)/dc_shell.log
+
+$(SYN_DIR):
+	mkdir -p $(SYN_DIR)
 
 ##############################################
 ################ PnR Targets #################
 ##############################################
 
+pnr: $(PNR_DIR)/cpu.v
 
 ################################################
 ################ Clean Targets #################
