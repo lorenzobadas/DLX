@@ -59,9 +59,9 @@ analyze -library work -format vhdl $files
 elaborate -lib work $top_entity
 
 set clock_name "CLOCK"
-set clock_period 2.80
+set clock_period 1.38
 
-create_clock -name $clock_name -period $clock_period CLK
+create_clock -name $clock_name -period $clock_period clk_i
 
 set_dont_touch_network $clock_name
 set_clock_uncertainty 0.07 [get_clocks $clock_name]
@@ -73,7 +73,8 @@ set_load $OLOAD [all_outputs]
 
 set_max_delay -from [all_inputs] -to [all_outputs] $clock_period
 
-compile -map_effort high -auto_ungroup delay
+ungroup -all -flatten
+compile_ultra
 
 puts "## Writing Reports ##"
 report_power   > "$outdir/power.rpt"
@@ -81,7 +82,6 @@ report_area    > "$outdir/area.rpt"
 report_timing  > "$outdir/timing.rpt"
 report_clocks  > "$outdir/clocks.rpt"
 
-ungroup -all -flatten
 change_names -hierarchy -rules verilog
 
 write -hierarchy -f verilog -output "$outdir/${top_entity}.v"
