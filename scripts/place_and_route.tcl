@@ -62,7 +62,7 @@ optDesign -preCTS
 # Create Ccock Tree
 set_ccopt_property target_max_trans 0.08
 set_ccopt_property target_skew 0.5
-create_ccopt_clock_tree -name MY_CLK -source CLK
+create_ccopt_clock_tree -name MY_CLK -source clk_i
 ccopt_design
 report_ccopt_clock_trees > report_ccopt_clock_trees.log
 report_ccopt_skew_groups > report_ccopt_skew_groups.log
@@ -116,3 +116,4 @@ saveNetlist cpu.v
 all_hold_analysis_views 
 all_setup_analysis_views
 write_sdf -ideal_clock_network -recompute_delay_calc cpu.sdf
+saveDesign cpu_pnr.enc
