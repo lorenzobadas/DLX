@@ -101,6 +101,38 @@ cpu-tb: clean_sim $(SIM_DIR)/instr_memory.mem | $(SIM_DIR)
 	vsim \
 		-do $(SCRIPTS_DIR)/tb_cpu.do
 
+post-syn-cpu-tb: | $(SIM_DIR) $(SYN_DIR)/results/cpu.v
+	cp $(SYN_DIR)/results/cpu.v $(SIM_DIR)
+	cp $(PKG_FILES) $(CPU_SRC) $(CPU_TB_SRC) $(SIM_DIR)
+	cp $(SRC_DIR)/tb/tb_cpu.v $(SIM_DIR)
+
+	rm -f $(SIM_DIR)/cpu.vhd
+	rm -f $(SIM_DIR)/tb_cpu.vhd
+
+	cd $(SIM_DIR) && \
+	vcom \
+	 	$(SIM_DIR)/instructions_pkg.vhd \
+		$(SIM_DIR)/alu_instr_pkg.vhd    \
+		$(SIM_DIR)/ctrl_signals_pkg.vhd \
+		$(SIM_DIR)/utils_pkg.vhd        \
+		$(SIM_DIR)/mem_pkg.vhd          \
+	 	$$(find $(SIM_DIR) -name '*.vhd' -type f) \
+		-autoorder \
+		-autoorderquiet \
+		-mixedsvvh
+
+
+	cd $(SIM_DIR) && \
+	vlog \
+	  $(SIM_DIR)/tb_cpu.v \
+		$(SIM_DIR)/cpu.v \
+		-mixedsvvh
+
+	cd $(SIM_DIR) && \
+	vsim \
+		-L /eda/dk/nangate45/verilog/qsim2020.4 \
+		-do $(SCRIPTS_DIR)/tb_cpu.do
+
 $(SIM_DIR):
 	mkdir -p $(SIM_DIR)
 
@@ -128,7 +160,10 @@ $(SYN_DIR):
 
 pnr: clean_pnr $(PNR_DIR)/cpu.v
 
-$(PNR_DIR)/cpu.v: $(SYN_DIR)/results/cpu.v | $(PNR_DIR) $(PNR_DIR)/netlist
+pnr_gui: $(PNR_DIR)/cpu_pnr.enc
+# execute inside the innovus terminal "source $(PNR_DIR)/cpu_pnr.enc"
+
+$(PNR_DIR)/cpu.v $(PNR_DIR)/cpu_pnr.enc: $(SYN_DIR)/results/cpu.v | $(PNR_DIR) $(PNR_DIR)/netlist
 	cp $(SYN_DIR)/results/cpu.v $(SYN_DIR)/results/cpu.sdc $(PNR_DIR)/netlist
 	cp design.globals place_and_route.tcl mmm_design.tcl $(PNR_DIR)
 
