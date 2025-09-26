@@ -108,7 +108,7 @@ $(SIM_DIR):
 ################ Synthesis Targets #################
 ####################################################
 
-synthesis: $(SYN_DIR)/cpu.v
+synthesis: clean_syn $(SYN_DIR)/cpu.v
 
 $(SYN_DIR)/cpu.v: | $(SYN_DIR)
 
@@ -126,7 +126,18 @@ $(SYN_DIR):
 ################ PnR Targets #################
 ##############################################
 
-pnr: $(PNR_DIR)/cpu.v
+pnr: clean_pnr $(PNR_DIR)/cpu.v
+
+$(PNR_DIR)/cpu.v: $(SYN_DIR)/cpu.v | $(PNR_DIR)
+	cp $(SYN_DIR)/cpu.v $(SYN_DIR)/cpu.sdc $(PNR_DIR)/netlist
+	cp design.globals place_and_route.tcl mmm_design.tcl $(PNR_DIR)
+
+	cd $(PNR_DIR) && \
+	innovus -no_gui -batch -file place_and_route.tcl
+
+$(PNR_DIR):
+	mkdir -p $(PNR_DIR)/netlist
+	
 
 ################################################
 ################ Clean Targets #################
