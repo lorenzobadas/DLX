@@ -1,6 +1,7 @@
-# ignore all files in vhdlsim and syn
-**/vhdlsim/*
+# ignore all files in sim, syn and pnr directories
+**/sim/*
 **/syn/*
+**/pnr/*
 
 # except for the following files
 !**/Makefile

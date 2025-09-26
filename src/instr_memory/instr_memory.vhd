@@ -11,7 +11,7 @@ entity instr_memory is
         ram_width : integer := imem_width;
         ram_depth : integer := imem_depth;
         ram_add   : integer := imem_addr_size;
-        init_file : string := "instr_memory.mem"
+        init_file : string
     );
     port(
         clk_i  : in std_logic;

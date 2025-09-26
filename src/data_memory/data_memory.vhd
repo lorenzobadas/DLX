@@ -11,7 +11,7 @@ entity data_memory is
         ram_width : integer := dmem_width;
         ram_depth : integer := dmem_depth;
         ram_add   : integer := dmem_addr_size;
-        init_file : string := "data_memory.mem"
+        init_file : string
     );
     port(
         clk_i         : in std_logic;

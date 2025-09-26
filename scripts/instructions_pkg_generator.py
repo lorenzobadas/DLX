@@ -1,12 +1,15 @@
 import json
-# open instructions.json
+import sys
+
+# Get the JSON file path from the command line arguments
+json_path = sys.argv[1]
 
 print("library ieee;")
 print("use ieee.std_logic_1164.all;")
 print("package instructions_pkg is")
 opcode_string = "    constant opcode_{}: {}std_logic_vector(5 downto 0) := \"{}\";       -- {}"
 func_string   = "    constant func_{}: {}std_logic_vector(10 downto 0) := \"{}\"; -- {}"
-with open('instructions.json', 'r') as f:
+with open(json_path, 'r') as f:
     instructions = json.load(f)
     max_name_len = 0
     for instruction in instructions:

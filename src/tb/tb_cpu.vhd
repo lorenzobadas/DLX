@@ -66,7 +66,7 @@ architecture test of tb_cpu is
             ram_width : integer := imem_width;
             ram_depth : integer := imem_depth;
             ram_add   : integer := imem_addr_size;
-            init_file : string := "instr_memory.mem"
+            init_file : string
         );
         port(
             clk_i  : in std_logic;
@@ -82,7 +82,7 @@ architecture test of tb_cpu is
             ram_width : integer := dmem_width;
             ram_depth : integer := dmem_depth;
             ram_add   : integer := dmem_addr_size;
-            init_file : string := "data_memory.mem"
+            init_file : string
         );
         port(
             clk_i         : in std_logic;
@@ -120,7 +120,7 @@ begin
             ram_width => imem_width,
             ram_depth => imem_depth,
             ram_add   => imem_addr_size,
-            init_file => "instr_memory.mem"
+            init_file => "../sim/instr_memory.mem"
         )
         port map (
             clk_i  => clk,
@@ -135,7 +135,7 @@ begin
             ram_width => dmem_width,
             ram_depth => dmem_depth,
             ram_add   => dmem_addr_size,
-            init_file => "data_memory.mem"
+            init_file => "../sim/data_memory.mem"
         )
         port map (
             clk_i   => clk,
