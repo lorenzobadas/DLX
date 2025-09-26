@@ -12,13 +12,13 @@ module tb_cpu;
 
     // Instruction memory signals
     wire imem_en;
-    wire [ram_add-1:0] imem_addr;
+    wire [ram_add+1:0] imem_addr;
     wire [ram_width-1:0] imem_dout;
 
     // Data memory signals
     wire dmem_en;
     wire dmem_we;
-    wire [ram_add-1:0] dmem_addr;
+    wire [ram_add+1:0] dmem_addr;
     wire [ram_width-1:0] dmem_din;
     wire [1:0] dmem_data_format;
     wire dmem_data_sign;
@@ -47,7 +47,7 @@ module tb_cpu;
     instr_memory #(
         .ram_width(ram_width),
         .ram_depth(1 << ram_add),
-        .ram_add(ram_add),
+        .ram_add(ram_add+2),
         .init_file("../sim/instr_memory.mem")
     ) imem_inst (
         .clk_i(clk),
@@ -61,7 +61,7 @@ module tb_cpu;
     data_memory #(
         .ram_width(ram_width),
         .ram_depth(1 << ram_add),
-        .ram_add(ram_add),
+        .ram_add(ram_add+2),
         .init_file("../sim/data_memory.mem")
     ) dmem_inst (
         .clk_i(clk),
