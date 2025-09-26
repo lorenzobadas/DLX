@@ -33,16 +33,19 @@ architecture behav of data_memory is
 begin
 
     process(clk_i, reset_i)
+-- synthesis translate_off
         file dataFP : text;
         variable dataLine : line;
         variable tmpData : std_logic_vector(ram_width-1 downto 0);
         variable wordIdx : integer := 0;
+-- synthesis translate_on
     begin
         if (reset_i = '1') then
             -- Reset memory
             for i in 0 to ram_depth-1 loop
                 ram_s(i) <= (others => '0');
             end loop;
+-- synthesis translate_off
             -- Load memory from init file
             -- Open file
             file_open(dataFP, init_file, READ_MODE);
@@ -60,6 +63,7 @@ begin
             end loop;
             -- Close file
             file_close(dataFP);
+-- synthesis translate_on
         elsif (rising_edge(clk_i)) then
             if(en_i = '1') then
                 if(we_i = '1') then
