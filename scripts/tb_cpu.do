@@ -1,4 +1,4 @@
-vsim work.tb_cpu -t 10ps -voptargs="+acc"
+vsim -L /eda/dk/nangate45/verilog/qsim2020.4 work.tb_cpu -voptargs="+acc"
 
 add wave -divider "TB Signals"
 add wave /tb_cpu/*
