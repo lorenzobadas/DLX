@@ -101,7 +101,7 @@ cpu-tb: clean_sim $(SIM_DIR)/instr_memory.mem | $(SIM_DIR)
 	vsim \
 		-do $(SCRIPTS_DIR)/tb_cpu.do
 
-post-syn-cpu-tb: | $(SIM_DIR) $(SYN_DIR)/results/cpu.v
+post-syn-cpu-tb: clean_sim $(SIM_DIR)/instr_memory.mem | $(SIM_DIR) $(SYN_DIR)/results/cpu.v
 	cp $(SYN_DIR)/results/cpu.v $(SIM_DIR)
 	cp $(PKG_FILES) $(CPU_SRC) $(CPU_TB_SRC) $(SIM_DIR)
 	cp $(SRC_DIR)/tb/tb_cpu.v $(SIM_DIR)
@@ -130,8 +130,7 @@ post-syn-cpu-tb: | $(SIM_DIR) $(SYN_DIR)/results/cpu.v
 
 	cd $(SIM_DIR) && \
 	vsim \
-		-L /eda/dk/nangate45/verilog/qsim2020.4 \
-		-do $(SCRIPTS_DIR)/tb_cpu.do
+		-do $(SCRIPTS_DIR)/tb_cpu_postsyn.do
 
 $(SIM_DIR):
 	mkdir -p $(SIM_DIR)
