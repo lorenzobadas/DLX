@@ -32,106 +32,112 @@ class ProcessorEmulator:
         sign_bit = 1 << (bits - 1)
         return (value & (sign_bit - 1)) - (value & sign_bit)
 
-    # ****************************************** INSRTRUCTIONS ******************************************
+    # ****************************************** INSTRUCTIONS ******************************************
     def instr_j(self, address : int):
-        self.pc = address
+        address = self.sign_extend(address, 26)
+        self.pc += 4 + address
 
     def instr_jal(self, address : int):
-        self.registers[self.ra_register], self.pc = self.pc + 1, address
+        address = self.sign_extend(address, 26)
+        self.registers[self.ra_register] = self.pc + 4
+        self.pc += 4 + address
 
     def instr_jr(self, rs : int):
         self.pc = self.registers[rs]
 
     def instr_jalr(self, rs : int):
-        self.registers[self.ra_register], self.pc = self.pc + 1, self.registers[rs]
+        self.registers[self.ra_register] = self.pc + 4
+        self.pc = self.registers[rs]
 
     def instr_beqz(self, rs : int, offset : int):
-        self.pc += self.sign_extend(offset, 16) if self.registers[rs] == 0 else 1
+        self.pc += self.sign_extend(offset, 16) if self.registers[rs] == 0 else 4
 
     def instr_bnez(self, rs : int, offset : int):
-        self.pc += self.sign_extend(offset, 16) if self.registers[rs] != 0 else 1
+        self.pc += self.sign_extend(offset, 16) if self.registers[rs] != 0 else 4
 
     def instr_addi(self, rt : int, rs : int, immediate : int):
         self.registers[rt] = self.registers[rs] + self.sign_extend(immediate, 16);
-        self.pc += 1
+        self.pc += 4
 
     def instr_subi(self, rt : int, rs : int, immediate : int):
         self.registers[rt] = self.registers[rs] - self.sign_extend(immediate, 16);
-        self.pc += 1
+        self.pc += 4
 
     def instr_andi(self, rt : int, rs : int, immediate : int):
         self.registers[rt] = self.registers[rs] & immediate;
-        self.pc += 1
+        self.pc += 4
 
     def instr_ori(self, rt : int, rs : int, immediate : int):
         self.registers[rt] = self.registers[rs] | immediate;
-        self.pc += 1
+        self.pc += 4
 
     def instr_xori(self, rt : int, rs : int, immediate : int):
         self.registers[rt] = self.registers[rs] ^ immediate;
-        self.pc += 1
+        self.pc += 4
 
     def instr_slli(self, rt : int, rs : int, immediate : int):
         self.registers[rt] = self.registers[rs] << (immediate & 0x1F);
-        self.pc += 1
+        self.pc += 4
 
     def instr_srli(self, rt : int, rs : int, immediate : int):
         self.registers[rt] = (self.registers[rs] & 0xFFFFFFFF) >> (immediate & 0x1F);
-        self.pc += 1
+        self.pc += 4
 
     def instr_srai(self, rt : int, rs : int, immediate : int):
         self.registers[rt] = self.registers[rs] >> (immediate & 0x1F);
-        self.pc += 1
+        self.pc += 4
 
     def instr_slti(self, rt : int, rs : int, immediate : int):
         self.registers[rt] = 1 if self.registers[rs] < self.sign_extend(immediate, 16) else 0;
-        self.pc += 1
+        self.pc += 4
 
     def instr_sgti(self, rt : int, rs : int, immediate : int):
         self.registers[rt] = 1 if self.registers[rs] > self.sign_extend(immediate, 16) else 0;
-        self.pc += 1
+        self.pc += 4
 
     def instr_seqi(self, rt : int, rs : int, immediate : int):
         self.registers[rt] = 1 if self.registers[rs] == self.sign_extend(immediate, 16) else 0;
-        self.pc += 1
+        self.pc += 4
 
     def instr_snei(self, rt : int, rs : int, immediate : int):
         self.registers[rt] = 1 if self.registers[rs] != self.sign_extend(immediate, 16) else 0;
-        self.pc += 1
+        self.pc += 4
 
     def instr_slei(self, rt : int, rs : int, immediate : int):
         self.registers[rt] = 1 if self.registers[rs] <= self.sign_extend(immediate, 16) else 0;
-        self.pc += 1
+        self.pc += 4
 
     def instr_sgei(self, rt : int, rs : int, immediate : int):
         self.registers[rt] = 1 if self.registers[rs] >= self.sign_extend(immediate, 16) else 0;
-        self.pc += 1
+        self.pc += 4
 
     def instr_lw(self, rt : int, base : int, offset : int):
         address = self.registers[base] + self.sign_extend(offset, 16)
+        address &= 0xFFFFFFFF
         if address % 4 != 0:
             print(f"Memory alignment error on LW at 0x{address:08x}");
-            self.pc += 1;
+            self.pc += 4;
             return
         if 0 <= address < len(self.data_memory) - 3:
             word_bytes = self.data_memory[address:address+4]
-            self.registers[rt] = int.from_bytes(word_bytes, byteorder='big', signed=True)
+            self.registers[rt] = int.from_bytes(word_bytes, byteorder='big', signed=False)
         else:
             print(f"Error: Invalid memory read at address 0x{address:08x}")
-        self.pc += 1
+        self.pc += 4
 
     def instr_sw(self, rt : int, base : int, offset : int):
         address = self.registers[base] + self.sign_extend(offset, 16)
+        address &= 0xFFFFFFFF
         if address % 4 != 0:
             print(f"Memory alignment error on SW at 0x{address:08x}");
-            self.pc += 1;
+            self.pc += 4;
             return
         if 0 <= address < len(self.data_memory) - 3:
-            word_bytes = self.registers[rt].to_bytes(4, byteorder='big', signed=True)
+            word_bytes = self.registers[rt].to_bytes(4, byteorder='big', signed=False)
             self.data_memory[address:address+4] = word_bytes
         else:
             print(f"Error: Invalid memory write at address 0x{address:08x}")
-        self.pc += 1
+        self.pc += 4
 
     def instr_lb(self, rt : int, base : int, offset : int):
         address = self.registers[base] + self.sign_extend(offset, 16)
@@ -140,7 +146,7 @@ class ProcessorEmulator:
             self.registers[rt] = self.sign_extend(byte_val, 8)
         else:
             print(f"Error: Invalid memory read at address 0x{address:08x}")
-        self.pc += 1
+        self.pc += 4
 
     def instr_sb(self, rt : int, base : int, offset : int):
         address = self.registers[base] + self.sign_extend(offset, 16)
@@ -149,79 +155,86 @@ class ProcessorEmulator:
             self.data_memory[address] = byte_val
         else:
             print(f"Error: Invalid memory write at address 0x{address:08x}")
-        self.pc += 1
+        self.pc += 4
 
     def instr_add(self, rd : int, rs : int, rt : int):
         self.registers[rd] = self.registers[rs] + self.registers[rt];
-        self.pc += 1
+        self.pc += 4
 
     def instr_sub(self, rd : int, rs : int, rt : int):
         self.registers[rd] = self.registers[rs] - self.registers[rt];
-        self.pc += 1
+        self.pc += 4
 
     def instr_and(self, rd : int, rs : int, rt : int):
         self.registers[rd] = self.registers[rs] & self.registers[rt];
-        self.pc += 1
+        self.pc += 4
 
     def instr_or(self, rd : int, rs : int, rt : int):
         self.registers[rd] = self.registers[rs] | self.registers[rt];
-        self.pc += 1
+        self.pc += 4
 
     def instr_xor(self, rd : int, rs : int, rt : int):
         self.registers[rd] = self.registers[rs] ^ self.registers[rt];
-        self.pc += 1
+        self.pc += 4
 
     def instr_sll(self, rd : int, rt : int, shamt : int):
         self.registers[rd] = self.registers[rt] << shamt;
-        self.pc += 1
+        self.pc += 4
 
     def instr_srl(self, rd : int, rt : int, shamt : int):
         self.registers[rd] = (self.registers[rt] & 0xFFFFFFFF) >> shamt;
-        self.pc += 1
+        self.pc += 4
 
     def instr_sra(self, rd : int, rt : int, shamt : int):
         self.registers[rd] = self.registers[rt] >> shamt;
-        self.pc += 1
+        self.pc += 4
 
     def instr_slt(self, rd : int, rs : int, rt : int):
         self.registers[rd] = 1 if self.registers[rs] < self.registers[rt] else 0;
-        self.pc += 1
+        self.pc += 4
 
     def instr_sgt(self, rd : int, rs : int, rt : int):
         self.registers[rd] = 1 if self.registers[rs] > self.registers[rt] else 0;
-        self.pc += 1
+        self.pc += 4
 
     def instr_seq(self, rd : int, rs : int, rt : int):
         self.registers[rd] = 1 if self.registers[rs] == self.registers[rt] else 0;
-        self.pc += 1
+        self.pc += 4
 
     def instr_sne(self, rd : int, rs : int, rt : int):
         self.registers[rd] = 1 if self.registers[rs] != self.registers[rt] else 0;
-        self.pc += 1
+        self.pc += 4
 
     def instr_sle(self, rd : int, rs : int, rt : int):
         self.registers[rd] = 1 if self.registers[rs] <= self.registers[rt] else 0;
-        self.pc += 1
+        self.pc += 4
 
     def instr_sge(self, rd : int, rs : int, rt : int):
         self.registers[rd] = 1 if self.registers[rs] >= self.registers[rt] else 0;
-        self.pc += 1
+        self.pc += 4
 
     def instr_nop(self):
-        self.pc += 1
+        self.pc += 4
 
     def run(self, max_cycles : int = 500):
         if not self.instructions:
             print("No program loaded.");
             return
         cycles = 0
-        while 0 <= self.pc < len(self.instructions) and cycles < max_cycles:
-            instruction_word = self.instructions[self.pc]
-            opcode, rs, rt, rd, shamt, func, imm16, imm26 = (
-                (instruction_word >> 26) & 0x3F, (instruction_word >> 21) & 0x1F,
-                (instruction_word >> 16) & 0x1F, (instruction_word >> 11) & 0x1F,
-                (instruction_word >> 6) & 0x1F, instruction_word & 0x7FF,
-                instruction_word & 0xFFFF, instruction_word & 0x3FFFFFF)
+        while self.pc < len(self.instructions)*4 and cycles < max_cycles:
+            # Fetch instruction
+            assert (self.pc % 4) == 0, f"PC not aligned: {self.pc}"
+            instruction_word = self.instructions[self.pc >> 2]
+
+            # Decode fields
+            opcode = (instruction_word >> 26) & 0x3F
+            rs     = (instruction_word >> 21) & 0x1F
+            rt     = (instruction_word >> 16) & 0x1F
+            rd     = (instruction_word >> 11) & 0x1F
+            shamt  = (instruction_word >>  6) & 0x1F
+            func   =  instruction_word        & 0x7FF
+            imm16  =  instruction_word        & 0xFFFF
+            imm26  =  instruction_word        & 0x3FFFFFF
 
             if self.debug_cycles: self.print_cycle_state(cycles, instruction_word)
 
@@ -272,7 +285,11 @@ class ProcessorEmulator:
                 print(f"\nERROR: Unsupported instruction at PC={self.pc} (0x{instruction_word:08x}) with opcode=0x{opcode:02x}")
                 exit(1)
 
-            self.registers[0] = 0; cycles += 1
+            self.registers[0] = 0
+            self.pc = self.pc & 0xFFFFFFFF
+            for i in range(1, 32):
+                self.registers[i] = self.registers[i] & 0xFFFFFFFF
+            cycles += 1
 
         print("-" * 20)
         if cycles >= max_cycles:
@@ -293,6 +310,11 @@ class ProcessorEmulator:
         for i in range(0, 32, 4):
             r1,r2,r3,r4 = self.registers[i:i+4]
             print(f"R{i:02d}: {r1:<11d} R{i+1:02d}: {r2:<11d} R{i+2:02d}: {r3:<11d} R{i+3:02d}: {r4:<11d}")
+        print("\nData Memory:")
+        for i in range(0, len(self.data_memory), 4):
+            chunk = self.data_memory[i:i+4]
+            hex_chunk = ' '.join(f"{byte:02x}" for byte in chunk)
+            print(f"0x{i:04x}: {hex_chunk} = {int.from_bytes(chunk, byteorder='big', signed=True)}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="DLX emulator")

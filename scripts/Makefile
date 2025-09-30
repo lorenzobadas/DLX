@@ -4,13 +4,14 @@
 GIT_ROOT   := $(shell git rev-parse --show-toplevel)
 
 # Other directory paths
-SRC_DIR     := $(GIT_ROOT)/src
-TB_DIR      := $(GIT_ROOT)/src/tb
-ASM_DIR     := $(GIT_ROOT)/asm
-SCRIPTS_DIR := $(GIT_ROOT)/scripts
-SIM_DIR     := $(GIT_ROOT)/sim
-SYN_DIR	    := $(GIT_ROOT)/syn
-PNR_DIR     := $(GIT_ROOT)/pnr
+SRC_DIR      := $(GIT_ROOT)/src
+TB_DIR       := $(GIT_ROOT)/src/tb
+ASM_DIR      := $(GIT_ROOT)/asm
+SCRIPTS_DIR  := $(GIT_ROOT)/scripts
+SIM_DIR      := $(GIT_ROOT)/sim
+EMULATOR_DIR := $(GIT_ROOT)/emulator
+SYN_DIR	     := $(GIT_ROOT)/syn
+PNR_DIR      := $(GIT_ROOT)/pnr
 
 # Find all relevant source files
 PKG_FILES  := $(shell find $(SRC_DIR)/pkg/ -name '*pkg.vhd' -type f)
@@ -78,12 +79,12 @@ alu-tb: clean_sim | $(SIM_DIR)
 
 $(SIM_DIR)/instr_memory.mem: clean_sim | $(SIM_DIR)
 	perl $(SCRIPTS_DIR)/dlxasm.pl -o $(SIM_DIR)/$(ASM_FILENAME).bin -list $(SIM_DIR)/$(ASM_FILENAME).list $(ASM_FILE)
-	rm -f $(SIM_DIR)/$(ASM_FILENAME).bin.hdr $(SIM_DIR)/$(ASM_FILENAME).list
+	rm -f $(SIM_DIR)/$(ASM_FILENAME).bin.hdr
 	cat $(SIM_DIR)/$(ASM_FILENAME).bin | hexdump -v -e '/1 "%02X" /1 "%02X" /1 "%02X" /1 "%02X\n"' > $(SIM_DIR)/$(ASM_FILENAME)_dump.txt
 	rm -f $(SIM_DIR)/$(ASM_FILENAME).bin
 	mv $(SIM_DIR)/$(ASM_FILENAME)_dump.txt $@
 
-cpu-tb: clean_sim $(SIM_DIR)/instr_memory.mem | $(SIM_DIR)
+cpu-tb: clean_sim $(SIM_DIR)/instr_memory.mem $(SIM_DIR)/emulator.log | $(SIM_DIR)
 	cp $(PKG_FILES) $(CPU_SRC) $(CPU_TB_SRC) $(SIM_DIR)
 
 	cd $(SIM_DIR) && \
@@ -101,7 +102,7 @@ cpu-tb: clean_sim $(SIM_DIR)/instr_memory.mem | $(SIM_DIR)
 	vsim \
 		-do $(SCRIPTS_DIR)/tb_cpu.do
 
-post-syn-cpu-tb: clean_sim $(SIM_DIR)/instr_memory.mem | $(SIM_DIR) $(SYN_DIR)/results/cpu.v
+post-syn-cpu-tb: clean_sim $(SIM_DIR)/instr_memory.mem $(SIM_DIR)/emulator.log | $(SIM_DIR) $(SYN_DIR)/results/cpu.v
 	cp $(SYN_DIR)/results/cpu.v $(SIM_DIR)
 	cp $(PKG_FILES) $(CPU_SRC) $(CPU_TB_SRC) $(SIM_DIR)
 	cp $(SRC_DIR)/tb/tb_cpu.v $(SIM_DIR)
@@ -160,7 +161,7 @@ $(SYN_DIR):
 pnr: clean_pnr $(PNR_DIR)/cpu.v
 
 pnr_gui: $(PNR_DIR)/cpu_pnr.enc
-# execute inside the innovus terminal "source $(PNR_DIR)/cpu_pnr.enc"
+# launch innovus from terminal and in the GUI execute -> `source $(PNR_DIR)/cpu_pnr.enc`
 
 $(PNR_DIR)/cpu.v $(PNR_DIR)/cpu_pnr.enc: $(SYN_DIR)/results/cpu.v | $(PNR_DIR) $(PNR_DIR)/netlist
 	cp $(SYN_DIR)/results/cpu.v $(SYN_DIR)/results/cpu.sdc $(PNR_DIR)/netlist
@@ -175,6 +176,13 @@ $(PNR_DIR):
 $(PNR_DIR)/netlist:
 	mkdir -p $(PNR_DIR)/netlist
 	
+
+###################################################
+################ Emulator Targets #################
+###################################################
+$(SIM_DIR)/emulator.log: $(SIM_DIR)/instr_memory.mem | $(SIM_DIR)
+	python3 $(EMULATOR_DIR)/dlx_emulator.py --debug --max_cycles 10000 $(SIM_DIR)/instr_memory.mem > $(SIM_DIR)/emulator.log
+
 
 ################################################
 ################ Clean Targets #################
