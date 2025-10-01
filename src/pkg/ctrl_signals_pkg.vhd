@@ -1,12 +1,14 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 use work.instructions_pkg.all;
 use work.alu_instr_pkg.all;
 
 package ctrl_signals_pkg is
 
     type id_ctrl_t is record
-        immSrc : std_logic; 
+        immSrc : std_logic;
+        jrEn   : std_logic;
     end record;
 
     type ex_ctrl_t is record
@@ -38,7 +40,8 @@ package ctrl_signals_pkg is
     end record;
 
     constant CTRL_SIGNALS_RESET : ctrl_signals_t := (
-        id_ctrl  => (immSrc => '0'),
+        id_ctrl  => (immSrc => '0',
+                     jrEn => '0'),
         ex_ctrl  => (ALUSrc2 => '0',
                      ALUOp   => alu_add,
                      regDest => '0'),
@@ -96,7 +99,11 @@ package body ctrl_signals_pkg is
                     when func_sgeu  => ctrl.ex_ctrl.ALUOp <= alu_sgeu;
                     when func_sleu  => ctrl.ex_ctrl.ALUOp <= alu_sleu;
                     when func_sgtu  => ctrl.ex_ctrl.ALUOp <= alu_sgtu;
-                    when others     => ctrl.ex_ctrl.ALUOp <= alu_add;
+                    when "00000000000" =>
+                        -- NOP instruction 
+                    when others     => 
+                        ctrl.ex_ctrl.ALUOp <= alu_add;
+                        assert false report "Unknown R-type function code: " & integer'image(to_integer(unsigned(func))) severity error;
                 end case;
             when opcode_j =>
                 ctrl.id_ctrl.immSrc  <= '1'; -- j-type immediate
@@ -105,6 +112,18 @@ package body ctrl_signals_pkg is
                 ctrl.mem_ctrl.jumpEn  <= '1';
             when opcode_jal =>
                 ctrl.id_ctrl.immSrc  <= '1'; -- j-type immediate
+                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm (offset)
+                ctrl.ex_ctrl.ALUOp   <= alu_add; -- npc + offset
+                ctrl.mem_ctrl.jumpEn  <= '1';
+                ctrl.wb_ctrl.jalEn   <= '1'; -- write to r31
+                ctrl.wb_ctrl.regWrite<= '1';
+            when opcode_jr =>
+                ctrl.id_ctrl.jrEn   <= '1';
+                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm (offset)
+                ctrl.ex_ctrl.ALUOp   <= alu_add; -- npc + offset
+                ctrl.mem_ctrl.jumpEn  <= '1';
+            when opcode_jalr =>
+                ctrl.id_ctrl.jrEn   <= '1';
                 ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm (offset)
                 ctrl.ex_ctrl.ALUOp   <= alu_add; -- npc + offset
                 ctrl.mem_ctrl.jumpEn  <= '1';
@@ -215,6 +234,7 @@ package body ctrl_signals_pkg is
 
             when others =>
                 ctrl <= CTRL_SIGNALS_RESET;
+                assert false report "Unknown opcode: " & integer'image(to_integer(unsigned(opcode))) severity error;
         end case;
     end procedure;
 

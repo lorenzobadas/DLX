@@ -14,6 +14,8 @@ entity hazard_unit is
         id_regDest_i  : in  std_logic; -- Instruction is R-type (uses rs2 as source)
         id_PCSrc_i    : in  std_logic; -- Branch taken
         id_branchEn_i : in  std_logic; -- Instruction is a branch
+        id_jumpEn_i   : in  std_logic; -- Instruction is a jump
+        id_jrEn_i     : in  std_logic; -- Instruction is a jump register
         -- Outputs
         pc_write_o    : out std_logic;
         if_id_write_o : out std_logic;
@@ -24,7 +26,7 @@ end entity hazard_unit;
 
 architecture beh of hazard_unit is
 begin
-    process(ex_memToReg_i, ex_regWrite_i, ex_rdest_i, id_rs1_i, id_rs2_i, id_regDest_i, id_PCSrc_i, id_branchEn_i)
+    process(ex_memToReg_i, ex_regWrite_i, ex_rdest_i, id_rs1_i, id_rs2_i, id_regDest_i, id_PCSrc_i, id_branchEn_i, id_jumpEn_i, id_jrEn_i)
     begin
         -- Default values: no stall
         pc_write_o <= '1';
@@ -45,8 +47,9 @@ begin
         elsif ex_regWrite_i = '1'   and 
               ex_rdest_i = id_rs1_i and 
               ex_rdest_i /= "00000" and 
-              id_branchEn_i = '1'   then
-            -- Branch hazard detected on rs1
+              (id_branchEn_i = '1' or
+              (id_jumpEn_i = '1' and id_jrEn_i = '1')) then
+            -- Branch/JR hazard detected on rs1
             -- Disable PC
             -- Disable IF/ID register bank
             -- Insert NOP in ID/EX register bank

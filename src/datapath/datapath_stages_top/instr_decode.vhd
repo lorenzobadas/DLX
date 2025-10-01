@@ -31,6 +31,7 @@ entity instr_decode is
         branchOnZero_i : in std_logic;
         jumpEn_i       : in std_logic;
         jalEn_i        : in std_logic;
+        jrEn_i         : in std_logic;
         forwardC_i     : in std_logic
     );
 end entity;
@@ -102,6 +103,7 @@ architecture struct of instr_decode is
     signal rdata1_bypassed : std_logic_vector(nbit-1 downto 0);
     signal rdata1_final    : std_logic_vector(nbit-1 downto 0);
     signal rdata2_bypassed : std_logic_vector(nbit-1 downto 0);
+    signal branch_pc       : std_logic_vector(nbit-1 downto 0);
 begin
     imm_i_type <= (31 downto 16 => instr_i(15)) & instr_i(15 downto 0);
     imm_j_type <= (31 downto 26 => instr_i(25)) & instr_i(25 downto 0);
@@ -138,8 +140,19 @@ begin
             b   => imm,
             cin => '0',
             sub => '0',
-            s   => branch_pc_o,
+            s   => branch_pc,
             cout => open
+        );
+
+    mux_jrEn: mux2to1
+        generic map (
+            nbit => nbit
+        )
+        port map (
+            in0_i => branch_pc,
+            in1_i => rdata1_final,
+            sel_i => jrEn_i,
+            out_o => branch_pc_o
         );
 
     PCSrc_o <= (branchEn_i and (rs1_zero xor (not branchOnZero_i))) or jumpEn_i;

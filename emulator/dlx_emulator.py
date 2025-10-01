@@ -50,10 +50,10 @@ class ProcessorEmulator:
         self.pc = self.registers[rs]
 
     def instr_beqz(self, rs : int, offset : int):
-        self.pc += self.sign_extend(offset, 16) if self.registers[rs] == 0 else 4
+        self.pc += 4 + self.sign_extend(offset, 16) if self.registers[rs] == 0 else 4
 
     def instr_bnez(self, rs : int, offset : int):
-        self.pc += self.sign_extend(offset, 16) if self.registers[rs] != 0 else 4
+        self.pc += 4 + self.sign_extend(offset, 16) if self.registers[rs] != 0 else 4
 
     def instr_addi(self, rt : int, rs : int, immediate : int):
         self.registers[rt] = self.registers[rs] + self.sign_extend(immediate, 16);
@@ -177,16 +177,16 @@ class ProcessorEmulator:
         self.registers[rd] = self.registers[rs] ^ self.registers[rt];
         self.pc += 4
 
-    def instr_sll(self, rd : int, rt : int, shamt : int):
-        self.registers[rd] = self.registers[rt] << shamt;
+    def instr_sll(self, rd : int, rs : int, rt : int):
+        self.registers[rd] = self.registers[rs] << self.registers[rt];
         self.pc += 4
 
-    def instr_srl(self, rd : int, rt : int, shamt : int):
-        self.registers[rd] = (self.registers[rt] & 0xFFFFFFFF) >> shamt;
+    def instr_srl(self, rd : int, rs : int, rt : int):
+        self.registers[rd] = (self.registers[rs] & 0xFFFFFFFF) >> self.registers[rt];
         self.pc += 4
 
-    def instr_sra(self, rd : int, rt : int, shamt : int):
-        self.registers[rd] = self.registers[rt] >> shamt;
+    def instr_sra(self, rd : int, rs : int, rt : int):
+        self.registers[rd] = self.registers[rs] >> self.registers[rt];
         self.pc += 4
 
     def instr_slt(self, rd : int, rs : int, rt : int):
@@ -231,7 +231,6 @@ class ProcessorEmulator:
             rs     = (instruction_word >> 21) & 0x1F
             rt     = (instruction_word >> 16) & 0x1F
             rd     = (instruction_word >> 11) & 0x1F
-            shamt  = (instruction_word >>  6) & 0x1F
             func   =  instruction_word        & 0x7FF
             imm16  =  instruction_word        & 0xFFFF
             imm26  =  instruction_word        & 0x3FFFFFF
@@ -244,9 +243,9 @@ class ProcessorEmulator:
                 elif func == 0x24: self.instr_and(rd, rs, rt)
                 elif func == 0x25: self.instr_or(rd, rs, rt)
                 elif func == 0x26: self.instr_xor(rd, rs, rt)
-                elif func == 0x04: self.instr_sll(rd, rt, shamt)
-                elif func == 0x06: self.instr_srl(rd, rt, shamt)
-                elif func == 0x07: self.instr_sra(rd, rt, shamt)
+                elif func == 0x04: self.instr_sll(rd, rs, rt)
+                elif func == 0x06: self.instr_srl(rd, rs, rt)
+                elif func == 0x07: self.instr_sra(rd, rs, rt)
                 elif func == 0x2a: self.instr_slt(rd, rs, rt)
                 elif func == 0x2b: self.instr_sgt(rd, rs, rt)
                 elif func == 0x28: self.instr_seq(rd, rs, rt)
