@@ -61,7 +61,7 @@ elaborate -lib work $top_entity
 set clock_name "CLOCK"
 
 if {$flatten == 1} {
-    set clock_period 1.38
+    set clock_period 1.50
 } else {
     set clock_period 1.75
 }
