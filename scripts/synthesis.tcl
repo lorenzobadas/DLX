@@ -63,7 +63,7 @@ set clock_name "CLOCK"
 if {$flatten == 1} {
     set clock_period 1.50
 } else {
-    set clock_period 1.75
+    set clock_period 1.78
 }
 
 create_clock -name $clock_name -period $clock_period clk_i
@@ -90,11 +90,6 @@ report_power   > "$outdir/power.rpt"
 report_area    > "$outdir/area.rpt"
 report_timing  > "$outdir/timing.rpt"
 report_clocks  > "$outdir/clocks.rpt"
-
-# Make sure the design is ungrouped before writing out the netlist
-if { $flatten == 0 } {
-    ungroup -all -flatten
-}
 
 change_names -hierarchy -rules verilog
 
