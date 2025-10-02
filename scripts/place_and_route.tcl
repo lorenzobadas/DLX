@@ -1,7 +1,7 @@
 set_global _enable_mmmc_by_default_flow      $CTE::mmmc_default
 suppressMessage ENCEXT-2799
 
-source design.globals
+source ../design.globals
 
 set init_design_netlisttype verilog
 set init_design_settop 1
@@ -10,7 +10,7 @@ set init_verilog ./netlist/cpu.v
 set init_lef_file /eda/dk/nangate45/lef/NangateOpenCellLibrary.lef
 set init_gnd_net VSS
 set init_pwr_net VDD
-set init_mmmc_file mmm_design.tcl
+set init_mmmc_file ../mmm_design.tcl
 init_design
 set_global _enable_mmmc_by_default_flow      $CTE::mmmc_default
 suppressMessage ENCEXT-2799

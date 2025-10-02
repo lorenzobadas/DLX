@@ -45,8 +45,6 @@ if {![info exists outdir]} {
     quit
 }
 
-file mkdir $outdir
-
 set files [concat   [findFiles $rootdir/src "instructions_pkg.vhd"] \
                     [findFiles $rootdir/src "alu_instr_pkg.vhd"] \
                     [findFiles $rootdir/src "ctrl_signals_pkg.vhd"] \
@@ -60,10 +58,14 @@ elaborate -lib work $top_entity
 
 set clock_name "CLOCK"
 
-if {$flatten == 1} {
+if {$flatten == "all"} {
     set clock_period 1.50
-} else {
+} elseif {$flatten == "auto"} {
     set clock_period 1.78
+} elseif {$flatten == "none"} {
+    set clock_period 2.00
+} else {
+    error "Unknown flatten option: $flatten"
 }
 
 create_clock -name $clock_name -period $clock_period clk_i
@@ -78,11 +80,15 @@ set_load $OLOAD [all_outputs]
 
 set_max_delay -from [all_inputs] -to [all_outputs] $clock_period
 
-if { $flatten == 1 } {
+if { $flatten == "all" } {
     ungroup -all -flatten
     compile_ultra
-} else {
+} elseif { $flatten == "auto" } {
     compile -map_effort high -auto_ungroup delay
+} elseif { $flatten == "none" } {
+    compile_ultra
+} else {
+    error "Unknown flatten option: $flatten"
 }
 
 puts "## Writing Reports ##"

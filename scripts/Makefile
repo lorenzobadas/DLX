@@ -29,7 +29,8 @@ ASM_FILE     ?= $(shell find $(ASM_DIR) -type f -name 'add*.asm' | head -1)
 ASM_FILENAME := $(basename $(notdir $(ASM_FILE)))
 
 # Default synthesis option
-FLATTEN ?= 1
+# Options: all, auto, none
+FLATTEN ?= all
 
 $(SRC_DIR)/pkg/instructions_pkg.vhd: 
 	python3 $(SCRIPTS_DIR)/instructions_pkg_generator.py $(SCRIPTS_DIR)/instructions.json > $@
@@ -143,42 +144,49 @@ $(SIM_DIR):
 ################ Synthesis Targets #################
 ####################################################
 
-synthesis: clean_syn $(SYN_DIR)/results/cpu.v
+synthesis: clean_syn $(SYN_DIR)/results_$(FLATTEN)/cpu.v
 
-$(SYN_DIR)/results/cpu.v: | $(SYN_DIR)
+$(SYN_DIR)/results_$(FLATTEN)/cpu.v: | $(SYN_DIR) $(SYN_DIR)/results_$(FLATTEN)
 
 	cp .synopsys_dc.setup $(SYN_DIR)
 
 	cd $(SYN_DIR) && \
 	dc_shell-xg-t \
-		-x "set flatten $(FLATTEN); set rootdir {$(GIT_ROOT)}; set outdir {$(SYN_DIR)/results}; source $(SCRIPTS_DIR)/synthesis.tcl" \
-		| tee $(SYN_DIR)/dc_shell.log
+		-x "set flatten $(FLATTEN); set rootdir {$(GIT_ROOT)}; set outdir {$(SYN_DIR)/results_$(FLATTEN)}; source $(SCRIPTS_DIR)/synthesis.tcl" \
+		| tee $(SYN_DIR)/results_$(FLATTEN)/dc_shell.log
 
 $(SYN_DIR):
 	mkdir -p $(SYN_DIR)
+
+$(SYN_DIR)/results_$(FLATTEN):
+	mkdir -p $(SYN_DIR)/results_$(FLATTEN)
 
 ##############################################
 ################ PnR Targets #################
 ##############################################
 
-pnr: clean_pnr $(PNR_DIR)/cpu.v
+pnr: clean_pnr $(PNR_DIR)/results_$(FLATTEN)/cpu.v
 
 pnr_gui: $(PNR_DIR)/cpu_pnr.enc
 # launch innovus from terminal and in the GUI execute -> `source $(PNR_DIR)/cpu_pnr.enc`
 
-$(PNR_DIR)/cpu.v $(PNR_DIR)/cpu_pnr.enc: $(SYN_DIR)/results/cpu.v | $(PNR_DIR) $(PNR_DIR)/netlist
-	cp $(SYN_DIR)/results/cpu.v $(SYN_DIR)/results/cpu.sdc $(PNR_DIR)/netlist
+$(PNR_DIR)/results_$(FLATTEN)/cpu.v $(PNR_DIR)/results_$(FLATTEN)/cpu_pnr.enc: $(SYN_DIR)/results_$(FLATTEN)/cpu.v | $(PNR_DIR) $(PNR_DIR)/results_$(FLATTEN) $(PNR_DIR)/results_$(FLATTEN)/netlist
+
+	cp $(SYN_DIR)/results_$(FLATTEN)/cpu.v $(SYN_DIR)/results_$(FLATTEN)/cpu.sdc $(PNR_DIR)/results_$(FLATTEN)/netlist
 	cp design.globals place_and_route.tcl mmm_design.tcl $(PNR_DIR)
 
-	cd $(PNR_DIR) && \
-	innovus -no_gui -batch -file place_and_route.tcl
+	cd $(PNR_DIR)/results_$(FLATTEN) && \
+	innovus -no_gui -batch -file ../place_and_route.tcl
 
 $(PNR_DIR):
 	mkdir -p $(PNR_DIR)
 
-$(PNR_DIR)/netlist:
-	mkdir -p $(PNR_DIR)/netlist
-	
+$(PNR_DIR)/results_$(FLATTEN):
+	mkdir -p $(PNR_DIR)/results_$(FLATTEN)
+
+$(PNR_DIR)/results_$(FLATTEN)/netlist:
+	mkdir -p $(PNR_DIR)/results_$(FLATTEN)/netlist
+
 
 ###################################################
 ################ Emulator Targets #################
@@ -195,9 +203,15 @@ clean_sim:
 	rm -rf  $(SIM_DIR)/*
 
 clean_syn:
-	rm -rf  $(SYN_DIR)/*
+	rm -rf  $(SYN_DIR)/results_$(FLATTEN)/*
 
 clean_pnr:
-	rm -rf  $(PNR_DIR)/*
+	rm -rf  $(PNR_DIR)/results_$(FLATTEN)/*
 	
-clean: clean_sim clean_syn clean_pnr
+purge_syn:
+	rm -rf  $(SYN_DIR)/*
+
+purge_pnr:
+	rm -rf  $(PNR_DIR)/*
+
+clean: clean_sim purge_syn purge_pnr
