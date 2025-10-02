@@ -28,6 +28,9 @@ CPU_TB_SRC := $(shell find $(TB_DIR) -name '*cpu*.vhd' -type f)
 ASM_FILE     ?= $(shell find $(ASM_DIR) -type f -name 'add*.asm' | head -1)
 ASM_FILENAME := $(basename $(notdir $(ASM_FILE)))
 
+# Default synthesis option
+FLATTEN ?= 1
+
 $(SRC_DIR)/pkg/instructions_pkg.vhd: 
 	python3 $(SCRIPTS_DIR)/instructions_pkg_generator.py $(SCRIPTS_DIR)/instructions.json > $@
 
@@ -148,7 +151,7 @@ $(SYN_DIR)/results/cpu.v: | $(SYN_DIR)
 
 	cd $(SYN_DIR) && \
 	dc_shell-xg-t \
-		-x "set rootdir {$(GIT_ROOT)}; set outdir {$(SYN_DIR)/results}; source $(SCRIPTS_DIR)/synthesis.tcl" \
+		-x "set flatten $(FLATTEN); set rootdir {$(GIT_ROOT)}; set outdir {$(SYN_DIR)/results}; source $(SCRIPTS_DIR)/synthesis.tcl" \
 		| tee $(SYN_DIR)/dc_shell.log
 
 $(SYN_DIR):

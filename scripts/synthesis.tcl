@@ -59,7 +59,12 @@ analyze -library work -format vhdl $files
 elaborate -lib work $top_entity
 
 set clock_name "CLOCK"
-set clock_period 1.38
+
+if {$flatten == 1} {
+    set clock_period 1.38
+} else {
+    set clock_period 1.75
+}
 
 create_clock -name $clock_name -period $clock_period clk_i
 
@@ -73,14 +78,23 @@ set_load $OLOAD [all_outputs]
 
 set_max_delay -from [all_inputs] -to [all_outputs] $clock_period
 
-ungroup -all -flatten
-compile_ultra
+if { $flatten == 1 } {
+    ungroup -all -flatten
+    compile_ultra
+} else {
+    compile -map_effort high -auto_ungroup delay
+}
 
 puts "## Writing Reports ##"
 report_power   > "$outdir/power.rpt"
 report_area    > "$outdir/area.rpt"
 report_timing  > "$outdir/timing.rpt"
 report_clocks  > "$outdir/clocks.rpt"
+
+# Make sure the design is ungrouped before writing out the netlist
+if { $flatten == 0 } {
+    ungroup -all -flatten
+}
 
 change_names -hierarchy -rules verilog
 
