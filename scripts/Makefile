@@ -106,8 +106,8 @@ cpu-tb: clean_sim $(SIM_DIR)/instr_memory.mem $(SIM_DIR)/emulator.log | $(SIM_DI
 	vsim \
 		-do $(SCRIPTS_DIR)/tb_cpu.do
 
-post-syn-cpu-tb: clean_sim $(SIM_DIR)/instr_memory.mem $(SIM_DIR)/emulator.log | $(SIM_DIR) $(SYN_DIR)/results/cpu.v
-	cp $(SYN_DIR)/results/cpu.v $(SIM_DIR)
+post-syn-cpu-tb: clean_sim $(SIM_DIR)/instr_memory.mem $(SIM_DIR)/emulator.log | $(SIM_DIR) $(SYN_DIR)/results_$(FLATTEN)/cpu.v
+	cp $(SYN_DIR)/results_$(FLATTEN)/cpu.v $(SIM_DIR)
 	cp $(PKG_FILES) $(CPU_SRC) $(CPU_TB_SRC) $(SIM_DIR)
 	cp $(SRC_DIR)/tb/tb_cpu.v $(SIM_DIR)
 
