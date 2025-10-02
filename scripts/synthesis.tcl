@@ -61,7 +61,7 @@ set clock_name "CLOCK"
 if {$flatten == "all"} {
     set clock_period 1.50
 } elseif {$flatten == "auto"} {
-    set clock_period 1.78
+    set clock_period 1.80
 } elseif {$flatten == "none"} {
     set clock_period 2.00
 } else {
