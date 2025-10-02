@@ -86,7 +86,7 @@ if { $flatten == "all" } {
 } elseif { $flatten == "auto" } {
     compile -map_effort high -auto_ungroup delay
 } elseif { $flatten == "none" } {
-    compile_ultra
+    compile -map_effort high
 } else {
     error "Unknown flatten option: $flatten"
 }
