@@ -37,19 +37,19 @@ architecture struct of cpu is
         port (
             instr_i         : in std_logic_vector(nbit-1 downto 0);
             immSrc_o        : out std_logic;
-            jrEn_o          : out std_logic;
-            ALUSrc2_o       : out std_logic;
-            ALUOp_o         : out alu_op_t;
             regDest_o       : out std_logic;
+            jumpEn_o        : out std_logic;
+            jrEn_o          : out std_logic;
             branchEn_o      : out std_logic;
             branchOnZero_o  : out std_logic;
-            jumpEn_o        : out std_logic;
+            ALUSrc2_o       : out std_logic;
+            ALUOp_o         : out alu_op_t;
+            jalEn_o         : out std_logic;
             memWrite_o      : out std_logic;
             memDataFormat_o : out std_logic_vector(1 downto 0);
             memDataSign_o   : out std_logic;
             memToReg_o      : out std_logic;
-            regWrite_o      : out std_logic;
-            jalEn_o         : out std_logic
+            regWrite_o      : out std_logic
         );
     end component;
 
@@ -393,13 +393,13 @@ begin
     fetch_inst: instr_fetch
         generic map (nbit => nbit)
         port map (
-            clk_i   => clk_i,
-            reset_i => rst_i,
-            pc_enable_i => pc_enable,
-            PCSrc_i => id_PCSrc,
-            branch_pc_i => id_branch_pc,
+            clk_i        => clk_i,
+            reset_i      => rst_i,
+            pc_enable_i  => pc_enable,
+            PCSrc_i      => id_PCSrc,
+            branch_pc_i  => id_branch_pc,
             instr_addr_o => if_instr_addr,
-            npc_o => if_npc
+            npc_o        => if_npc
         );
 
     -- IF/ID Pipeline Register
@@ -422,19 +422,19 @@ begin
         port map (
             instr_i         => id_instr,
             immSrc_o        => id_immSrc,
-            jrEn_o          => id_jrEn,
-            ALUSrc2_o       => id_ALUSrc2,
-            ALUOp_o         => id_ALUOp,
             regDest_o       => id_regDest,
+            jumpEn_o        => id_jumpEn,
+            jrEn_o          => id_jrEn,
             branchEn_o      => id_branchEn,
             branchOnZero_o  => id_branchOnZero,
-            jumpEn_o        => id_jumpEn,
+            ALUSrc2_o       => id_ALUSrc2,
+            ALUOp_o         => id_ALUOp,
+            jalEn_o         => id_jalEn,
             memWrite_o      => id_memWrite,
             memDataFormat_o => id_memDataFormat,
             memDataSign_o   => id_memDataSign,
             memToReg_o      => id_memToReg,
-            regWrite_o      => id_regWrite,
-            jalEn_o         => id_jalEn
+            regWrite_o      => id_regWrite
         );
 
     -- Decode Stage
@@ -638,16 +638,16 @@ begin
         );
 
     -- Instruction Memory
-    imem_en_o <= '1';
+    imem_en_o   <= '1';
     imem_addr_o <= if_instr_addr;
-    if_instr <= imem_dout_i;
+    if_instr    <= imem_dout_i;
     -- Data Memory
-    dmem_en_o <= '1';
-    dmem_we_o <= mem_memWrite;
-    dmem_addr_o <= mem_dmem_addr;
-    dmem_din_o <= mem_rdata2;
+    dmem_en_o          <= '1';
+    dmem_we_o          <= mem_memWrite;
+    dmem_addr_o        <= mem_dmem_addr;
+    dmem_din_o         <= mem_rdata2;
     dmem_data_format_o <= mem_memDataFormat;
-    dmem_data_sign_o <= mem_memDataSign;
-    mem_dout <= dmem_dout_i;
+    dmem_data_sign_o   <= mem_memDataSign;
+    mem_dout           <= dmem_dout_i;
     
 end architecture;

@@ -7,21 +7,22 @@ use work.alu_instr_pkg.all;
 package ctrl_signals_pkg is
 
     type id_ctrl_t is record
-        immSrc : std_logic;
-        jrEn   : std_logic;
+        immSrc       : std_logic;
+        regDest      : std_logic;
+        jumpEn       : std_logic;
+        jrEn         : std_logic;
+        branchEn     : std_logic;
+        branchOnZero : std_logic;
     end record;
 
     type ex_ctrl_t is record
         ALUSrc2 : std_logic;
         ALUOp   : alu_op_t;
-        regDest : std_logic;
+        jalEn   : std_logic;
     end record;
 
     type mem_ctrl_t is record
-        branchOnZero : std_logic;
-        branchEn  : std_logic;
-        jumpEn    : std_logic;
-        memWrite  : std_logic;
+        memWrite      : std_logic;
         memDataFormat : std_logic_vector(1 downto 0);
         memDataSign   : std_logic;
     end record;
@@ -29,7 +30,6 @@ package ctrl_signals_pkg is
     type wb_ctrl_t is record
         memToReg  : std_logic;
         regWrite  : std_logic;
-        jalEn     : std_logic;
     end record;
 
     type ctrl_signals_t is record
@@ -40,20 +40,28 @@ package ctrl_signals_pkg is
     end record;
 
     constant CTRL_SIGNALS_RESET : ctrl_signals_t := (
-        id_ctrl  => (immSrc => '0',
-                     jrEn => '0'),
-        ex_ctrl  => (ALUSrc2 => '0',
-                     ALUOp   => alu_add,
-                     regDest => '0'),
-        mem_ctrl => (branchOnZero => '0',
-                     branchEn  => '0',
-                     jumpEn    => '0',
-                     memWrite  => '0',
-                     memDataFormat => "00",
-                     memDataSign   => '0'),
-        wb_ctrl  => (memToReg => '0',
-                     regWrite => '0',
-                     jalEn    => '0')
+        id_ctrl  => (
+            immSrc       => '0',
+            regDest      => '0',
+            jumpEn       => '0',
+            jrEn         => '0',
+            branchEn     => '0',
+            branchOnZero => '0'
+        ),
+        ex_ctrl  => (
+            ALUSrc2 => '0',
+            ALUOp   => alu_add,
+            jalEn   => '0'
+        ),
+        mem_ctrl => (
+            memWrite      => '0',
+            memDataFormat => "00",
+            memDataSign   => '0'
+        ),
+        wb_ctrl  => (
+            memToReg => '0',
+            regWrite => '0'
+        )
     );
 
     procedure get_control_signals(
@@ -77,8 +85,8 @@ package body ctrl_signals_pkg is
 
         case opcode is
             when "000000" => -- R-type
-                ctrl.ex_ctrl.ALUSrc2 <= '0'; -- rdata2
-                ctrl.ex_ctrl.regDest <= '1';
+                ctrl.ex_ctrl.ALUSrc2  <= '0';
+                ctrl.id_ctrl.regDest  <= '1';
                 ctrl.wb_ctrl.regWrite <= '1';
                 case func is
                     when func_sll   => ctrl.ex_ctrl.ALUOp <= alu_sll;
@@ -107,130 +115,122 @@ package body ctrl_signals_pkg is
                 end case;
             when opcode_j =>
                 ctrl.id_ctrl.immSrc  <= '1'; -- j-type immediate
+                ctrl.id_ctrl.jumpEn  <= '1';
                 ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm (offset)
-                ctrl.ex_ctrl.ALUOp   <= alu_add; -- npc + offset
-                ctrl.mem_ctrl.jumpEn  <= '1';
             when opcode_jal =>
-                ctrl.id_ctrl.immSrc  <= '1'; -- j-type immediate
-                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm (offset)
-                ctrl.ex_ctrl.ALUOp   <= alu_add; -- npc + offset
-                ctrl.mem_ctrl.jumpEn  <= '1';
-                ctrl.wb_ctrl.jalEn   <= '1'; -- write to r31
-                ctrl.wb_ctrl.regWrite<= '1';
+                ctrl.id_ctrl.immSrc   <= '1'; -- j-type immediate
+                ctrl.id_ctrl.jumpEn   <= '1';
+                ctrl.ex_ctrl.ALUSrc2  <= '1'; -- imm (offset)
+                ctrl.ex_ctrl.jalEn    <= '1'; -- write to r31
+                ctrl.wb_ctrl.regWrite <= '1';
             when opcode_jr =>
-                ctrl.id_ctrl.jrEn   <= '1';
+                ctrl.id_ctrl.jumpEn  <= '1';
+                ctrl.id_ctrl.jrEn    <= '1';
                 ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm (offset)
-                ctrl.ex_ctrl.ALUOp   <= alu_add; -- npc + offset
-                ctrl.mem_ctrl.jumpEn  <= '1';
             when opcode_jalr =>
-                ctrl.id_ctrl.jrEn   <= '1';
-                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm (offset)
-                ctrl.ex_ctrl.ALUOp   <= alu_add; -- npc + offset
-                ctrl.mem_ctrl.jumpEn  <= '1';
-                ctrl.wb_ctrl.jalEn   <= '1'; -- write to r31
-                ctrl.wb_ctrl.regWrite<= '1';
+                ctrl.id_ctrl.jumpEn   <= '1';
+                ctrl.id_ctrl.jrEn     <= '1';
+                ctrl.ex_ctrl.ALUSrc2  <= '1'; -- imm (offset)
+                ctrl.ex_ctrl.jalEn    <= '1'; -- write to r31
+                ctrl.wb_ctrl.regWrite <= '1';
             when opcode_beqz =>
-                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm (offset)
-                ctrl.ex_ctrl.ALUOp   <= alu_add; -- npc + offset
-                ctrl.mem_ctrl.branchEn <= '1';
-                ctrl.mem_ctrl.branchOnZero <= '1';
+                ctrl.id_ctrl.branchEn     <= '1';
+                ctrl.id_ctrl.branchOnZero <= '1';
             when opcode_bnez =>
-                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm (offset)
-                ctrl.ex_ctrl.ALUOp   <= alu_add; -- npc + offset
-                ctrl.mem_ctrl.branchEn <= '1';
-                ctrl.mem_ctrl.branchOnZero <= '0';
+                ctrl.id_ctrl.branchEn     <= '1';
+                ctrl.id_ctrl.branchOnZero <= '0';
             when opcode_addi =>
-                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
-                ctrl.ex_ctrl.ALUOp   <= alu_add; -- rdata1 + imm
-                ctrl.wb_ctrl.regWrite<= '1'; 
+                ctrl.ex_ctrl.ALUSrc2  <= '1';     -- imm
+                ctrl.ex_ctrl.ALUOp    <= alu_add; -- rdata1 + imm
+                ctrl.wb_ctrl.regWrite <= '1'; 
             when opcode_subi =>
-                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm 
-                ctrl.ex_ctrl.ALUOp   <= alu_sub; -- rdata1 - imm
-                ctrl.wb_ctrl.regWrite<= '1';
+                ctrl.ex_ctrl.ALUSrc2  <= '1';     -- imm 
+                ctrl.ex_ctrl.ALUOp    <= alu_sub; -- rdata1 - imm
+                ctrl.wb_ctrl.regWrite <= '1';
             when opcode_andi =>
-                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
-                ctrl.ex_ctrl.ALUOp   <= alu_and; -- rdata1 & imm
-                ctrl.wb_ctrl.regWrite<= '1';
+                ctrl.ex_ctrl.ALUSrc2  <= '1';     -- imm
+                ctrl.ex_ctrl.ALUOp    <= alu_and; -- rdata1 & imm
+                ctrl.wb_ctrl.regWrite <= '1';
             when opcode_ori =>
-                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
-                ctrl.ex_ctrl.ALUOp   <= alu_or; -- rdata1 | imm
-                ctrl.wb_ctrl.regWrite<= '1';
+                ctrl.ex_ctrl.ALUSrc2  <= '1';    -- imm
+                ctrl.ex_ctrl.ALUOp    <= alu_or; -- rdata1 | imm
+                ctrl.wb_ctrl.regWrite <= '1';
             when opcode_xori =>
-                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
-                ctrl.ex_ctrl.ALUOp   <= alu_xor; -- rdata1 ^ imm
-                ctrl.wb_ctrl.regWrite<= '1';
+                ctrl.ex_ctrl.ALUSrc2  <= '1';     -- imm
+                ctrl.ex_ctrl.ALUOp    <= alu_xor; -- rdata1 ^ imm
+                ctrl.wb_ctrl.regWrite <= '1';
             when opcode_slli =>
-                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
-                ctrl.ex_ctrl.ALUOp   <= alu_sll; -- rdata1 << imm
-                ctrl.wb_ctrl.regWrite<= '1';
+                ctrl.ex_ctrl.ALUSrc2  <= '1';     -- imm
+                ctrl.ex_ctrl.ALUOp    <= alu_sll; -- rdata1 << imm
+                ctrl.wb_ctrl.regWrite <= '1';
             when opcode_nop =>
                 -- do nothing and go to the next instruction
                 null;
             when opcode_srli =>
-                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
-                ctrl.ex_ctrl.ALUOp   <= alu_srl; -- rdata1 >> imm
-                ctrl.wb_ctrl.regWrite<= '1';
+                ctrl.ex_ctrl.ALUSrc2  <= '1';     -- imm
+                ctrl.ex_ctrl.ALUOp    <= alu_srl; -- rdata1 >> imm
+                ctrl.wb_ctrl.regWrite <= '1';
             when opcode_snei =>
-                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
-                ctrl.ex_ctrl.ALUOp   <= alu_sne; 
-                ctrl.wb_ctrl.regWrite<= '1';
+                ctrl.ex_ctrl.ALUSrc2  <= '1'; -- imm
+                ctrl.ex_ctrl.ALUOp    <= alu_sne; 
+                ctrl.wb_ctrl.regWrite <= '1';
             when opcode_slei =>
-                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
-                ctrl.ex_ctrl.ALUOp   <= alu_sle; 
-                ctrl.wb_ctrl.regWrite<= '1';
+                ctrl.ex_ctrl.ALUSrc2  <= '1'; -- imm
+                ctrl.ex_ctrl.ALUOp    <= alu_sle; 
+                ctrl.wb_ctrl.regWrite <= '1';
             when opcode_sgei =>
-                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
-                ctrl.ex_ctrl.ALUOp   <= alu_sge; 
-                ctrl.wb_ctrl.regWrite<= '1';
+                ctrl.ex_ctrl.ALUSrc2  <= '1'; -- imm
+                ctrl.ex_ctrl.ALUOp    <= alu_sge; 
+                ctrl.wb_ctrl.regWrite <= '1';
             when opcode_lb =>
-                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
-                ctrl.ex_ctrl.ALUOp   <= alu_add;
-                ctrl.mem_ctrl.memDataFormat <= "00"; -- byte
-                ctrl.mem_ctrl.memDataSign   <= '1';  -- signed
-                ctrl.wb_ctrl.memToReg<= '1';
-                ctrl.wb_ctrl.regWrite<= '1';
+                ctrl.ex_ctrl.ALUSrc2        <= '1';     -- imm
+                ctrl.ex_ctrl.ALUOp          <= alu_add;
+                ctrl.mem_ctrl.memDataFormat <= "00";    -- byte
+                ctrl.mem_ctrl.memDataSign   <= '1';     -- signed
+                ctrl.wb_ctrl.memToReg       <= '1';
+                ctrl.wb_ctrl.regWrite       <= '1';
             when opcode_lbu =>
-                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
-                ctrl.ex_ctrl.ALUOp   <= alu_add;
-                ctrl.mem_ctrl.memDataFormat <= "00"; -- byte
-                ctrl.mem_ctrl.memDataSign   <= '0';  -- unsigned
-                ctrl.wb_ctrl.memToReg<= '1';
-                ctrl.wb_ctrl.regWrite<= '1';
+                ctrl.ex_ctrl.ALUSrc2        <= '1';     -- imm
+                ctrl.ex_ctrl.ALUOp          <= alu_add;
+                ctrl.mem_ctrl.memDataFormat <= "00";    -- byte
+                ctrl.mem_ctrl.memDataSign   <= '0';     -- unsigned
+                ctrl.wb_ctrl.memToReg       <= '1';
+                ctrl.wb_ctrl.regWrite       <= '1';
             when opcode_lh =>
-                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
-                ctrl.ex_ctrl.ALUOp   <= alu_add;
-                ctrl.mem_ctrl.memDataFormat <= "01"; -- halfword
-                ctrl.mem_ctrl.memDataSign   <= '1';  -- signed
-                ctrl.wb_ctrl.memToReg<= '1';
-                ctrl.wb_ctrl.regWrite<= '1';
+                ctrl.ex_ctrl.ALUSrc2        <= '1';     -- imm
+                ctrl.ex_ctrl.ALUOp          <= alu_add;
+                ctrl.mem_ctrl.memDataFormat <= "01";    -- halfword
+                ctrl.mem_ctrl.memDataSign   <= '1';     -- signed
+                ctrl.wb_ctrl.memToReg       <= '1';
+                ctrl.wb_ctrl.regWrite       <= '1';
             when opcode_lhu =>
-                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
-                ctrl.ex_ctrl.ALUOp   <= alu_add;
-                ctrl.mem_ctrl.memDataFormat <= "01"; -- halfword
-                ctrl.mem_ctrl.memDataSign   <= '0';  -- unsigned
-                ctrl.wb_ctrl.memToReg<= '1';
-                ctrl.wb_ctrl.regWrite<= '1';
+                ctrl.ex_ctrl.ALUSrc2        <= '1';     -- imm
+                ctrl.ex_ctrl.ALUOp          <= alu_add;
+                ctrl.mem_ctrl.memDataFormat <= "01";    -- halfword
+                ctrl.mem_ctrl.memDataSign   <= '0';     -- unsigned
+                ctrl.wb_ctrl.memToReg       <= '1';
+                ctrl.wb_ctrl.regWrite       <= '1';
             when opcode_lw =>
-                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
-                ctrl.ex_ctrl.ALUOp   <= alu_add;
-                ctrl.mem_ctrl.memDataFormat <= "10"; -- word
-                ctrl.wb_ctrl.memToReg<= '1';
-                ctrl.wb_ctrl.regWrite<= '1';
+                ctrl.ex_ctrl.ALUSrc2        <= '1';     -- imm
+                ctrl.ex_ctrl.ALUOp          <= alu_add;
+                ctrl.mem_ctrl.memDataFormat <= "10";    -- word
+                ctrl.wb_ctrl.memToReg       <= '1';
+                ctrl.wb_ctrl.regWrite       <= '1';
             when opcode_sb =>
-                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
-                ctrl.ex_ctrl.ALUOp   <= alu_add;
-                ctrl.mem_ctrl.memWrite<= '1';
-                ctrl.mem_ctrl.memDataFormat <= "00"; -- byte
+                ctrl.ex_ctrl.ALUSrc2        <= '1';     -- imm
+                ctrl.ex_ctrl.ALUOp          <= alu_add;
+                ctrl.mem_ctrl.memWrite      <= '1';
+                ctrl.mem_ctrl.memDataFormat <= "00";    -- byte
             when opcode_sh =>
-                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
-                ctrl.ex_ctrl.ALUOp   <= alu_add;
-                ctrl.mem_ctrl.memWrite<= '1';
-                ctrl.mem_ctrl.memDataFormat <= "01"; -- halfword
+                ctrl.ex_ctrl.ALUSrc2        <= '1';     -- imm
+                ctrl.ex_ctrl.ALUOp          <= alu_add;
+                ctrl.mem_ctrl.memWrite      <= '1';
+                ctrl.mem_ctrl.memDataFormat <= "01";    -- halfword
             when opcode_sw =>
-                ctrl.ex_ctrl.ALUSrc2 <= '1'; -- imm
-                ctrl.ex_ctrl.ALUOp   <= alu_add;
-                ctrl.mem_ctrl.memWrite<= '1';
-                ctrl.mem_ctrl.memDataFormat <= "10"; -- word
+                ctrl.ex_ctrl.ALUSrc2        <= '1';     -- imm
+                ctrl.ex_ctrl.ALUOp          <= alu_add;
+                ctrl.mem_ctrl.memWrite      <= '1';
+                ctrl.mem_ctrl.memDataFormat <= "10";    -- word
 
             when others =>
                 ctrl <= CTRL_SIGNALS_RESET;
