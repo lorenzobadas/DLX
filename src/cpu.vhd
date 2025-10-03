@@ -95,18 +95,18 @@ architecture struct of cpu is
             instr_i         : in  std_logic_vector(nbit-1 downto 0);
             waddr_i         : in  std_logic_vector(4 downto 0);
             wbdata_i        : in  std_logic_vector(nbit-1 downto 0);
-            mem_fwd_rdata1_i : in std_logic_vector(nbit-1 downto 0);
+            mem_fwd_rdata_i : in std_logic_vector(nbit-1 downto 0);
             rdata1_o        : out std_logic_vector(nbit-1 downto 0);
             rdata2_o        : out std_logic_vector(nbit-1 downto 0);
             imm_o           : out std_logic_vector(nbit-1 downto 0);
-            rdest_i_type_o  : out std_logic_vector(4 downto 0);
-            rdest_r_type_o  : out std_logic_vector(4 downto 0);
+            rdest_o         : out std_logic_vector(4 downto 0);
             rsrc1_o         : out std_logic_vector(4 downto 0);
             rsrc2_o         : out std_logic_vector(4 downto 0);
             branch_pc_o     : out std_logic_vector(nbit-1 downto 0);
             PCSrc_o         : out std_logic;
             -- Control signals
             immSrc_i       : in std_logic;
+            regDest_i      : in std_logic;
             regWrite_i     : in std_logic;
             branchEn_i     : in std_logic;
             branchOnZero_i : in std_logic;
@@ -150,22 +150,19 @@ architecture struct of cpu is
             rdata1_i        : in  std_logic_vector(nbit-1 downto 0);
             rdata2_i        : in  std_logic_vector(nbit-1 downto 0);
             imm_i           : in  std_logic_vector(nbit-1 downto 0);
-            rdest_i_type_i  : in  std_logic_vector(4 downto 0);
-            rdest_r_type_i  : in  std_logic_vector(4 downto 0);
+            rdest_i         : in  std_logic_vector(4 downto 0);
             rsrc1_i         : in  std_logic_vector(4 downto 0);
             rsrc2_i         : in  std_logic_vector(4 downto 0);
             npc_o           : out std_logic_vector(nbit-1 downto 0);
             rdata1_o        : out std_logic_vector(nbit-1 downto 0);
             rdata2_o        : out std_logic_vector(nbit-1 downto 0);
             imm_o           : out std_logic_vector(nbit-1 downto 0);
-            rdest_i_type_o  : out std_logic_vector(4 downto 0);
-            rdest_r_type_o  : out std_logic_vector(4 downto 0);
+            rdest_o         : out std_logic_vector(4 downto 0);
             rsrc1_o         : out std_logic_vector(4 downto 0);
             rsrc2_o         : out std_logic_vector(4 downto 0);
             -- Control signals
             ALUSrc2_i       : in  std_logic;
             ALUOp_i         : in  alu_op_t;
-            regDest_i       : in  std_logic;
             memWrite_i      : in  std_logic;
             memDataFormat_i : in  std_logic_vector(1 downto 0);
             memDataSign_i   : in  std_logic;
@@ -174,7 +171,6 @@ architecture struct of cpu is
             jalEn_i         : in  std_logic;
             ALUSrc2_o       : out std_logic;
             ALUOp_o         : out alu_op_t;
-            regDest_o       : out std_logic;
             memWrite_o      : out std_logic;
             memDataFormat_o : out  std_logic_vector(1 downto 0);
             memDataSign_o   : out std_logic;
@@ -195,19 +191,13 @@ architecture struct of cpu is
             rdata1_i         : in  std_logic_vector(nbit-1 downto 0);
             rdata2_i         : in  std_logic_vector(nbit-1 downto 0);
             imm_i            : in  std_logic_vector(nbit-1 downto 0);
-            rdest_i_type_i   : in  std_logic_vector(4 downto 0);
-            rdest_r_type_i   : in  std_logic_vector(4 downto 0);
-            mem_fwd_rdata1_i : in std_logic_vector(nbit-1 downto 0);
-            mem_fwd_rdata2_i : in std_logic_vector(nbit-1 downto 0);
-            wb_fwd_rdata1_i  : in std_logic_vector(nbit-1 downto 0);
-            wb_fwd_rdata2_i  : in std_logic_vector(nbit-1 downto 0);
+            mem_fwd_rdata_i  : in  std_logic_vector(nbit-1 downto 0);
+            wb_fwd_rdata_i   : in  std_logic_vector(nbit-1 downto 0);
             rdata2_o         : out std_logic_vector(nbit-1 downto 0);
             aluout_o         : out std_logic_vector(nbit-1 downto 0);
-            rdest_o          : out std_logic_vector(4 downto 0);
             -- Control signals
             ALUSrc2_i        : in  std_logic;
             ALUOp_i          : in  alu_op_t;
-            regDest_i        : in  std_logic;
             jalEn_i          : in  std_logic;
             -- Forwarding signals
             forwardA_i       : in  std_logic_vector(1 downto 0);
@@ -314,88 +304,88 @@ architecture struct of cpu is
     ---------------------------------------------------------------------SIGNALS
     ---------------- Datapath signals ----------------
     -- IF stage signals
-    signal if_npc      : std_logic_vector(nbit-1 downto 0);
-    signal if_instr    : std_logic_vector(nbit-1 downto 0);
-    signal if_instr_addr    : std_logic_vector(imem_addr_size-1 downto 0);
+    signal if_npc        : std_logic_vector(nbit-1 downto 0);
+    signal if_instr      : std_logic_vector(nbit-1 downto 0);
+    signal if_instr_addr : std_logic_vector(imem_addr_size-1 downto 0);
     signal id_branch_pc  : std_logic_vector(nbit-1 downto 0);
-    signal id_PCSrc    : std_logic;
+    signal id_PCSrc      : std_logic;
     -- ID stage signals
-    signal id_npc                   : std_logic_vector(nbit-1 downto 0);
-    signal id_instr                 : std_logic_vector(nbit-1 downto 0);
-    signal id_rdata1                : std_logic_vector(nbit-1 downto 0);
-    signal id_rdata2                : std_logic_vector(nbit-1 downto 0);
-    signal id_imm                   : std_logic_vector(nbit-1 downto 0);
-    signal id_rdest_i_type, id_rdest_r_type   : std_logic_vector(4 downto 0);
-    signal id_rsrc1, id_rsrc2       : std_logic_vector(4 downto 0);
-    signal id_zero                  : std_logic;
+    signal id_npc    : std_logic_vector(nbit-1 downto 0);
+    signal id_instr  : std_logic_vector(nbit-1 downto 0);
+    signal id_rdata1 : std_logic_vector(nbit-1 downto 0);
+    signal id_rdata2 : std_logic_vector(nbit-1 downto 0);
+    signal id_imm    : std_logic_vector(nbit-1 downto 0);
+    signal id_rdest  : std_logic_vector(4 downto 0);
+    signal id_rsrc1  : std_logic_vector(4 downto 0);
+    signal id_rsrc2  : std_logic_vector(4 downto 0);
+    signal id_zero   : std_logic;
     -- EX stage signals
-    signal ex_npc                   : std_logic_vector(nbit-1 downto 0);
-    signal ex_rdata1                : std_logic_vector(nbit-1 downto 0);
-    signal ex_rdata2                : std_logic_vector(nbit-1 downto 0);
-    signal ex_rdata2_final          : std_logic_vector(nbit-1 downto 0);
-    signal ex_imm                   : std_logic_vector(nbit-1 downto 0);
-    signal ex_aluout                : std_logic_vector(nbit-1 downto 0);
-    signal ex_rdest                 : std_logic_vector(4 downto 0);
-    signal ex_rdest_i_type, ex_rdest_r_type   : std_logic_vector(4 downto 0);
-    signal ex_rsrc1, ex_rsrc2       : std_logic_vector(4 downto 0);
-    signal forwardA                 : std_logic_vector(1 downto 0);
-    signal forwardB                 : std_logic_vector(1 downto 0);
-    signal forwardC                 : std_logic;
+    signal ex_npc          : std_logic_vector(nbit-1 downto 0);
+    signal ex_rdata1       : std_logic_vector(nbit-1 downto 0);
+    signal ex_rdata2       : std_logic_vector(nbit-1 downto 0);
+    signal ex_rdata2_final : std_logic_vector(nbit-1 downto 0);
+    signal ex_imm          : std_logic_vector(nbit-1 downto 0);
+    signal ex_aluout       : std_logic_vector(nbit-1 downto 0);
+    signal ex_rdest        : std_logic_vector(4 downto 0);
+    signal ex_rsrc1        : std_logic_vector(4 downto 0);
+    signal ex_rsrc2        : std_logic_vector(4 downto 0);
+    signal forwardA        : std_logic_vector(1 downto 0);
+    signal forwardB        : std_logic_vector(1 downto 0);
+    signal forwardC        : std_logic;
     -- MEM stage signals
-    signal mem_pc          : std_logic_vector(nbit-1 downto 0) := (others => '0');
-    signal mem_aluout      : std_logic_vector(nbit-1 downto 0);
-    signal mem_rdata2      : std_logic_vector(nbit-1 downto 0);
-    signal mem_dout        : std_logic_vector(nbit-1 downto 0);
-    signal mem_rdest       : std_logic_vector(4 downto 0);
-    signal mem_dmem_addr   : std_logic_vector(dmem_addr_size-1 downto 0);
-    signal mem_dmem_din    : std_logic_vector(dmem_width-1 downto 0);
+    signal mem_pc        : std_logic_vector(nbit-1 downto 0);
+    signal mem_aluout    : std_logic_vector(nbit-1 downto 0);
+    signal mem_rdata2    : std_logic_vector(nbit-1 downto 0);
+    signal mem_dout      : std_logic_vector(nbit-1 downto 0);
+    signal mem_rdest     : std_logic_vector(4 downto 0);
+    signal mem_dmem_addr : std_logic_vector(dmem_addr_size-1 downto 0);
+    signal mem_dmem_din  : std_logic_vector(dmem_width-1 downto 0);
     -- WB stage signals
-    signal wb_data          : std_logic_vector(nbit-1 downto 0);
-    signal wb_aluout        : std_logic_vector(nbit-1 downto 0);
-    signal wb_dout           : std_logic_vector(nbit-1 downto 0);
-    signal wb_rdest         : std_logic_vector(4 downto 0);
+    signal wb_data   : std_logic_vector(nbit-1 downto 0);
+    signal wb_aluout : std_logic_vector(nbit-1 downto 0);
+    signal wb_dout   : std_logic_vector(nbit-1 downto 0);
+    signal wb_rdest  : std_logic_vector(4 downto 0);
 
     ---------------- Control signals ----------------
     -- from ID stage (Control Unit)
-    signal id_immSrc    : std_logic;
-    signal id_jrEn      : std_logic;
-    signal id_ALUSrc2   : std_logic;
-    signal id_ALUOp     : alu_op_t;
-    signal id_regDest   : std_logic;
-    signal id_branchEn  : std_logic;
-    signal id_branchOnZero: std_logic;
-    signal id_jumpEn    : std_logic;
-    signal id_memWrite  : std_logic;
-    signal id_memDataFormat: std_logic_vector(1 downto 0);
-    signal id_memDataSign  : std_logic;
-    signal id_memToReg  : std_logic;
-    signal id_regWrite  : std_logic;
-    signal id_jalEn     : std_logic;
+    signal id_immSrc        : std_logic;
+    signal id_jrEn          : std_logic;
+    signal id_ALUSrc2       : std_logic;
+    signal id_ALUOp         : alu_op_t;
+    signal id_regDest       : std_logic;
+    signal id_branchEn      : std_logic;
+    signal id_branchOnZero  : std_logic;
+    signal id_jumpEn        : std_logic;
+    signal id_memWrite      : std_logic;
+    signal id_memDataFormat : std_logic_vector(1 downto 0);
+    signal id_memDataSign   : std_logic;
+    signal id_memToReg      : std_logic;
+    signal id_regWrite      : std_logic;
+    signal id_jalEn         : std_logic;
     -- from ID/EX stage
-    signal ex_ALUSrc2   : std_logic;
-    signal ex_ALUOp     : alu_op_t;
-    signal ex_regDest   : std_logic;
-    signal ex_memWrite  : std_logic;
-    signal ex_memDataFormat: std_logic_vector(1 downto 0);
-    signal ex_memDataSign: std_logic;
-    signal ex_memToReg  : std_logic;
-    signal ex_regWrite  : std_logic;
-    signal ex_jalEn     : std_logic;
+    signal ex_ALUSrc2       : std_logic;
+    signal ex_ALUOp         : alu_op_t;
+    signal ex_memWrite      : std_logic;
+    signal ex_memDataFormat : std_logic_vector(1 downto 0);
+    signal ex_memDataSign   : std_logic;
+    signal ex_memToReg      : std_logic;
+    signal ex_regWrite      : std_logic;
+    signal ex_jalEn         : std_logic;
     -- from EX/MEM stage
-    signal mem_memWrite  : std_logic;
-    signal mem_memDataFormat: std_logic_vector(1 downto 0);
-    signal mem_memDataSign: std_logic;
-    signal mem_memToReg  : std_logic;
-    signal mem_regWrite  : std_logic;
+    signal mem_memWrite      : std_logic;
+    signal mem_memDataFormat : std_logic_vector(1 downto 0);
+    signal mem_memDataSign   : std_logic;
+    signal mem_memToReg      : std_logic;
+    signal mem_regWrite      : std_logic;
     -- from MEM/WB stage
-    signal wb_memToReg  : std_logic;
-    signal wb_regWrite  : std_logic;
+    signal wb_memToReg : std_logic;
+    signal wb_regWrite : std_logic;
 
     ---------------- Hazard signals ----------------
-    signal pc_enable     : std_logic;
-    signal if_id_write   : std_logic;
-    signal if_id_flush   : std_logic;
-    signal id_ex_nop     : std_logic;
+    signal pc_enable   : std_logic;
+    signal if_id_write : std_logic;
+    signal if_id_flush : std_logic;
+    signal id_ex_nop   : std_logic;
 
 begin
     ---------------------------------------------------------------------INSTANCES
@@ -451,24 +441,24 @@ begin
     decode_inst: instr_decode
         generic map (nbit => nbit)
         port map (
-            clk_i          => clk_i,
-            reset_i        => rst_i,
-            npc_i          => id_npc,
-            instr_i        => id_instr,
-            waddr_i        => wb_rdest,
-            wbdata_i       => wb_data,
-            mem_fwd_rdata1_i => mem_aluout,
-            rdata1_o       => id_rdata1,
-            rdata2_o       => id_rdata2,
-            imm_o          => id_imm,
-            rdest_i_type_o => id_rdest_i_type,
-            rdest_r_type_o => id_rdest_r_type,
-            rsrc1_o        => id_rsrc1,
-            rsrc2_o        => id_rsrc2,
-            branch_pc_o    => id_branch_pc,
-            PCSrc_o        => id_PCSrc,
+            clk_i           => clk_i,
+            reset_i         => rst_i,
+            npc_i           => id_npc,
+            instr_i         => id_instr,
+            waddr_i         => wb_rdest,
+            wbdata_i        => wb_data,
+            mem_fwd_rdata_i => mem_aluout,
+            rdata1_o        => id_rdata1,
+            rdata2_o        => id_rdata2,
+            imm_o           => id_imm,
+            rdest_o         => id_rdest,
+            rsrc1_o         => id_rsrc1,
+            rsrc2_o         => id_rsrc2,
+            branch_pc_o     => id_branch_pc,
+            PCSrc_o         => id_PCSrc,
             -- Control signals
             immSrc_i       => id_immSrc,
+            regDest_i      => id_regDest,
             regWrite_i     => wb_regWrite,
             branchEn_i     => id_branchEn,
             branchOnZero_i => id_branchOnZero,
@@ -508,22 +498,19 @@ begin
             rdata1_i       => id_rdata1,
             rdata2_i       => id_rdata2,
             imm_i          => id_imm,
-            rdest_i_type_i => id_rdest_i_type,
-            rdest_r_type_i => id_rdest_r_type,
+            rdest_i        => id_rdest,
             rsrc1_i        => id_rsrc1,
             rsrc2_i        => id_rsrc2,
             npc_o          => ex_npc,
             rdata1_o       => ex_rdata1,
             rdata2_o       => ex_rdata2,
             imm_o          => ex_imm,
-            rdest_i_type_o => ex_rdest_i_type,
-            rdest_r_type_o => ex_rdest_r_type,
+            rdest_o        => ex_rdest,
             rsrc1_o        => ex_rsrc1,
             rsrc2_o        => ex_rsrc2,
             -- Control signals
             ALUSrc2_i       => id_ALUSrc2,
             ALUOp_i         => id_ALUOp,
-            regDest_i       => id_regDest,
             memWrite_i      => id_memWrite,
             memDataFormat_i => id_memDataFormat,
             memDataSign_i   => id_memDataSign,
@@ -532,7 +519,6 @@ begin
             jalEn_i         => id_jalEn,
             ALUSrc2_o       => ex_ALUSrc2,
             ALUOp_o         => ex_ALUOp,
-            regDest_o       => ex_regDest,
             memWrite_o      => ex_memWrite,
             memDataFormat_o => ex_memDataFormat,
             memDataSign_o   => ex_memDataSign,
@@ -545,25 +531,19 @@ begin
     execute_inst: execution
         generic map (nbit => nbit)
         port map (
-            clk_i          => clk_i,
-            reset_i        => rst_i,
-            npc_i          => ex_npc,
-            rdata1_i       => ex_rdata1,
-            rdata2_i       => ex_rdata2,
-            imm_i          => ex_imm,
-            rdest_i_type_i => ex_rdest_i_type,
-            rdest_r_type_i => ex_rdest_r_type,
-            mem_fwd_rdata1_i  => mem_aluout,
-            mem_fwd_rdata2_i  => mem_aluout,
-            wb_fwd_rdata1_i => wb_data,
-            wb_fwd_rdata2_i => wb_data,
-            rdata2_o       => ex_rdata2_final,
-            aluout_o       => ex_aluout,
-            rdest_o        => ex_rdest,
+            clk_i           => clk_i,
+            reset_i         => rst_i,
+            npc_i           => ex_npc,
+            rdata1_i        => ex_rdata1,
+            rdata2_i        => ex_rdata2,
+            imm_i           => ex_imm,
+            mem_fwd_rdata_i => mem_aluout,
+            wb_fwd_rdata_i  => wb_data,
+            rdata2_o        => ex_rdata2_final,
+            aluout_o        => ex_aluout,
             -- Control signals
             ALUSrc2_i      => ex_ALUSrc2,
             ALUOp_i        => ex_ALUOp,
-            regDest_i      => ex_regDest,
             jalEn_i        => ex_jalEn,
             -- Forwarding signals
             forwardA_i     => forwardA,

@@ -14,19 +14,13 @@ entity execution is
         rdata1_i         : in  std_logic_vector(nbit-1 downto 0);
         rdata2_i         : in  std_logic_vector(nbit-1 downto 0);
         imm_i            : in  std_logic_vector(nbit-1 downto 0);
-        rdest_i_type_i   : in  std_logic_vector(4 downto 0);
-        rdest_r_type_i   : in  std_logic_vector(4 downto 0);
-        mem_fwd_rdata1_i : in std_logic_vector(nbit-1 downto 0);
-        mem_fwd_rdata2_i : in std_logic_vector(nbit-1 downto 0);
-        wb_fwd_rdata1_i  : in std_logic_vector(nbit-1 downto 0);
-        wb_fwd_rdata2_i  : in std_logic_vector(nbit-1 downto 0);
+        mem_fwd_rdata_i  : in  std_logic_vector(nbit-1 downto 0);
+        wb_fwd_rdata_i   : in  std_logic_vector(nbit-1 downto 0);
         rdata2_o         : out std_logic_vector(nbit-1 downto 0);
         aluout_o         : out std_logic_vector(nbit-1 downto 0);
-        rdest_o          : out std_logic_vector(4 downto 0);
         -- Control signals
         ALUSrc2_i       : in  std_logic;
         ALUOp_i         : in  alu_op_t;
-        regDest_i       : in  std_logic;
         jalEn_i         : in  std_logic;
         -- Forwarding signals
         forwardA_i      : in  std_logic_vector(1 downto 0);
@@ -105,8 +99,8 @@ begin
         )
         port map (
             in0_i => rdata1_i,
-            in1_i => wb_fwd_rdata1_i,
-            in2_i => mem_fwd_rdata1_i,
+            in1_i => wb_fwd_rdata_i,
+            in2_i => mem_fwd_rdata_i,
             sel_i => forwardA_i,
             out_o => alu_in1
         );
@@ -117,8 +111,8 @@ begin
         )
         port map (
             in0_i => rdata2_i,
-            in1_i => wb_fwd_rdata2_i,
-            in2_i => mem_fwd_rdata2_i,
+            in1_i => wb_fwd_rdata_i,
+            in2_i => mem_fwd_rdata_i,
             sel_i => forwardB_i,
             out_o => fwd_data2
         );
@@ -135,15 +129,4 @@ begin
         );
 
     rdata2_o <= fwd_data2;
-
-    mux_rdest: mux2to1
-        generic map (
-            nbit => 5
-        )
-        port map (
-            in0_i => rdest_i_type_i,
-            in1_i => rdest_r_type_i,
-            sel_i => regDest_i,
-            out_o => rdest_o
-        );
 end architecture;

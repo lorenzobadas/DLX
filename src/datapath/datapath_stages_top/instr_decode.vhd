@@ -14,18 +14,18 @@ entity instr_decode is
         instr_i         : in  std_logic_vector(nbit-1 downto 0);
         waddr_i         : in  std_logic_vector(4 downto 0);
         wbdata_i        : in  std_logic_vector(nbit-1 downto 0);
-        mem_fwd_rdata1_i : in  std_logic_vector(nbit-1 downto 0);
+        mem_fwd_rdata_i : in  std_logic_vector(nbit-1 downto 0);
         rdata1_o        : out std_logic_vector(nbit-1 downto 0);
         rdata2_o        : out std_logic_vector(nbit-1 downto 0);
         imm_o           : out std_logic_vector(nbit-1 downto 0);
-        rdest_i_type_o  : out std_logic_vector(4 downto 0);
-        rdest_r_type_o  : out std_logic_vector(4 downto 0);
+        rdest_o         : out std_logic_vector(4 downto 0);
         rsrc1_o         : out std_logic_vector(4 downto 0);
         rsrc2_o         : out std_logic_vector(4 downto 0);
         branch_pc_o     : out std_logic_vector(nbit-1 downto 0);
         PCSrc_o         : out std_logic;
         -- Control signals
         immSrc_i       : in std_logic;
+        regDest_i      : in std_logic;
         regWrite_i     : in std_logic;
         branchEn_i     : in std_logic;
         branchOnZero_i : in std_logic;
@@ -91,28 +91,32 @@ architecture struct of instr_decode is
         );
     end component;
 
-    signal imm_i_type, imm_j_type: std_logic_vector(nbit-1 downto 0);
-    signal imm: std_logic_vector(nbit-1 downto 0);
-    signal rdest_i_type: std_logic_vector(4 downto 0);
-    signal raddr1, raddr2: std_logic_vector(4 downto 0);
-    signal rs1_zero: std_logic;
-    signal rdata1: std_logic_vector(nbit-1 downto 0);
-    signal rdata2: std_logic_vector(nbit-1 downto 0);
-    signal bypass1 : std_logic;
-    signal bypass2 : std_logic;
-    signal rdata1_bypassed : std_logic_vector(nbit-1 downto 0);
-    signal rdata1_final    : std_logic_vector(nbit-1 downto 0);
-    signal rdata2_bypassed : std_logic_vector(nbit-1 downto 0);
-    signal branch_pc       : std_logic_vector(nbit-1 downto 0);
+    signal imm_i_type         : std_logic_vector(nbit-1 downto 0);
+    signal imm_j_type         : std_logic_vector(nbit-1 downto 0);
+    signal imm                : std_logic_vector(nbit-1 downto 0);
+    signal rdest_i_type       : std_logic_vector(4 downto 0);
+    signal rdest_i_type_final : std_logic_vector(4 downto 0);
+    signal rdest_r_type       : std_logic_vector(4 downto 0);
+    signal raddr1             : std_logic_vector(4 downto 0);
+    signal raddr2             : std_logic_vector(4 downto 0);
+    signal rs1_zero           : std_logic;
+    signal rdata1             : std_logic_vector(nbit-1 downto 0);
+    signal rdata2             : std_logic_vector(nbit-1 downto 0);
+    signal bypass1            : std_logic;
+    signal bypass2            : std_logic;
+    signal rdata1_bypassed    : std_logic_vector(nbit-1 downto 0);
+    signal rdata1_final       : std_logic_vector(nbit-1 downto 0);
+    signal rdata2_bypassed    : std_logic_vector(nbit-1 downto 0);
+    signal branch_pc          : std_logic_vector(nbit-1 downto 0);
 begin
-    imm_i_type <= (31 downto 16 => instr_i(15)) & instr_i(15 downto 0);
-    imm_j_type <= (31 downto 26 => instr_i(25)) & instr_i(25 downto 0);
+    imm_i_type   <= (31 downto 16 => instr_i(15)) & instr_i(15 downto 0);
+    imm_j_type   <= (31 downto 26 => instr_i(25)) & instr_i(25 downto 0);
     rdest_i_type <= instr_i(20 downto 16);
-    rdest_r_type_o <= instr_i(15 downto 11);
-    raddr1 <= instr_i(25 downto 21);
-    raddr2 <= instr_i(20 downto 16);
-    rsrc1_o <= raddr1;
-    rsrc2_o <= raddr2;
+    rdest_r_type <= instr_i(15 downto 11);
+    raddr1       <= instr_i(25 downto 21);
+    raddr2       <= instr_i(20 downto 16);
+    rsrc1_o      <= raddr1;
+    rsrc2_o      <= raddr2;
     
     reg_file: register_file
         generic map (
@@ -120,9 +124,9 @@ begin
             nbit => nbit
         )
         port map (
-            clk_i => clk_i,
-            we_i => regWrite_i,
-            waddr_i => waddr_i,
+            clk_i    => clk_i,
+            we_i     => regWrite_i,
+            waddr_i  => waddr_i,
             wbdata_i => wbdata_i,
             raddr1_i => raddr1,
             raddr2_i => raddr2,
@@ -132,15 +136,15 @@ begin
 
     branch_adder: p4_adder
         generic map (
-            nbit => nbit,
+            nbit       => nbit,
             subtractor => 1
         )
         port map (
-            a   => npc_i,
-            b   => imm,
-            cin => '0',
-            sub => '0',
-            s   => branch_pc,
+            a    => npc_i,
+            b    => imm,
+            cin  => '0',
+            sub  => '0',
+            s    => branch_pc,
             cout => open
         );
 
@@ -178,7 +182,7 @@ begin
             in0_i => rdest_i_type,
             in1_i => std_logic_vector(to_unsigned(31, 5)),
             sel_i => jalEn_i,
-            out_o => rdest_i_type_o
+            out_o => rdest_i_type_final
         );
 
     bypass_proc: process(raddr1, raddr2, waddr_i, regWrite_i)
@@ -224,7 +228,7 @@ begin
         )
         port map (
             in0_i => rdata1_bypassed,
-            in1_i => mem_fwd_rdata1_i,
+            in1_i => mem_fwd_rdata_i,
             sel_i => forwardC_i,
             out_o => rdata1_final
         );
@@ -236,6 +240,17 @@ begin
         port map (
             a_i    => rdata1_final,
             zero_o => rs1_zero
+        );
+
+    mux_rdest: mux2to1
+        generic map (
+            nbit => 5
+        )
+        port map (
+            in0_i => rdest_i_type_final,
+            in1_i => rdest_r_type,
+            sel_i => regDest_i,
+            out_o => rdest_o
         );
 
     rdata1_o <= rdata1_bypassed; -- Not rdata1_final because rdata1_final is only for branch/jr and it is never written back -> no need to pass it to next stage
