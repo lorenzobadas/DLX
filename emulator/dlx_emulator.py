@@ -157,6 +157,52 @@ class ProcessorEmulator:
             print(f"Error: Invalid memory write at address 0x{address:08x}")
         self.pc += 4
 
+    def instr_lh(self, rt : int, base : int, offset : int):
+        address = self.registers[base] + self.sign_extend(offset, 16)
+        if address % 2 != 0:
+            print(f"Memory alignment error on LH at 0x{address:08x}");
+            exit()
+        if 0 <= address < len(self.data_memory) - 1:
+            halfword_bytes = self.data_memory[address:address+2]
+            self.registers[rt] = int.from_bytes(halfword_bytes, byteorder='big', signed=True)
+        else:
+            print(f"Error: Invalid memory read at address 0x{address:08x}")
+        self.pc += 4
+    
+    def instr_lbu(self, rt : int, base : int, offset : int):
+        address = self.registers[base] + self.sign_extend(offset, 16)
+        if 0 <= address < len(self.data_memory):
+            byte_val = self.data_memory[address]
+            self.registers[rt] = byte_val
+        else:
+            print(f"Error: Invalid memory read at address 0x{address:08x}")
+        self.pc += 4
+
+    def instr_lhu(self, rt : int, base : int, offset : int):
+        address = self.registers[base] + self.sign_extend(offset, 16)
+        if address % 2 != 0:
+            print(f"Memory alignment error on LHU at 0x{address:08x}");
+            exit()
+        if 0 <= address < len(self.data_memory) - 1:
+            halfword_bytes = self.data_memory[address:address+2]
+            self.registers[rt] = int.from_bytes(halfword_bytes, byteorder='big', signed=False)
+        else:
+            print(f"Error: Invalid memory read at address 0x{address:08x}")
+        self.pc += 4
+
+    def instr_sh(self, rt : int, base : int, offset : int):
+        address = self.registers[base] + self.sign_extend(offset, 16)
+        if address % 2 != 0:
+            print(f"Memory alignment error on SH at 0x{address:08x}");
+            exit()
+        if 0 <= address < len(self.data_memory) - 1:
+            halfword_val = self.registers[rt] & 0xFFFF
+            halfword_bytes = halfword_val.to_bytes(2, byteorder='big', signed=False)
+            self.data_memory[address:address+2] = halfword_bytes
+        else:
+            print(f"Error: Invalid memory write at address 0x{address:08x}")
+        self.pc += 4
+
     def instr_add(self, rd : int, rs : int, rt : int):
         self.registers[rd] = self.registers[rs] + self.registers[rt];
         self.pc += 4
@@ -280,6 +326,10 @@ class ProcessorEmulator:
             elif opcode == 0x2b: self.instr_sw(rt, rs, imm16)
             elif opcode == 0x20: self.instr_lb(rt, rs, imm16)
             elif opcode == 0x28: self.instr_sb(rt, rs, imm16)
+            elif opcode == 0x21: self.instr_lh(rt, rs, imm16)
+            elif opcode == 0x24: self.instr_lbu(rt, rs, imm16)
+            elif opcode == 0x25: self.instr_lhu(rt, rs, imm16)
+            elif opcode == 0x29: self.instr_sh(rt, rs, imm16)
             else:
                 print(f"\nERROR: Unsupported instruction at PC={self.pc} (0x{instruction_word:08x}) with opcode=0x{opcode:02x}")
                 exit(1)

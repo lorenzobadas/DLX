@@ -81,14 +81,16 @@ alu-tb: clean_sim | $(SIM_DIR)
 	vsim \
 		-do $(SCRIPTS_DIR)/tb_alu.do
 
-$(SIM_DIR)/instr_memory.mem: clean_sim | $(SIM_DIR)
+$(SIM_DIR)/instr_memory.mem $(SIM_DIR)/data_memory.mem: clean_sim | $(SIM_DIR)
 	perl $(SCRIPTS_DIR)/dlxasm.pl -o $(SIM_DIR)/$(ASM_FILENAME).bin -list $(SIM_DIR)/$(ASM_FILENAME).list $(ASM_FILE)
 	rm -f $(SIM_DIR)/$(ASM_FILENAME).bin.hdr
 	cat $(SIM_DIR)/$(ASM_FILENAME).bin | hexdump -v -e '/1 "%02X" /1 "%02X" /1 "%02X" /1 "%02X\n"' > $(SIM_DIR)/$(ASM_FILENAME)_dump.txt
 	rm -f $(SIM_DIR)/$(ASM_FILENAME).bin
-	mv $(SIM_DIR)/$(ASM_FILENAME)_dump.txt $@
+	mv $(SIM_DIR)/$(ASM_FILENAME)_dump.txt $(SIM_DIR)/instr_memory.mem
+	cp $(SIM_DIR)/instr_memory.mem         $(SIM_DIR)/data_memory.mem
 
-cpu-tb: clean_sim $(SIM_DIR)/instr_memory.mem $(SIM_DIR)/emulator.log | $(SIM_DIR)
+
+cpu-tb: clean_sim $(SIM_DIR)/instr_memory.mem $(SIM_DIR)/data_memory.mem $(SIM_DIR)/emulator.log | $(SIM_DIR)
 	cp $(PKG_FILES) $(CPU_SRC) $(CPU_TB_SRC) $(SIM_DIR)
 
 	cd $(SIM_DIR) && \
@@ -106,7 +108,7 @@ cpu-tb: clean_sim $(SIM_DIR)/instr_memory.mem $(SIM_DIR)/emulator.log | $(SIM_DI
 	vsim \
 		-do $(SCRIPTS_DIR)/tb_cpu.do
 
-post-syn-cpu-tb: clean_sim $(SIM_DIR)/instr_memory.mem $(SIM_DIR)/emulator.log | $(SIM_DIR) $(SYN_DIR)/results_$(FLATTEN)/cpu.v
+post-syn-cpu-tb: clean_sim $(SIM_DIR)/instr_memory.mem $(SIM_DIR)/data_memory.mem $(SIM_DIR)/emulator.log | $(SIM_DIR) $(SYN_DIR)/results_$(FLATTEN)/cpu.v
 	cp $(SYN_DIR)/results_$(FLATTEN)/cpu.v $(SIM_DIR)
 	cp $(PKG_FILES) $(CPU_SRC) $(CPU_TB_SRC) $(SIM_DIR)
 	cp $(SRC_DIR)/tb/tb_cpu.v $(SIM_DIR)
