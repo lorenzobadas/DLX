@@ -8,6 +8,7 @@ package ctrl_signals_pkg is
 
     type id_ctrl_t is record
         immSrc       : std_logic;
+        immUnsigned  : std_logic;
         regDest      : std_logic;
         jumpEn       : std_logic;
         jrEn         : std_logic;
@@ -42,6 +43,7 @@ package ctrl_signals_pkg is
     constant CTRL_SIGNALS_RESET : ctrl_signals_t := (
         id_ctrl  => (
             immSrc       => '0',
+            immUnsigned  => '0',
             regDest      => '0',
             jumpEn       => '0',
             jrEn         => '0',

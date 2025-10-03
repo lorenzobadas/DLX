@@ -25,6 +25,7 @@ entity instr_decode is
         PCSrc_o         : out std_logic;
         -- Control signals
         immSrc_i       : in std_logic;
+        immUnsigned_i  : in std_logic;
         regDest_i      : in std_logic;
         regWrite_i     : in std_logic;
         branchEn_i     : in std_logic;
@@ -91,6 +92,18 @@ architecture struct of instr_decode is
         );
     end component;
 
+    component sign_extension is
+        generic (
+            width_in  : integer;
+            width_out : integer
+        );
+        port (
+            data_i     : in  std_logic_vector(width_in-1  downto 0);
+            unsigned_i : in  std_logic;
+            data_o     : out std_logic_vector(width_out-1 downto 0)
+        );
+    end component;
+
     signal imm_i_type         : std_logic_vector(nbit-1 downto 0);
     signal imm_j_type         : std_logic_vector(nbit-1 downto 0);
     signal imm                : std_logic_vector(nbit-1 downto 0);
@@ -109,14 +122,34 @@ architecture struct of instr_decode is
     signal rdata2_bypassed    : std_logic_vector(nbit-1 downto 0);
     signal branch_pc          : std_logic_vector(nbit-1 downto 0);
 begin
-    imm_i_type   <= (31 downto 16 => instr_i(15)) & instr_i(15 downto 0);
-    imm_j_type   <= (31 downto 26 => instr_i(25)) & instr_i(25 downto 0);
     rdest_i_type <= instr_i(20 downto 16);
     rdest_r_type <= instr_i(15 downto 11);
     raddr1       <= instr_i(25 downto 21);
     raddr2       <= instr_i(20 downto 16);
     rsrc1_o      <= raddr1;
     rsrc2_o      <= raddr2;
+
+    imm_i_extension: sign_extension
+        generic map (
+            width_in  => 16,
+            width_out => nbit
+        )
+        port map (
+            data_i     => instr_i(15 downto 0),
+            unsigned_i => immUnsigned_i,
+            data_o     => imm_i_type
+        );
+
+    imm_j_extension: sign_extension
+        generic map (
+            width_in  => 26,
+            width_out => nbit
+        )
+        port map (
+            data_i     => instr_i(25 downto 0),
+            unsigned_i => immUnsigned_i,
+            data_o     => imm_j_type
+        );
     
     reg_file: register_file
         generic map (

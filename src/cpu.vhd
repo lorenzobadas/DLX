@@ -37,6 +37,7 @@ architecture struct of cpu is
         port (
             instr_i         : in std_logic_vector(nbit-1 downto 0);
             immSrc_o        : out std_logic;
+            immUnsigned_o   : out std_logic;
             regDest_o       : out std_logic;
             jumpEn_o        : out std_logic;
             jrEn_o          : out std_logic;
@@ -106,6 +107,7 @@ architecture struct of cpu is
             PCSrc_o         : out std_logic;
             -- Control signals
             immSrc_i       : in std_logic;
+            immUnsigned_i  : in std_logic;
             regDest_i      : in std_logic;
             regWrite_i     : in std_logic;
             branchEn_i     : in std_logic;
@@ -349,28 +351,29 @@ architecture struct of cpu is
     ---------------- Control signals ----------------
     -- from ID stage (Control Unit)
     signal id_immSrc        : std_logic;
-    signal id_jrEn          : std_logic;
-    signal id_ALUSrc2       : std_logic;
-    signal id_ALUOp         : alu_op_t;
+    signal id_immUnsigned   : std_logic;
     signal id_regDest       : std_logic;
+    signal id_jumpEn        : std_logic;
+    signal id_jrEn          : std_logic;
     signal id_branchEn      : std_logic;
     signal id_branchOnZero  : std_logic;
-    signal id_jumpEn        : std_logic;
+    signal id_ALUSrc2       : std_logic;
+    signal id_ALUOp         : alu_op_t;
+    signal id_jalEn         : std_logic;
     signal id_memWrite      : std_logic;
     signal id_memDataFormat : std_logic_vector(1 downto 0);
     signal id_memDataSign   : std_logic;
     signal id_memToReg      : std_logic;
     signal id_regWrite      : std_logic;
-    signal id_jalEn         : std_logic;
     -- from ID/EX stage
     signal ex_ALUSrc2       : std_logic;
     signal ex_ALUOp         : alu_op_t;
+    signal ex_jalEn         : std_logic;
     signal ex_memWrite      : std_logic;
     signal ex_memDataFormat : std_logic_vector(1 downto 0);
     signal ex_memDataSign   : std_logic;
     signal ex_memToReg      : std_logic;
     signal ex_regWrite      : std_logic;
-    signal ex_jalEn         : std_logic;
     -- from EX/MEM stage
     signal mem_memWrite      : std_logic;
     signal mem_memDataFormat : std_logic_vector(1 downto 0);
@@ -422,6 +425,7 @@ begin
         port map (
             instr_i         => id_instr,
             immSrc_o        => id_immSrc,
+            immUnsigned_o   => id_immUnsigned,
             regDest_o       => id_regDest,
             jumpEn_o        => id_jumpEn,
             jrEn_o          => id_jrEn,
@@ -458,6 +462,7 @@ begin
             PCSrc_o         => id_PCSrc,
             -- Control signals
             immSrc_i       => id_immSrc,
+            immUnsigned_i  => id_immUnsigned,
             regDest_i      => id_regDest,
             regWrite_i     => wb_regWrite,
             branchEn_i     => id_branchEn,

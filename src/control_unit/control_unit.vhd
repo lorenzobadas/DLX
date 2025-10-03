@@ -12,6 +12,7 @@ entity control_unit is
     port (
         instr_i         : in std_logic_vector(nbit-1 downto 0);
         immSrc_o        : out std_logic;
+        immUnsigned_o   : out std_logic;
         regDest_o       : out std_logic;
         jumpEn_o        : out std_logic;
         jrEn_o          : out std_logic;
@@ -45,6 +46,7 @@ begin
     process(ctrl)
     begin
         immSrc_o        <= ctrl.id_ctrl.immSrc;
+        immUnsigned_o   <= ctrl.id_ctrl.immUnsigned;
         regDest_o       <= ctrl.id_ctrl.regDest;
         jumpEn_o        <= ctrl.id_ctrl.jumpEn;
         jrEn_o          <= ctrl.id_ctrl.jrEn;
