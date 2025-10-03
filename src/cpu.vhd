@@ -202,7 +202,6 @@ architecture struct of cpu is
             wb_fwd_rdata1_i  : in std_logic_vector(nbit-1 downto 0);
             wb_fwd_rdata2_i  : in std_logic_vector(nbit-1 downto 0);
             rdata2_o         : out std_logic_vector(nbit-1 downto 0);
-            zero_o           : out std_logic;
             aluout_o         : out std_logic_vector(nbit-1 downto 0);
             rdest_o          : out std_logic_vector(4 downto 0);
             -- Control signals
@@ -245,11 +244,9 @@ architecture struct of cpu is
             aluout_i: in  std_logic_vector(nbit-1 downto 0);
             rdata2_i: in  std_logic_vector(nbit-1 downto 0);
             rdest_i : in  std_logic_vector(4 downto 0);
-            zero_i  : in  std_logic;
             aluout_o: out std_logic_vector(nbit-1 downto 0);
             rdata2_o: out std_logic_vector(nbit-1 downto 0);
             rdest_o : out std_logic_vector(4 downto 0);
-            zero_o  : out std_logic;
             -- Control signals
             memWrite_i  : in std_logic;
             memDataFormat_i : in std_logic_vector(1 downto 0);
@@ -338,7 +335,6 @@ architecture struct of cpu is
     signal ex_rdata2_final          : std_logic_vector(nbit-1 downto 0);
     signal ex_imm                   : std_logic_vector(nbit-1 downto 0);
     signal ex_aluout                : std_logic_vector(nbit-1 downto 0);
-    signal ex_zero                  : std_logic;
     signal ex_rdest                 : std_logic_vector(4 downto 0);
     signal ex_rdest_i_type, ex_rdest_r_type   : std_logic_vector(4 downto 0);
     signal ex_rsrc1, ex_rsrc2       : std_logic_vector(4 downto 0);
@@ -347,7 +343,6 @@ architecture struct of cpu is
     signal forwardC                 : std_logic;
     -- MEM stage signals
     signal mem_pc          : std_logic_vector(nbit-1 downto 0) := (others => '0');
-    signal mem_zero        : std_logic;
     signal mem_aluout      : std_logic_vector(nbit-1 downto 0);
     signal mem_rdata2      : std_logic_vector(nbit-1 downto 0);
     signal mem_dout        : std_logic_vector(nbit-1 downto 0);
@@ -563,7 +558,6 @@ begin
             wb_fwd_rdata1_i => wb_data,
             wb_fwd_rdata2_i => wb_data,
             rdata2_o       => ex_rdata2_final,
-            zero_o         => ex_zero,
             aluout_o       => ex_aluout,
             rdest_o        => ex_rdest,
             -- Control signals
@@ -603,11 +597,9 @@ begin
             aluout_i      => ex_aluout,
             rdata2_i      => ex_rdata2_final,
             rdest_i       => ex_rdest,
-            zero_i        => ex_zero,
             aluout_o      => mem_aluout,
             rdata2_o      => mem_rdata2,
             rdest_o       => mem_rdest,
-            zero_o        => mem_zero,
             -- Control signals
             memWrite_i    => ex_memWrite,
             memDataFormat_i => ex_memDataFormat,

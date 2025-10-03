@@ -15,7 +15,7 @@ end entity;
 architecture behav of zero_detector is
 begin
     process(a_i)
-        variable zero_var : std_logic_vector(nbit-1 downto 0) := (others => '0');
+        constant zero_var : std_logic_vector(nbit-1 downto 0) := (others => '0');
     begin
         if a_i = zero_var then
             zero_o <= '1';

@@ -12,11 +12,9 @@ entity ex_mem_regs is
         aluout_i: in  std_logic_vector(nbit-1 downto 0);
         rdata2_i: in  std_logic_vector(nbit-1 downto 0);
         rdest_i : in  std_logic_vector(4 downto 0);
-        zero_i  : in  std_logic;
         aluout_o: out std_logic_vector(nbit-1 downto 0);
         rdata2_o: out std_logic_vector(nbit-1 downto 0);
         rdest_o : out std_logic_vector(4 downto 0);
-        zero_o  : out std_logic;
         -- Control signals
         memWrite_i    : in std_logic;
         memDataFormat_i : in std_logic_vector(1 downto 0);
@@ -39,7 +37,6 @@ begin
             aluout_o <= (others => '0');
             rdata2_o <= (others => '0');
             rdest_o <= (others => '0');
-            zero_o <= '0';
             memWrite_o <= '0';
             memDataFormat_o <= (others => '0');
             memDataSign_o <= '0';
@@ -49,7 +46,6 @@ begin
             aluout_o <= aluout_i;
             rdata2_o <= rdata2_i;
             rdest_o <= rdest_i;
-            zero_o <= zero_i;
             memWrite_o <= memWrite_i;
             memDataFormat_o <= memDataFormat_i;
             memDataSign_o <= memDataSign_i;

@@ -21,7 +21,6 @@ entity execution is
         wb_fwd_rdata1_i  : in std_logic_vector(nbit-1 downto 0);
         wb_fwd_rdata2_i  : in std_logic_vector(nbit-1 downto 0);
         rdata2_o         : out std_logic_vector(nbit-1 downto 0);
-        zero_o           : out std_logic;
         aluout_o         : out std_logic_vector(nbit-1 downto 0);
         rdest_o          : out std_logic_vector(4 downto 0);
         -- Control signals
@@ -45,16 +44,6 @@ architecture struct of execution is
             a_i:       in  std_logic_vector(nbit-1 downto 0);
             b_i:       in  std_logic_vector(nbit-1 downto 0);
             alu_out_o: out std_logic_vector(nbit-1 downto 0)
-        );
-    end component;
-
-    component zero_detector is
-        generic(
-            nbit: integer := 32
-        );
-        port(
-            a_i:       in  std_logic_vector(nbit-1 downto 0);
-            zero_o:    out std_logic
         );
     end component;
 
@@ -108,15 +97,6 @@ begin
             in1_i => npc_i,
             sel_i => jalEn_i,
             out_o => aluout_o
-        );
-
-    zero_inst: zero_detector
-        generic map (
-            nbit => nbit
-        )
-        port map (
-            a_i => rdata1_i,
-            zero_o => zero_o
         );
 
     mux_rdata1: mux3to1

@@ -238,7 +238,7 @@ begin
             zero_o => rs1_zero
         );
 
-    rdata1_o <= rdata1_bypassed;
+    rdata1_o <= rdata1_bypassed; -- Not rdata1_final because rdata1_final is only for branch/jr and it is never written back -> no need to pass it to next stage
     rdata2_o <= rdata2_bypassed;
 
 end architecture;
