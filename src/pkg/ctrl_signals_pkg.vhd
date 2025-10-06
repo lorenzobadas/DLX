@@ -109,6 +109,8 @@ package body ctrl_signals_pkg is
                     when func_sgeu  => ctrl.ex_ctrl.ALUOp <= alu_sgeu;
                     when func_sleu  => ctrl.ex_ctrl.ALUOp <= alu_sleu;
                     when func_sgtu  => ctrl.ex_ctrl.ALUOp <= alu_sgtu;
+                    when func_addu  => ctrl.ex_ctrl.ALUOp <= alu_add; 
+                    when func_subu  => ctrl.ex_ctrl.ALUOp <= alu_sub; 
                     when "00000000000" =>
                         -- NOP instruction 
                     when others     => 
@@ -234,25 +236,21 @@ package body ctrl_signals_pkg is
                 ctrl.mem_ctrl.memWrite      <= '1';
                 ctrl.mem_ctrl.memDataFormat <= "10";    -- word
             when opcode_srai =>
-                ctrl.id_ctrl.immUnsigned <= '1';
                 ctrl.ex_ctrl.ALUSrc2  <= '1';     -- imm
                 ctrl.id_ctrl.regDest  <= '1';
                 ctrl.wb_ctrl.regWrite <= '1';
                 ctrl.ex_ctrl.ALUOp <= alu_sra;
             when opcode_seqi =>
-                ctrl.id_ctrl.immUnsigned <= '1';
                 ctrl.ex_ctrl.ALUSrc2  <= '1';     -- imm
                 ctrl.id_ctrl.regDest  <= '1';
                 ctrl.wb_ctrl.regWrite <= '1';
                 ctrl.ex_ctrl.ALUOp <= alu_seq;
             when opcode_slti =>
-                ctrl.id_ctrl.immUnsigned <= '1';
                 ctrl.ex_ctrl.ALUSrc2  <= '1';     -- imm
                 ctrl.id_ctrl.regDest  <= '1';
                 ctrl.wb_ctrl.regWrite <= '1';
                 ctrl.ex_ctrl.ALUOp <= alu_slt;
             when opcode_sgti =>
-                ctrl.id_ctrl.immUnsigned <= '1';
                 ctrl.ex_ctrl.ALUSrc2  <= '1';     -- imm
                 ctrl.id_ctrl.regDest  <= '1';
                 ctrl.wb_ctrl.regWrite <= '1';
@@ -281,16 +279,6 @@ package body ctrl_signals_pkg is
                 ctrl.id_ctrl.regDest  <= '1';
                 ctrl.wb_ctrl.regWrite <= '1';
                 ctrl.ex_ctrl.ALUOp <= alu_sgeu;
-            when opcode_addu =>
-                ctrl.ex_ctrl.ALUSrc2  <= '0';     -- rs2
-                ctrl.id_ctrl.regDest  <= '1';
-                ctrl.wb_ctrl.regWrite <= '1';
-                ctrl.ex_ctrl.ALUOp <= alu_add;
-            when opcode_subu =>
-                ctrl.ex_ctrl.ALUSrc2  <= '0';     -- rs2
-                ctrl.id_ctrl.regDest  <= '1';
-                ctrl.wb_ctrl.regWrite <= '1';
-                ctrl.ex_ctrl.ALUOp <= alu_sub;
             when opcode_addui =>
                 ctrl.id_ctrl.immUnsigned <= '1';
                 ctrl.ex_ctrl.ALUSrc2  <= '1';     -- imm
