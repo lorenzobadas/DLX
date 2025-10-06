@@ -17,7 +17,7 @@ end entity;
 architecture struct of sign_extension is
     signal extension : std_logic_vector(width_out-width_in-1 downto 0);
 begin
-    process(unsigned_i)
+    process(data_i, unsigned_i)
     begin
         if unsigned_i = '1' then
             extension <= (others => '0');
