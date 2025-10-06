@@ -109,6 +109,8 @@ package body ctrl_signals_pkg is
                     when func_sgeu  => ctrl.ex_ctrl.ALUOp <= alu_sgeu;
                     when func_sleu  => ctrl.ex_ctrl.ALUOp <= alu_sleu;
                     when func_sgtu  => ctrl.ex_ctrl.ALUOp <= alu_sgtu;
+                    when func_addu  => ctrl.ex_ctrl.ALUOp <= alu_add; 
+                    when func_subu  => ctrl.ex_ctrl.ALUOp <= alu_sub; 
                     when "00000000000" =>
                         -- NOP instruction 
                     when others     => 
@@ -233,6 +235,62 @@ package body ctrl_signals_pkg is
                 ctrl.ex_ctrl.ALUOp          <= alu_add;
                 ctrl.mem_ctrl.memWrite      <= '1';
                 ctrl.mem_ctrl.memDataFormat <= "10";    -- word
+            when opcode_srai =>
+                ctrl.ex_ctrl.ALUSrc2  <= '1';     -- imm
+                ctrl.id_ctrl.regDest  <= '1';
+                ctrl.wb_ctrl.regWrite <= '1';
+                ctrl.ex_ctrl.ALUOp <= alu_sra;
+            when opcode_seqi =>
+                ctrl.ex_ctrl.ALUSrc2  <= '1';     -- imm
+                ctrl.id_ctrl.regDest  <= '1';
+                ctrl.wb_ctrl.regWrite <= '1';
+                ctrl.ex_ctrl.ALUOp <= alu_seq;
+            when opcode_slti =>
+                ctrl.ex_ctrl.ALUSrc2  <= '1';     -- imm
+                ctrl.id_ctrl.regDest  <= '1';
+                ctrl.wb_ctrl.regWrite <= '1';
+                ctrl.ex_ctrl.ALUOp <= alu_slt;
+            when opcode_sgti =>
+                ctrl.ex_ctrl.ALUSrc2  <= '1';     -- imm
+                ctrl.id_ctrl.regDest  <= '1';
+                ctrl.wb_ctrl.regWrite <= '1';
+                ctrl.ex_ctrl.ALUOp <= alu_sgt;
+            when opcode_sltui =>
+                ctrl.id_ctrl.immUnsigned <= '1';
+                ctrl.ex_ctrl.ALUSrc2  <= '1';     -- imm
+                ctrl.id_ctrl.regDest  <= '1';
+                ctrl.wb_ctrl.regWrite <= '1';
+                ctrl.ex_ctrl.ALUOp <= alu_sltu;
+            when opcode_sgtui =>
+                ctrl.id_ctrl.immUnsigned <= '1';
+                ctrl.ex_ctrl.ALUSrc2  <= '1';     -- imm
+                ctrl.id_ctrl.regDest  <= '1';
+                ctrl.wb_ctrl.regWrite <= '1';
+                ctrl.ex_ctrl.ALUOp <= alu_sgtu;
+            when opcode_sleui =>
+                ctrl.id_ctrl.immUnsigned <= '1';
+                ctrl.ex_ctrl.ALUSrc2  <= '1';     -- imm
+                ctrl.id_ctrl.regDest  <= '1';
+                ctrl.wb_ctrl.regWrite <= '1';
+                ctrl.ex_ctrl.ALUOp <= alu_sleu;
+            when opcode_sgeui =>
+                ctrl.id_ctrl.immUnsigned <= '1';
+                ctrl.ex_ctrl.ALUSrc2  <= '1';     -- imm
+                ctrl.id_ctrl.regDest  <= '1';
+                ctrl.wb_ctrl.regWrite <= '1';
+                ctrl.ex_ctrl.ALUOp <= alu_sgeu;
+            when opcode_addui =>
+                ctrl.id_ctrl.immUnsigned <= '1';
+                ctrl.ex_ctrl.ALUSrc2  <= '1';     -- imm
+                ctrl.id_ctrl.regDest  <= '1';
+                ctrl.wb_ctrl.regWrite <= '1';
+                ctrl.ex_ctrl.ALUOp <= alu_add;
+            when opcode_subui =>
+                ctrl.id_ctrl.immUnsigned <= '1';
+                ctrl.ex_ctrl.ALUSrc2  <= '1';     -- imm
+                ctrl.id_ctrl.regDest  <= '1';
+                ctrl.wb_ctrl.regWrite <= '1';
+                ctrl.ex_ctrl.ALUOp <= alu_sub;
 
             when others =>
                 ctrl <= CTRL_SIGNALS_RESET;
