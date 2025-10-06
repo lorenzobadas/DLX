@@ -152,14 +152,17 @@ package body ctrl_signals_pkg is
                 ctrl.ex_ctrl.ALUOp    <= alu_sub; -- rdata1 - imm
                 ctrl.wb_ctrl.regWrite <= '1';
             when opcode_andi =>
+                ctrl.id_ctrl.immUnsigned <= '1';
                 ctrl.ex_ctrl.ALUSrc2  <= '1';     -- imm
                 ctrl.ex_ctrl.ALUOp    <= alu_and; -- rdata1 & imm
                 ctrl.wb_ctrl.regWrite <= '1';
             when opcode_ori =>
+                ctrl.id_ctrl.immUnsigned <= '1';
                 ctrl.ex_ctrl.ALUSrc2  <= '1';    -- imm
                 ctrl.ex_ctrl.ALUOp    <= alu_or; -- rdata1 | imm
                 ctrl.wb_ctrl.regWrite <= '1';
             when opcode_xori =>
+                ctrl.id_ctrl.immUnsigned <= '1';
                 ctrl.ex_ctrl.ALUSrc2  <= '1';     -- imm
                 ctrl.ex_ctrl.ALUOp    <= alu_xor; -- rdata1 ^ imm
                 ctrl.wb_ctrl.regWrite <= '1';
