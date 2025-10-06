@@ -16,11 +16,19 @@ class ProcessorEmulator:
         # cycle-by-cycle register dumping
         self.debug_cycles : bool = debug_cycles
 
-    def load_program(self, filename : str):
+    def load_program(self, filename: str):
         try:
             with open(filename, 'r') as f:
-                self.instructions = [int(line.strip(), 16) for line in f if line.strip()]
+                lines = [line.strip() for line in f if line.strip()]
+                self.instructions = [int(line, 16) for line in lines]
+
+            # Load same content into data memory (byte-level)
+            data = bytes.fromhex(''.join(lines))
+            size = min(len(data), len(self.data_memory))
+            self.data_memory[:size] = data[:size]
+
             print(f"Program '{filename}' loaded successfully. {len(self.instructions)} instructions.")
+            print(f"Data memory loaded with {size} bytes.")
         except FileNotFoundError:
             print(f"Error: Program file '{filename}' not found.")
             exit(1)
@@ -28,9 +36,19 @@ class ProcessorEmulator:
             print(f"Error: Invalid hexadecimal value in '{filename}'.")
             exit(1)
 
+
     def sign_extend(self, value : int, bits : int):
         sign_bit = 1 << (bits - 1)
         return (value & (sign_bit - 1)) - (value & sign_bit)
+
+    def signed(self, value: int) -> int:
+        value = value & 0xFFFFFFFF
+        value = int.from_bytes(value.to_bytes(4, byteorder='big'), byteorder='big', signed=True)
+        return value
+    
+    def unsigned(self, value: int) -> int:
+        return value & 0xFFFFFFFF
+
 
     # ****************************************** INSTRUCTIONS ******************************************
     def instr_j(self, address : int):
@@ -88,27 +106,27 @@ class ProcessorEmulator:
         self.pc += 4
 
     def instr_slti(self, rt : int, rs : int, immediate : int):
-        self.registers[rt] = 1 if self.registers[rs] < self.sign_extend(immediate, 16) else 0;
+        self.registers[rt] = self.signed(self.registers[rs]) < self.sign_extend(immediate, 16);
         self.pc += 4
 
     def instr_sgti(self, rt : int, rs : int, immediate : int):
-        self.registers[rt] = 1 if self.registers[rs] > self.sign_extend(immediate, 16) else 0;
+        self.registers[rt] = self.signed(self.registers[rs]) > self.sign_extend(immediate, 16);
         self.pc += 4
 
     def instr_seqi(self, rt : int, rs : int, immediate : int):
-        self.registers[rt] = 1 if self.registers[rs] == self.sign_extend(immediate, 16) else 0;
+        self.registers[rt] = self.registers[rs] == self.sign_extend(immediate, 16);
         self.pc += 4
 
     def instr_snei(self, rt : int, rs : int, immediate : int):
-        self.registers[rt] = 1 if self.registers[rs] != self.sign_extend(immediate, 16) else 0;
+        self.registers[rt] = self.registers[rs] != self.sign_extend(immediate, 16);
         self.pc += 4
 
     def instr_slei(self, rt : int, rs : int, immediate : int):
-        self.registers[rt] = 1 if self.registers[rs] <= self.sign_extend(immediate, 16) else 0;
+        self.registers[rt] = self.signed(self.registers[rs]) <= self.sign_extend(immediate, 16);
         self.pc += 4
 
     def instr_sgei(self, rt : int, rs : int, immediate : int):
-        self.registers[rt] = 1 if self.registers[rs] >= self.sign_extend(immediate, 16) else 0;
+        self.registers[rt] = self.signed(self.registers[rs]) >= self.sign_extend(immediate, 16);
         self.pc += 4
 
     def instr_lw(self, rt : int, base : int, offset : int):
@@ -236,27 +254,27 @@ class ProcessorEmulator:
         self.pc += 4
 
     def instr_slt(self, rd : int, rs : int, rt : int):
-        self.registers[rd] = 1 if self.registers[rs] < self.registers[rt] else 0;
+        self.registers[rd] = self.signed(self.registers[rs]) < self.signed(self.registers[rt]);
         self.pc += 4
 
     def instr_sgt(self, rd : int, rs : int, rt : int):
-        self.registers[rd] = 1 if self.registers[rs] > self.registers[rt] else 0;
+        self.registers[rd] = self.signed(self.registers[rs]) > self.signed(self.registers[rt]);
         self.pc += 4
 
     def instr_seq(self, rd : int, rs : int, rt : int):
-        self.registers[rd] = 1 if self.registers[rs] == self.registers[rt] else 0;
+        self.registers[rd] = self.registers[rs] == self.registers[rt];
         self.pc += 4
 
     def instr_sne(self, rd : int, rs : int, rt : int):
-        self.registers[rd] = 1 if self.registers[rs] != self.registers[rt] else 0;
+        self.registers[rd] = self.registers[rs] != self.registers[rt];
         self.pc += 4
 
     def instr_sle(self, rd : int, rs : int, rt : int):
-        self.registers[rd] = 1 if self.registers[rs] <= self.registers[rt] else 0;
+        self.registers[rd] = self.signed(self.registers[rs]) <= self.signed(self.registers[rt]);
         self.pc += 4
 
     def instr_sge(self, rd : int, rs : int, rt : int):
-        self.registers[rd] = 1 if self.registers[rs] >= self.registers[rt] else 0;
+        self.registers[rd] = self.signed(self.registers[rs]) >= self.signed(self.registers[rt]);
         self.pc += 4
 
     def instr_nop(self):
