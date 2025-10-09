@@ -3,13 +3,12 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.math_real.uniform;
 use work.utils_pkg.all;
-use work.alu_instr_pkg.all;
 
-entity tb_t2_logic_ops is
-end tb_t2_logic_ops;
+entity tb_t2_logic is
+end tb_t2_logic;
 
-architecture test of tb_t2_logic_ops is
-    component t2_logic_ops is
+architecture test of tb_t2_logic is
+    component t2_logic is
         generic (
             nbit: integer := 32
         );
@@ -30,7 +29,7 @@ architecture test of tb_t2_logic_ops is
     constant iterations: integer := 1000;
 begin
 
-    dut: t2_logic_ops
+    dut: t2_logic
         generic map (
             nbit => nbit
         )

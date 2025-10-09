@@ -17,7 +17,7 @@ end entity;
 
 architecture struct of alu is
     -- Components
-    component t2_logic_ops is
+    component t2_logic is
         generic (
             nbit: integer := 32
         );
@@ -84,7 +84,7 @@ architecture struct of alu is
     signal comparator_result: std_logic_vector(nbit-1 downto 0);
     signal s: std_logic_vector(3 downto 0);
 begin
-    t2_logic_ops_inst: t2_logic_ops
+    t2_logic_inst: t2_logic
         generic map(
             nbit => nbit
         )

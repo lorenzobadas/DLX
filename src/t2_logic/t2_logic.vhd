@@ -6,7 +6,7 @@ use ieee.std_logic_1164.all;
 -- result = a AND/OR/XOR b ------
 ---------------------------------
 
-entity t2_logic_ops is
+entity t2_logic is
     generic (
         nbit: integer := 32
     );
@@ -18,7 +18,7 @@ entity t2_logic_ops is
     );
 end entity;
 
-architecture struct of t2_logic_ops is
+architecture struct of t2_logic is
     component logic_block is
         port(
             s_i: in  std_logic_vector(3 downto 0);
