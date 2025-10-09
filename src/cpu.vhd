@@ -122,16 +122,18 @@ architecture struct of cpu is
     component hazard_unit is
         port (
             -- Inputs
-            ex_memToReg_i : in  std_logic; -- Instruction is a load
-            ex_regWrite_i : in  std_logic; -- Instruction writes to a register
-            ex_rdest_i    : in  std_logic_vector(4 downto 0);
-            id_rs1_i      : in  std_logic_vector(4 downto 0);
-            id_rs2_i      : in  std_logic_vector(4 downto 0);
-            id_regDest_i  : in  std_logic; -- Instruction is R-type (uses rs2 as source)
-            id_PCSrc_i    : in  std_logic; -- Branch taken
-            id_branchEn_i : in  std_logic; -- Instruction is a branch
-            id_jumpEn_i   : in  std_logic; -- Instruction is a jump
-            id_jrEn_i     : in  std_logic; -- Instruction is a jump register
+            ex_memToReg_i  : in  std_logic; -- Instruction is a load
+            ex_regWrite_i  : in  std_logic; -- Instruction writes to a register
+            ex_rdest_i     : in  std_logic_vector(4 downto 0);
+            mem_memToReg_i : in  std_logic; -- Instruction is a load
+            mem_rdest_i    : in  std_logic_vector(4 downto 0);
+            id_rs1_i       : in  std_logic_vector(4 downto 0);
+            id_rs2_i       : in  std_logic_vector(4 downto 0);
+            id_regDest_i   : in  std_logic; -- Instruction is R-type (uses rs2 as source)
+            id_PCSrc_i     : in  std_logic; -- Branch taken
+            id_branchEn_i  : in  std_logic; -- Instruction is a branch
+            id_jumpEn_i    : in  std_logic; -- Instruction is a jump
+            id_jrEn_i      : in  std_logic; -- Instruction is a jump register
             -- Outputs
             pc_write_o    : out std_logic;
             if_id_write_o : out std_logic;
@@ -476,20 +478,22 @@ begin
     -- Hazard Unit
     hazard_unit_inst: hazard_unit
         port map (
-            ex_memToReg_i => ex_memToReg,
-            ex_regWrite_i => ex_regWrite,
-            ex_rdest_i    => ex_rdest,
-            id_rs1_i      => id_rsrc1,
-            id_rs2_i      => id_rsrc2,
-            id_regDest_i  => id_regDest,
-            id_PCSrc_i    => id_PCSrc,
-            id_branchEn_i => id_branchEn,
-            id_jumpEn_i   => id_jumpEn,
-            id_jrEn_i     => id_jrEn,
-            pc_write_o    => pc_enable,
-            if_id_write_o => if_id_write,
-            if_id_flush_o => if_id_flush,
-            id_ex_nop_o   => id_ex_nop
+            ex_memToReg_i  => ex_memToReg,
+            ex_regWrite_i  => ex_regWrite,
+            ex_rdest_i     => ex_rdest,
+            mem_memToReg_i => mem_memToReg,
+            mem_rdest_i    => mem_rdest,
+            id_rs1_i       => id_rsrc1,
+            id_rs2_i       => id_rsrc2,
+            id_regDest_i   => id_regDest,
+            id_PCSrc_i     => id_PCSrc,
+            id_branchEn_i  => id_branchEn,
+            id_jumpEn_i    => id_jumpEn,
+            id_jrEn_i      => id_jrEn,
+            pc_write_o     => pc_enable,
+            if_id_write_o  => if_id_write,
+            if_id_flush_o  => if_id_flush,
+            id_ex_nop_o    => id_ex_nop
         );
 
     -- ID/EX Pipeline Register
