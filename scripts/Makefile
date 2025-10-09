@@ -1,5 +1,5 @@
 .SUFFIXES:
-.PHONY: t2-shifter-tb p4-adder-tb alu-tb cpu-tb clean clean_sim clean_syn clean_pnr clean_all
+.PHONY: t2-logic-ops-tb t2-shifter-tb p4-adder-tb alu-tb cpu-tb clean clean_sim clean_syn clean_pnr clean_all
 
 GIT_ROOT   := $(shell git rev-parse --show-toplevel)
 
@@ -14,15 +14,17 @@ SYN_DIR	     := $(GIT_ROOT)/syn
 PNR_DIR      := $(GIT_ROOT)/pnr
 
 # Find all relevant source files
-PKG_FILES  := $(shell find $(SRC_DIR)/pkg/ -name '*pkg.vhd' -type f)
-T2_SRC     := $(shell find $(SRC_DIR)/t2_shifter -type f)
-T2_TB_SRC  := $(shell find $(TB_DIR) -name '*t2_shifter*.vhd' -type f)
-P4_SRC     := $(shell find $(SRC_DIR)/p4_adder -type f)
-P4_TB_SRC  := $(shell find $(TB_DIR) -name '*p4_adder*.vhd' -type f)
-ALU_SRC    := $(shell find $(SRC_DIR)/alu -type f)
-ALU_TB_SRC := $(shell find $(TB_DIR) -name '*alu*.vhd' -type f)
-CPU_SRC    := $(shell find $(SRC_DIR) -type f)
-CPU_TB_SRC := $(shell find $(TB_DIR) -name '*cpu*.vhd' -type f)
+PKG_FILES  		  := $(shell find $(SRC_DIR)/pkg/ -name '*pkg.vhd' -type f)
+T2_SHIFTER_SRC    := $(shell find $(SRC_DIR)/t2_shifter -type f)
+T2_SHIFTER_TB_SRC := $(shell find $(TB_DIR) -name '*t2_shifter*.vhd' -type f)
+T2_LOGIC_SRC	  := $(shell find $(SRC_DIR)/t2_logic_ops -type f)
+T2_LOGIC_TB_SRC   := $(shell find $(TB_DIR) -name '*t2_logic_ops*.vhd' -type f)
+P4_SRC     		  := $(shell find $(SRC_DIR)/p4_adder -type f)
+P4_TB_SRC  		  := $(shell find $(TB_DIR) -name '*p4_adder*.vhd' -type f)
+ALU_SRC    		  := $(shell find $(SRC_DIR)/alu -type f)
+ALU_TB_SRC 		  := $(shell find $(TB_DIR) -name '*alu*.vhd' -type f)
+CPU_SRC    		  := $(shell find $(SRC_DIR) -type f)
+CPU_TB_SRC 		  := $(shell find $(TB_DIR) -name '*cpu*.vhd' -type f)
 
 # Default assembly file if none specified
 ASM_FILE     ?= $(shell find $(ASM_DIR) -type f -name 'add*.asm' | head -1)
@@ -39,8 +41,22 @@ $(SRC_DIR)/pkg/instructions_pkg.vhd:
 ########### Simulation Targets #################
 ################################################
 
+t2-logic-ops-tb: clean_sim | $(SIM_DIR)
+	cp $(PKG_FILES) $(T2_LOGIC_SRC) $(T2_LOGIC_TB_SRC) $(SIM_DIR)
+	
+	cd $(SIM_DIR) && \
+	vcom \
+	$$(find $(SIM_DIR) -name '*pkg.vhd' -type f) \
+	$$(find $(SIM_DIR) -name '*.vhd' -type f) \
+	-autoorder \
+	-autoorderquiet
+
+	cd $(SIM_DIR) && \
+	vsim \
+		-do $(SCRIPTS_DIR)/tb_t2_logic_ops.do
+
 t2-shifter-tb: clean_sim | $(SIM_DIR)
-	cp $(PKG_FILES) $(T2_SRC) $(T2_TB_SRC) $(SIM_DIR)
+	cp $(PKG_FILES) $(T2_SHIFTER_SRC) $(T2_SHIFTER_TB_SRC) $(SIM_DIR)
 	
 	cd $(SIM_DIR) && \
 	vcom \
@@ -68,7 +84,7 @@ p4-adder-tb: clean_sim | $(SIM_DIR)
 		-do $(SCRIPTS_DIR)/tb_p4_adder.do
 
 alu-tb: clean_sim | $(SIM_DIR)
-	cp $(PKG_FILES) $(P4_SRC) $(T2_SRC) $(ALU_SRC) $(ALU_TB_SRC) $(SIM_DIR)
+	cp $(PKG_FILES) $(T2_LOGIC_SRC) $(P4_SRC) $(T2_SHIFTER_SRC) $(ALU_SRC) $(ALU_TB_SRC) $(SIM_DIR)
 
 	cd $(SIM_DIR) && \
 	vcom \

@@ -17,14 +17,14 @@ end entity;
 
 architecture struct of alu is
     -- Components
-    component logic_ops is
+    component t2_logic_ops is
         generic (
             nbit: integer := 32
         );
         port (
             a_i:      in  std_logic_vector(nbit-1 downto 0);
             b_i:      in  std_logic_vector(nbit-1 downto 0);
-            alu_op_i: in  alu_op_t;
+            s_i:      in  std_logic_vector(3 downto 0);
             result_o: out std_logic_vector(nbit-1 downto 0)
         );
     end component;
@@ -82,15 +82,16 @@ architecture struct of alu is
     signal adder_result: std_logic_vector(nbit-1 downto 0);
     signal adder_cout:   std_logic;
     signal comparator_result: std_logic_vector(nbit-1 downto 0);
+    signal s: std_logic_vector(3 downto 0);
 begin
-    logic_ops_inst: logic_ops
-        generic map (
+    t2_logic_ops_inst: t2_logic_ops
+        generic map(
             nbit => nbit
         )
-        port map (
+        port map(
             a_i      => a_i,
             b_i      => b_i,
-            alu_op_i => alu_op_i,
+            s_i      => s,
             result_o => logic_ops_result
         );
 
@@ -164,6 +165,26 @@ begin
             when others =>
                 adder_cin <= '1';
                 adder_sub <= '1';
+        end case;
+    end process;
+
+    ---------------------------------
+    -- S0 S1 S2 S3 | Operation
+    --  0  0  0  1 | A AND B
+    --  0  1  1  1 | A OR B
+    --  0  1  1  0 | A XOR B
+    ---------------------------------
+    logic_control: process(alu_op_i)
+    begin
+        case alu_op_i is
+            when alu_and =>
+                s <= "1000";
+            when alu_or =>
+                s <= "1110";
+            when alu_xor =>
+                s <= "0110";
+            when others =>
+                s <= "0000";
         end case;
     end process;
 
