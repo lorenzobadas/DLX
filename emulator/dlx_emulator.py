@@ -36,7 +36,6 @@ class ProcessorEmulator:
             print(f"Error: Invalid hexadecimal value in '{filename}'.")
             exit(1)
 
-
     def sign_extend(self, value : int, bits : int):
         sign_bit = 1 << (bits - 1)
         return (value & (sign_bit - 1)) - (value & sign_bit)
@@ -45,7 +44,7 @@ class ProcessorEmulator:
         value = value & 0xFFFFFFFF
         value = int.from_bytes(value.to_bytes(4, byteorder='big'), byteorder='big', signed=True)
         return value
-    
+
     def unsigned(self, value: int) -> int:
         return value & 0xFFFFFFFF
 
@@ -82,15 +81,15 @@ class ProcessorEmulator:
         self.pc += 4
 
     def instr_andi(self, rt : int, rs : int, immediate : int):
-        self.registers[rt] = self.registers[rs] & immediate;
+        self.registers[rt] = self.registers[rs] & (immediate & 0xFFFF)
         self.pc += 4
 
     def instr_ori(self, rt : int, rs : int, immediate : int):
-        self.registers[rt] = self.registers[rs] | immediate;
+        self.registers[rt] = self.registers[rs] | (immediate & 0xFFFF)
         self.pc += 4
 
     def instr_xori(self, rt : int, rs : int, immediate : int):
-        self.registers[rt] = self.registers[rs] ^ immediate;
+        self.registers[rt] = self.registers[rs] ^ (immediate & 0xFFFF)
         self.pc += 4
 
     def instr_slli(self, rt : int, rs : int, immediate : int):
@@ -101,8 +100,10 @@ class ProcessorEmulator:
         self.registers[rt] = (self.registers[rs] & 0xFFFFFFFF) >> (immediate & 0x1F);
         self.pc += 4
 
-    def instr_srai(self, rt : int, rs : int, immediate : int):
-        self.registers[rt] = self.registers[rs] >> (immediate & 0x1F);
+    def instr_srai(self, rt: int, rs: int, immediate: int):
+        signed_val = self.signed(self.registers[rs])
+        shift_amount = immediate & 0x1F
+        self.registers[rt] = signed_val >> shift_amount
         self.pc += 4
 
     def instr_slti(self, rt : int, rs : int, immediate : int):
@@ -186,7 +187,7 @@ class ProcessorEmulator:
         else:
             print(f"Error: Invalid memory read at address 0x{address:08x}")
         self.pc += 4
-    
+
     def instr_lbu(self, rt : int, base : int, offset : int):
         address = self.registers[base] + self.sign_extend(offset, 16)
         if 0 <= address < len(self.data_memory):
@@ -241,16 +242,22 @@ class ProcessorEmulator:
         self.registers[rd] = self.registers[rs] ^ self.registers[rt];
         self.pc += 4
 
-    def instr_sll(self, rd : int, rs : int, rt : int):
-        self.registers[rd] = self.registers[rs] << self.registers[rt];
+    def instr_sll(self, rd: int, rs: int, rt: int):
+        shift_amount = self.registers[rt] & 0x1F
+        self.registers[rd] = self.registers[rs] << shift_amount
         self.pc += 4
 
-    def instr_srl(self, rd : int, rs : int, rt : int):
-        self.registers[rd] = (self.registers[rs] & 0xFFFFFFFF) >> self.registers[rt];
+    def instr_srl(self, rd: int, rs: int, rt: int):
+        shift_amount = self.registers[rt] & 0x1F
+        self.registers[rd] = (self.registers[rs] & 0xFFFFFFFF) >> shift_amount
         self.pc += 4
 
-    def instr_sra(self, rd : int, rs : int, rt : int):
-        self.registers[rd] = self.registers[rs] >> self.registers[rt];
+    def instr_sra(self, rd: int, rs: int, rt: int):
+        shift_amount = self.registers[rt] & 0x1F
+
+        signed_val = self.signed(self.registers[rs])
+
+        self.registers[rd] = signed_val >> shift_amount
         self.pc += 4
 
     def instr_slt(self, rd : int, rs : int, rt : int):
@@ -275,6 +282,54 @@ class ProcessorEmulator:
 
     def instr_sge(self, rd : int, rs : int, rt : int):
         self.registers[rd] = self.signed(self.registers[rs]) >= self.signed(self.registers[rt]);
+        self.pc += 4
+
+    def instr_addu(self, rd : int, rs : int, rt : int):
+        self.registers[rd] = self.registers[rs] + self.registers[rt]
+        self.pc += 4
+
+    def instr_subu(self, rd : int, rs : int, rt : int):
+        self.registers[rd] = self.registers[rs] - self.registers[rt]
+        self.pc += 4
+
+    def instr_sltu(self, rd : int, rs : int, rt : int):
+        self.registers[rd] = self.unsigned(self.registers[rs]) < self.unsigned(self.registers[rt])
+        self.pc += 4
+
+    def instr_sgtu(self, rd : int, rs : int, rt : int):
+        self.registers[rd] = self.unsigned(self.registers[rs]) > self.unsigned(self.registers[rt])
+        self.pc += 4
+
+    def instr_sleu(self, rd : int, rs : int, rt : int):
+        self.registers[rd] = self.unsigned(self.registers[rs]) <= self.unsigned(self.registers[rt])
+        self.pc += 4
+
+    def instr_sgeu(self, rd : int, rs : int, rt : int):
+        self.registers[rd] = self.unsigned(self.registers[rs]) >= self.unsigned(self.registers[rt])
+        self.pc += 4
+
+    def instr_addui(self, rt: int, rs: int, immediate: int):
+        self.registers[rt] = self.registers[rs] + (immediate & 0xFFFF)
+        self.pc += 4
+
+    def instr_subui(self, rt: int, rs: int, immediate: int):
+        self.registers[rt] = self.registers[rs] - (immediate & 0xFFFF)
+        self.pc += 4
+
+    def instr_sltui(self, rt: int, rs: int, immediate: int):
+        self.registers[rt] = self.unsigned(self.registers[rs]) < (immediate & 0xFFFF)
+        self.pc += 4
+
+    def instr_sgtui(self, rt: int, rs: int, immediate: int):
+        self.registers[rt] = self.unsigned(self.registers[rs]) > (immediate & 0xFFFF)
+        self.pc += 4
+
+    def instr_sleui(self, rt: int, rs: int, immediate: int):
+        self.registers[rt] = self.unsigned(self.registers[rs]) <= (immediate & 0xFFFF)
+        self.pc += 4
+
+    def instr_sgeui(self, rt: int, rs: int, immediate: int):
+        self.registers[rt] = self.unsigned(self.registers[rs]) >= (immediate & 0xFFFF)
         self.pc += 4
 
     def instr_nop(self):
@@ -303,7 +358,9 @@ class ProcessorEmulator:
 
             if opcode == 0x00: # R-Type
                 if   func == 0x20: self.instr_add(rd, rs, rt)
+                elif func == 0x21: self.instr_addu(rd, rs, rt)
                 elif func == 0x22: self.instr_sub(rd, rs, rt)
+                elif func == 0x23: self.instr_subu(rd, rs, rt)
                 elif func == 0x24: self.instr_and(rd, rs, rt)
                 elif func == 0x25: self.instr_or(rd, rs, rt)
                 elif func == 0x26: self.instr_xor(rd, rs, rt)
@@ -316,6 +373,10 @@ class ProcessorEmulator:
                 elif func == 0x29: self.instr_sne(rd, rs, rt)
                 elif func == 0x2c: self.instr_sle(rd, rs, rt)
                 elif func == 0x2d: self.instr_sge(rd, rs, rt)
+                elif func == 0x3a: self.instr_sltu(rd, rs, rt)
+                elif func == 0x3b: self.instr_sgtu(rd, rs, rt)
+                elif func == 0x3c: self.instr_sleu(rd, rs, rt)
+                elif func == 0x3d: self.instr_sgeu(rd, rs, rt)
                 else:
                     print(f"\nERROR: Unsupported R-Type instruction at PC={self.pc} (0x{instruction_word:08x}) with func=0x{func:03x}")
                     exit(1)
@@ -326,7 +387,9 @@ class ProcessorEmulator:
             elif opcode == 0x04: self.instr_beqz(rs, imm16)
             elif opcode == 0x05: self.instr_bnez(rs, imm16)
             elif opcode == 0x08: self.instr_addi(rt, rs, imm16)
+            elif opcode == 0x09: self.instr_addui(rt, rs, imm16)
             elif opcode == 0x0a: self.instr_subi(rt, rs, imm16)
+            elif opcode == 0x0b: self.instr_subui(rt, rs, imm16)
             elif opcode == 0x0c: self.instr_andi(rt, rs, imm16)
             elif opcode == 0x0d: self.instr_ori(rt, rs, imm16)
             elif opcode == 0x0e: self.instr_xori(rt, rs, imm16)
@@ -339,6 +402,10 @@ class ProcessorEmulator:
             elif opcode == 0x19: self.instr_snei(rt, rs, imm16)
             elif opcode == 0x1c: self.instr_slei(rt, rs, imm16)
             elif opcode == 0x1d: self.instr_sgei(rt, rs, imm16)
+            elif opcode == 0x3a: self.instr_sltui(rt, rs, imm16)
+            elif opcode == 0x3b: self.instr_sgtui(rt, rs, imm16)
+            elif opcode == 0x3c: self.instr_sleui(rt, rs, imm16)
+            elif opcode == 0x3d: self.instr_sgeui(rt, rs, imm16)
             elif opcode == 0x15: self.instr_nop()
             elif opcode == 0x23: self.instr_lw(rt, rs, imm16)
             elif opcode == 0x2b: self.instr_sw(rt, rs, imm16)
