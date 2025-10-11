@@ -45,6 +45,7 @@ architecture struct of instr_decode is
         );
         port (
             clk_i   : in  std_logic;
+            reset_i : in  std_logic;
             we_i    : in  std_logic;
             waddr_i : in  std_logic_vector(clog2(nreg)-1 downto 0);
             wbdata_i: in  std_logic_vector(nbit-1 downto 0);
@@ -158,6 +159,7 @@ begin
         )
         port map (
             clk_i    => clk_i,
+            reset_i  => reset_i,
             we_i     => regWrite_i,
             waddr_i  => waddr_i,
             wbdata_i => wbdata_i,
