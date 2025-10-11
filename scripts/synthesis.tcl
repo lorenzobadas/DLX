@@ -63,7 +63,7 @@ if {$flatten == "all"} {
 } elseif {$flatten == "auto"} {
     set clock_period 1.85
 } elseif {$flatten == "none"} {
-    set clock_period 2.00
+    set clock_period 2.01
 } else {
     error "Unknown flatten option: $flatten"
 }
