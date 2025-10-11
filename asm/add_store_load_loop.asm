@@ -135,6 +135,6 @@ nop
 
   .data
 code_space:
-  .space 256
+  .space 528
 array:
-  .space 256
+  .space 128
