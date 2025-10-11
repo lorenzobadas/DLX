@@ -1,3 +1,4 @@
+        .text
 begin:
         addi    r2,r0,1024
         addi    r2,r2,-32
@@ -8,7 +9,7 @@ begin:
         sw      -20(r8),r15
         lw      r10,-20(r8)
         jal     factorial
-        sw      0(r0),r10
+        sw      fact(r0),r10
         addi    r15,r0,0
         add     r10,r0,r15
         lw      r31,28(r2)
@@ -79,3 +80,8 @@ L6:
         lw      r8,40(r2)
         addi    r2,r2,48
         jr      r31
+
+        .data
+        .space 300
+fact:
+        .word 0
