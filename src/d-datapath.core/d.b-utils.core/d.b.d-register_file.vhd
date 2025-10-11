@@ -10,6 +10,7 @@ entity register_file is
     );
     port (
         clk_i   : in  std_logic;
+        reset_i : in  std_logic;
         we_i    : in  std_logic;
         waddr_i : in  std_logic_vector(clog2(nreg)-1 downto 0);
         wbdata_i : in  std_logic_vector(nbit-1 downto 0);
@@ -22,14 +23,16 @@ end entity;
 
 architecture behav of register_file is
     type reg_array_t is array (0 to nreg-1) of std_logic_vector(nbit-1 downto 0);
-    signal regs : reg_array_t := (others => (others => '0'));
+    signal regs : reg_array_t;
 begin
     rdata1_o <= regs(to_integer(unsigned(raddr1_i)));
     rdata2_o <= regs(to_integer(unsigned(raddr2_i)));
 
-    process(clk_i)
+    process(clk_i, reset_i)
     begin
-        if rising_edge(clk_i) then
+        if reset_i = '1' then
+            regs <= (others => (others => '0'));
+        elsif rising_edge(clk_i) then
             if (we_i = '1' and waddr_i /= "00000") then
                 regs(to_integer(unsigned(waddr_i))) <= wbdata_i;
             end if;
