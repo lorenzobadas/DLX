@@ -3,7 +3,7 @@ module tb_cpu;
     // Constants
     parameter nbit = 32;
     parameter ram_width = 32;
-    parameter ram_add = 8;
+    parameter ram_add = 11;
     parameter CLK_PERIOD = 10;
 
     // Clock and reset
@@ -23,9 +23,6 @@ module tb_cpu;
     wire [1:0] dmem_data_format;
     wire dmem_data_sign;
     wire [ram_width-1:0] dmem_dout;
-
-    // End simulation signal
-    reg simulation_done = 0;
 
     // Instantiate the CPU
     cpu cpu_inst (
@@ -77,14 +74,10 @@ module tb_cpu;
 
     // Clock generation
     always begin
-        if (!simulation_done) begin
-            clk = 0;
-            #(CLK_PERIOD/2);
-            clk = 1;
-            #(CLK_PERIOD/2);
-        end else begin
-            #1;
-        end
+        clk = 0;
+        #(CLK_PERIOD/2);
+        clk = 1;
+        #(CLK_PERIOD/2);
     end
 
     // Test process
@@ -93,7 +86,7 @@ module tb_cpu;
         #(CLK_PERIOD * 2);
         rst = 0;
         #(CLK_PERIOD * 10000);
-        simulation_done = 1;
+        $stop;
     end
 
 endmodule
