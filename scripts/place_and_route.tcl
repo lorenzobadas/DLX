@@ -91,6 +91,7 @@ addFiller -cell FILLCELL_X8 FILLCELL_X4 FILLCELL_X32 FILLCELL_X2 FILLCELL_X16 FI
 saveDesign cpu_pnr.enc
 reset_parasitics
 extractRC
+rcOut -spef cpu.spef
 redirect -quiet {set honorDomain [getAnalysisMode -honorClockDomains]} > /dev/null
 timeDesign -postRoute -pathReports -drvReports -slackReports -numPaths 50 -prefix cpu_postRoute -outDir timingReports
 redirect -quiet {set honorDomain [getAnalysisMode -honorClockDomains]} > /dev/null
