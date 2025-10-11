@@ -15,13 +15,13 @@ PNR_DIR      := $(GIT_ROOT)/pnr
 
 # Find all relevant source files
 PKG_FILES  		    := $(shell find $(SRC_DIR)/pkg/ -name '*pkg.vhd' -type f)
-T2_SHIFTER_SRC    := $(shell find $(SRC_DIR)/t2_shifter -type f)
+T2_SHIFTER_SRC    := $(shell find $(SRC_DIR)/*t2_shifter* -type f)
 T2_SHIFTER_TB_SRC := $(shell find $(TB_DIR) -name '*t2_shifter*.vhd' -type f)
-T2_LOGIC_SRC	    := $(shell find $(SRC_DIR)/t2_logic -type f)
+T2_LOGIC_SRC	    := $(shell find $(SRC_DIR)/*t2_logic* -type f)
 T2_LOGIC_TB_SRC   := $(shell find $(TB_DIR) -name '*t2_logic*.vhd' -type f)
-P4_SRC     		    := $(shell find $(SRC_DIR)/p4_adder -type f)
+P4_SRC     		    := $(shell find $(SRC_DIR)/*p4_adder* -type f)
 P4_TB_SRC  		    := $(shell find $(TB_DIR) -name '*p4_adder*.vhd' -type f)
-ALU_SRC    		    := $(shell find $(SRC_DIR)/alu -type f)
+ALU_SRC    		    := $(shell find $(SRC_DIR)/*alu* -type f)
 ALU_TB_SRC 		    := $(shell find $(TB_DIR) -name '*alu*.vhd' -type f)
 CPU_SRC    		    := $(shell find $(SRC_DIR) -type f)
 CPU_TB_SRC 		    := $(shell find $(TB_DIR) -name '*cpu*.vhd' -type f)
