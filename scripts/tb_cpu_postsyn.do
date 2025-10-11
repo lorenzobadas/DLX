@@ -10,4 +10,8 @@ add wave /tb_cpu/imem_inst/ram_s
 add wave -divider "Data Memory"
 add wave -radix decimal /tb_cpu/dmem_inst/ram_s
 
+
+add wave -divider "CPU"
+add wave /tb_cpu/cpu_inst/*
+
 run 100000 ns
